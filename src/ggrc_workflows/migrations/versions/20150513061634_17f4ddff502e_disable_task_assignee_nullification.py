@@ -1,3 +1,7 @@
+# Copyright (C) 2015 Google Inc., authors, and contributors <see AUTHORS file>
+# Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+# Created By: swizec@reciprocitylabs.com
+# Maintained By: swizec@reciprocitylabs.com
 
 """Disable task assignee nullification
 
@@ -14,67 +18,59 @@ down_revision = '2b89912f95f1'
 from alembic import op
 import sqlalchemy as sa
 
-tables = ["cycle_task_group_object_tasks", "cycle_task_group_objects",
-          "cycle_task_groups", "task_group_tasks", "task_groups"]
+from ggrc_workflows.models.task_group_task import TaskGroupTask
+from ggrc_workflows.models.task_group import TaskGroup
+from ggrc_workflows.models.cycle_task_group import CycleTaskGroup
+from ggrc_workflows.models.cycle_task_group_object import CycleTaskGroupObject
+from ggrc_workflows.models.cycle_task_group_object_task import CycleTaskGroupObjectTask
+from ggrc_basic_permissions.models import Role, UserRole
+from ggrc.models.person import Person
+
+models = [CycleTaskGroupObjectTask, CycleTaskGroupObject, CycleTaskGroup, TaskGroupTask, TaskGroup]
 
 def get_first_admin():
-    conn = op.get_bind()
+    prasanna = Person.query.filter(sa.and_(Person.email == "prasannav@google.com",
+                                           Person.is_enabled == True)).first()
 
-    res = conn.execute("""
-    SELECT id FROM people
-    WHERE email="prasannav@google.com"
-    ORDER BY created_at ASC
-    LIMIT 1
-    """)
-    prasanna = res.fetchall()
+    if prasanna:
+        return prasanna.id
 
-    if len(prasanna):
-        return prasanna[0][0]
+    superuser = UserRole.query.filter(
+            UserRole.role == Role.query.filter(Role.name == "Superuser").first()
+        ).first()
 
-    res = conn.execute("""
-    SELECT person_id FROM user_roles
-    WHERE role_id=(SELECT id FROM roles
-                   WHERE name="Superuser")
-    ORDER BY created_at  ASC
-    LIMIT 1
-    """)
-    superuser = res.fetchall()
+    if superuser:
+        return superuser.person.id
 
-    if len(superuser):
-        return superuser[0][0]
+    admin = UserRole.query.filter(
+        UserRole.role == Role.query.filter(Role.name == "gGRC Admin").first()
+    ).first()
 
-
-    res = conn.execute("""
-    SELECT person_id FROM user_roles
-    WHERE role_id=(SELECT id FROM roles
-                   WHERE name="gGRC Admin")
-    ORDER BY created_at  ASC
-    LIMIT 1
-    """)
-    admin = res.fetchall()
-
-    if len(admin):
-        return admin[0][0]
+    if admin:
+        return admin.person.id
 
     raise LookupError("Can't find default admin user")
 
+
 def upgrade():
-    first_admin_id = get_first_admin()
+    if any(model.query.filter(model.contact_id == None).count()
+           for model in models):
 
-    for table in tables:
-        op.execute("""
-        UPDATE %s
-        SET contact_id=%d
-        WHERE contact_id IS NULL;
-        """ % (table, first_admin_id))
+        first_admin_id = get_first_admin()
 
+        for model in models:
+            op.execute(model.__table__.update()\
+              .where(model.contact_id == None)\
+              .values({"contact_id": first_admin_id})
+            )
+
+    for model in models:
         op.execute("""
         ALTER TABLE %s MODIFY contact_id int(11) NOT NULL
-        """ % table)
-
+        """ % model.__tablename__)
 
 def downgrade():
-    for table in tables:
+    for model in models:
         op.execute("""
         ALTER TABLE %s MODIFY contact_id int(11);
-        """ % table)
+        """ % model.__tablename__)
