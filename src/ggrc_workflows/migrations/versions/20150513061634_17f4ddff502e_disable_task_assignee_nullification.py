@@ -17,6 +17,7 @@ down_revision = '2b89912f95f1'
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.types import Integer
 
 from ggrc_workflows.models.task_group_task import TaskGroupTask
 from ggrc_workflows.models.task_group import TaskGroup
@@ -55,22 +56,19 @@ def get_first_admin():
 def upgrade():
     if any(model.query.filter(model.contact_id == None).count()
            for model in models):
-
         first_admin_id = get_first_admin()
 
         for model in models:
-            op.execute(model.__table__.update()\
+            conn.execute(model.__table__.update()\
               .where(model.contact_id == None)\
               .values({"contact_id": first_admin_id})
             )
 
     for model in models:
-        op.execute("""
-        ALTER TABLE %s MODIFY contact_id int(11) NOT NULL
-        """ % model.__tablename__)
+        op.alter_column(model.__tablename__, "contact_id",
+                        nullable=False, existing_type=Integer)
 
 def downgrade():
     for model in models:
-        op.execute("""
-        ALTER TABLE %s MODIFY contact_id int(11);
-        """ % model.__tablename__)
+        op.alter_column(model.__tablename__, "contact_id",
+                        nullable=True, existing_type=Integer)
