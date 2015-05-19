@@ -80,7 +80,9 @@
       </label>
       <i class="grcicon-{{audit.object_model.table_singular}}-color pull-left icon-field"></i>
       <div class="objective-selector">
-        <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty audit_object_object.title ''}}" placeholder="Enter text to search for {{audit.object_type}}">
+        {{#using control_assessment=control_assessment}}
+        <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty control_assessment.title ''}}" placeholder="Enter text to search for {{audit.object_type}}" null-if-empty="true">
+        {{/using}}
       </div>
     {{/if_auditor}}
     </div>

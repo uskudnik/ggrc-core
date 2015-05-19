@@ -389,7 +389,7 @@ can.Model.Cacheable("CMS.Models.Request", {
     var that = this,
         obj = this.audit_object_object ? this.audit_object_object.reify() : this.audit_object_object,
         matching_objs;
-    if(that.audit_object
+    if(that.audit_object && that.audit_object.auditable
        && (!that.audit_object_object
            || that.audit_object.reify().auditable.id === that.audit_object_object.id
     )) {
