@@ -80,9 +80,19 @@
       </label>
       <i class="grcicon-{{audit.object_model.table_singular}}-color pull-left icon-field"></i>
       <div class="objective-selector">
-        {{#using control_assessment=control_assessment}}
-        <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty control_assessment.title ''}}" placeholder="Enter text to search for {{audit.object_type}}" null-if-empty="true">
-        {{/using}}
+        {{#if new_object_form}}
+          {{#if control_assessment}} <!-- creating a request from control assessment info page-->
+            {{#using control_assessment=control_assessment}}
+            {{#update_audit_object_object instance control_assessment}}
+            <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty control_assessment.title ''}}" placeholder="Enter text to search for {{audit.object_type}}" null-if-empty="true">-
+            {{/update}}
+            {{/using}}
+          {{else}}
+            <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty audit_object_object.title ''}}" placeholder="Enter text to search for {{audit.object_type}}">**
+          {{/if}}
+        {{else}}
+          <input tabindex="6" type="text" name="audit_object_object.title" data-lookup="{{audit.object_type}}" class="span10 search-icon" value="{{firstnonempty audit_object_object.title ''}}" placeholder="Enter text to search for {{audit.object_type}}">
+        {{/if}}
       </div>
     {{/if_auditor}}
     </div>

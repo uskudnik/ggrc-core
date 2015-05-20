@@ -3082,4 +3082,14 @@ Mustache.registerHelper("with_create_issue_json", function (instance, options) {
   return options.fn(options.contexts.add({'create_issue_json': JSON.stringify(json)}));
 });
 
+Mustache.registerHelper("update_audit_object_object", function (instance, attr_val, options) {
+  instance = Mustache.resolve(instance),
+  attr_val = Mustache.resolve(attr_val);
+  var path = "audit_object_object";
+
+  instance.attr(path, attr_val);
+
+  return options.fn(options.contexts);;
+});
+
 })(this, jQuery, can);
