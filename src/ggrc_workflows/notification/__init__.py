@@ -63,6 +63,11 @@ All notifications handle the following structure:
       "some@email.com": {
           "user": { user_info },
 
+          # if notifications are forced for the given workflow
+          "force_notifications": {
+              notification.id :True/False
+          }
+
           "cycle_starts_in": {
               workflow.id: {
                   "custom_message": ""
@@ -85,6 +90,19 @@ All notifications handle the following structure:
 
                   "workflow_tasks" : # list of all tasks in the workflow
                       { (task.id, object.id): { task_info, obj_info}, ... }
+              }
+              , ...
+          }
+
+          "cycle_start_failed": {
+              workflow.id: {
+                  "custom_message": ""
+                  "title": ""
+                  "workflow_url": "",
+                  "workflow_owners":
+                      { workflow_owner.id: workflow_owner_info, ...},
+                  "start_date": MM/DD/YYYY
+                  "fuzzy_start_date": "in X days/weeks ..."
               }
               , ...
           }

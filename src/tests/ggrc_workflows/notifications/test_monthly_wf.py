@@ -123,6 +123,7 @@ class TestMonthlyWorkflowNotification(TestCase):
 
     self.one_time_workflow_1 = {
         "title": "test monthly wf notifications",
+        "notify_on_change": True,
         "description": "some test workflow",
         "owners": [person_dict(self.person_2.id)],
         "frequency": "monthly",

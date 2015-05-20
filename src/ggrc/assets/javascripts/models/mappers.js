@@ -1112,7 +1112,7 @@
       }
 
     , get_instance_from_mapping: function(binding, mapping) {
-        return mapping[this.option_attr].reify();
+        return mapping[this.options_attr] && mapping[this.option_attr].reify();
       }
 
     , find_result_from_mapping: function(binding, mapping) {

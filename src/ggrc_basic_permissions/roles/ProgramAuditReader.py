@@ -7,7 +7,7 @@ permissions = {
     "read": [
         "Request",
         "ControlAssessment",
-        "Issues",
+        "Issue",
         "DocumentationResponse",
         "InterviewResponse",
         "PopulationSampleResponse",

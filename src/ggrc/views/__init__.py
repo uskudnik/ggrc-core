@@ -385,6 +385,20 @@ def audit_info_issues_revamp():
   """
   return render_template("/mockups/audit-revamp/issues.html")
 
+@app.route("/mockups/audit-3.0/")
+@login_required
+def audit_3_0():
+  """Audit 3.0 mockup
+  """
+  return render_template("/mockups/audit-3.0/info.html")
+
+@app.route("/mockups/audit-3.0/control-assessment.html")
+@login_required
+def audit_3_0_ca():
+  """Audit 3.0 CA mockup
+  """
+  return render_template("/mockups/audit-3.0/control-assessment.html")
+
 @app.route("/permissions")
 @login_required
 def user_permissions():

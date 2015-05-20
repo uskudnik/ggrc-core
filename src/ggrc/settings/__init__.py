@@ -22,6 +22,7 @@ SETTINGS_DIR = os.path.join(BASE_DIR, 'ggrc', 'settings')
 from default import *
 
 settings_modules = os.environ.get("GGRC_SETTINGS_MODULE", '')
+custom_url_root = os.environ.get("GGRC_CUSTOM_URL_ROOT", None)
 
 if len(settings_modules.strip()) == 0:
   raise RuntimeError(

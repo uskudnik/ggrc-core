@@ -7,8 +7,7 @@
 from sqlalchemy import and_, or_, inspect
 from datetime import timedelta, datetime, date
 
-from ggrc.models import (
-    Notification, NotificationType, NotificationConfig, ObjectType)
+from ggrc.models import Notification, NotificationType, ObjectType
 from ggrc import db
 
 
@@ -46,6 +45,9 @@ def handle_workflow_modify(sender, obj=None, src=None, service=None):
   if not notification:
     send_on = obj.next_cycle_start_date - timedelta(notif_type.advance_notice)
     add_notif(obj, notif_type, send_on)
+
+    notif_type = get_notification_type("cycle_start_failed")
+    add_notif(obj, notif_type, obj.next_cycle_start_date + timedelta(1))
 
   for task_group in obj.task_groups:
     for task_group_task in task_group.task_group_tasks:
@@ -193,7 +195,7 @@ def get_object_type(obj):
 
 def get_notification_type(name):
   return db.session.query(NotificationType).filter(
-      NotificationType.name == name).one()
+      NotificationType.name == name).first()
 
 
 def add_notif(obj, notif_type, send_on=None):
@@ -206,19 +208,3 @@ def add_notif(obj, notif_type, send_on=None):
       send_on=send_on,
   )
   db.session.add(notif)
-
-
-def is_instant(workflow, person):
-  def is_enabled(notif_type):
-    return NotificationConfig.query.filter(
-        and_(NotificationConfig.person_id == person.id,
-             NotificationConfig.enable_flag == True,  # noqa
-             NotificationConfig.notif_type == notif_type)).count() > 0
-
-  if workflow.notify_on_change and is_enabled("Email_Now"):
-    return "instant"
-
-  if is_enabled("Email_Digest"):
-    return "digest"
-
-  return None

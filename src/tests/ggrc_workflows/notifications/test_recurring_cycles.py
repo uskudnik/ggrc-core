@@ -99,6 +99,7 @@ class TestRecurringCycleNotifications(TestCase):
         "description": "",
         "owners": [person_dict(self.assignee.id)],
         "frequency": "quarterly",
+        "notify_on_change": True,
         "task_groups": [{
             "title": "tg_1",
             "contact": person_dict(self.assignee.id),

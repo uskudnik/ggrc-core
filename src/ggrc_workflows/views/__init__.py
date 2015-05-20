@@ -3,21 +3,51 @@
 # Created By: dan@reciprocitylabs.com
 # Maintained By: miha@reciprocitylabs.com
 
+from datetime import date, datetime
+from flask import render_template, redirect, url_for, current_app
+from ggrc.rbac import permissions
+from jinja2 import Environment, PackageLoader
+from werkzeug.exceptions import Forbidden
+
 from ggrc import db
-from ggrc_workflows import start_recurring_cycles
 from ggrc import notification
 from ggrc.login import login_required
 from ggrc.notification import email
-from jinja2 import Environment, PackageLoader
-from datetime import date, datetime
-from ggrc.rbac import permissions
-from werkzeug.exceptions import Forbidden
-
+from ggrc_workflows import start_recurring_cycles
+from ggrc_workflows.models import Workflow
 
 env = Environment(loader=PackageLoader('ggrc_workflows', 'templates'))
 
 # TODO: move these views to ggrc_views and all the functions to notifications
 # module.
+
+def send_error_notification(message):
+  try:
+    user_email = email.getAppEngineEmail()
+    email.send_email(user_email, "Error in nightly cron job", message)
+  except Exception as e:
+    current_app.logger.error(e)
+
+
+def run_job(job):
+  try:
+    job()
+  except Exception as e:
+    message = "job '{}' failed with: \n{}".format(job.__name__, e.message)
+    current_app.logger.error(message)
+    send_error_notification(message)
+
+
+def nightly_cron_endpoint():
+  cron_jobs = [
+    start_recurring_cycles,
+    send_todays_digest_notifications
+  ]
+
+  for job in cron_jobs:
+    run_job(job)
+
+  return 'Ok'
 
 
 def modify_data(data):
@@ -40,11 +70,6 @@ def modify_data(data):
         data["cycle_started_tasks"].update(cycle["my_tasks"])
 
   return data
-
-
-def do_start_recurring_cycles():
-  start_recurring_cycles()
-  return 'Ok'
 
 
 def show_pending_notifications():
@@ -89,10 +114,33 @@ def send_todays_digest_notifications():
   return "emails sent to: <br> {}".format("<br>".join(sent_emails))
 
 
+def _get_unstarted_workflows():
+  return db.session.query(Workflow).filter(
+      Workflow.next_cycle_start_date < date.today(),
+      Workflow.recurrences == True,  # noqa
+      Workflow.status == 'Active',
+  ).all()
+
+
+def unstarted_cycles():
+  workflows = _get_unstarted_workflows()
+  return render_template("unstarted_cycles.haml", workflows=workflows)
+
+
+def start_unstarted_cycles():
+  workflows = _get_unstarted_workflows()
+  for workflow in workflows:
+    workflow.next_cycle_start_date = date.today()
+    db.session.add(workflow)
+  db.session.commit()
+  run_job(start_recurring_cycles)
+  return redirect(url_for('unstarted_cycles'))
+
+
 def init_extra_views(app):
   app.add_url_rule(
-      "/start_recurring_cycles", "start_recurring_cycles",
-      view_func=do_start_recurring_cycles)
+      "/nightly_cron_endpoint", "nightly_cron_endpoint",
+      view_func=nightly_cron_endpoint)
 
   app.add_url_rule(
       "/_notifications/show_pending", "show_pending_notifications",
@@ -105,3 +153,11 @@ def init_extra_views(app):
   app.add_url_rule(
       "/_notifications/send_todays_digest", "send_todays_digest_notifications",
       view_func=send_todays_digest_notifications)
+
+  app.add_url_rule(
+      "/admin/unstarted_cycles",
+      view_func=login_required(unstarted_cycles))
+
+  app.add_url_rule(
+      "/admin/start_unstarted_cycles",
+      view_func=login_required(start_unstarted_cycles))

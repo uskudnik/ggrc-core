@@ -732,6 +732,9 @@ $(document).ready(function(){
 
     $(this).on('shown.bs.popover', function () {
       $(this).addClass("active");
+      $(this).next(".popover-manual-close").find(".popover-close").click(function (e) {
+          $(".attribute-trigger").popover("hide");
+      });
     });
 
     $(this).on('hidden.bs.popover', function () {
@@ -739,9 +742,13 @@ $(document).ready(function(){
     });
   });
 
-  // Close popover on close click
-  $(".popover-close").on("click", function(el) {
-    $(this).closest(".popover-manual-close").popover('hide');
+  // "Save report as" checkbox sync
+  $(".report-save-check").change(function() {
+    $(".report-save-check-bottom").prop("checked", this.checked);
+  });
+
+  $(".report-save-check-bottom").change(function() {
+    $(".report-save-check").prop("checked", this.checked);
   });
 
   // Close all popovers with a class "popover-manual-close" if you click anywhere except inside popover
@@ -765,26 +772,31 @@ $(document).ready(function(){
   // Top navigation show/hide
   function topNav() {
     var options = {
-          duration: 100,
+          duration: 800,
           easing: 'easeOutExpo'
         },
         $this = $(this),
         $tooltip = $this.find("i"),
         $nav = $this.closest("body").find(".top-inner-nav"),
         $lhn_nav = $this.closest("body").find(".lhs-holder"),
+        $lhn_type = $this.closest("body").find(".lhn-type"),
         $bar = $this.closest("body").find(".bar-v"),
         $content = $this.closest("body").find(".object-area"),
-        $fake_merge = $content.add($lhn_nav).add($bar);
+        $fake_merge = $content.add($bar);
     if($this.hasClass("active")) {
       $this.removeClass("active");
       $tooltip.attr("data-original-title", "Show menu");
-      $nav.animate({top: "66"}, options);
-      $fake_merge.animate({top: "106"}, options);
+      $nav.animate({top: "19"}, options);
+      $fake_merge.animate({top: "49"}, options);
+      $lhn_nav.animate({top: "99"}, options);
+      $lhn_type.animate({top: "65"}, options);
     } else {
       $this.addClass("active");
       $tooltip.attr("data-original-title", "Hide menu");
-      $nav.animate({top: "96"}, options);
-      $fake_merge.animate({top: "136"}, options);
+      $nav.animate({top: "48"}, options);
+      $fake_merge.animate({top: "78"}, options);
+      $lhn_nav.animate({top: "128"}, options);
+      $lhn_type.animate({top: "94"}, options);
     }
   }
 

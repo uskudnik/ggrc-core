@@ -11,7 +11,7 @@ permissions = {
         "ControlAssertion",
         "Control",
         "ControlAssessment",
-        "Issues",
+        "Issue",
         "ControlControl",
         "ControlSection",
         "DataAsset",

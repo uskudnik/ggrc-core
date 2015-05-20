@@ -7,7 +7,8 @@ import datetime
 import json
 import sys
 import time
-from flask import current_app
+from flask import current_app, request
+from settings import custom_url_root
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -118,6 +119,12 @@ def merge_dicts(*args):
   for arg in args:
     result = merge_dict(result, arg)
   return result
+
+
+def get_url_root():
+  if custom_url_root is not None:
+    return custom_url_root
+  return request.url_root
 
 
 class BenchmarkContextManager(object):

@@ -7,7 +7,7 @@ permissions = {
     "read": [
         "Request",
         "ControlAssessment",
-        "Issues",
+        "Issue",
         "DocumentationResponse",
         "InterviewResponse",
         "PopulationSampleResponse",
@@ -28,7 +28,7 @@ permissions = {
     "create": [
         "Request",
         "ControlAssessment",
-        "Issues",
+        "Issue",
         "DocumentationResponse",
         "InterviewResponse",
         "PopulationSampleResponse",
@@ -67,8 +67,22 @@ permissions = {
             "type": "Request",
             "condition": "is"
         },
-        "ControlAssessment",
-        "Issues",
+        {
+            "type": "ControlAssessment",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
+        {
+            "type": "Issue",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
         "DocumentationResponse",
         "InterviewResponse",
         "PopulationSampleResponse",

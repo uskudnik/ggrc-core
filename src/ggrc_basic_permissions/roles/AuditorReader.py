@@ -11,6 +11,8 @@ permissions = {
         "ControlCategory",
         "ControlAssertion",
         "Control",
+        "ControlAssessment",
+        "Issue",
         "ControlControl",
         "ControlSection",
         "DataAsset",

@@ -135,6 +135,7 @@ class TestOneTimeWorkflowNotification(TestCase):
     self.one_time_workflow_1 = {
         "title": "one time test workflow",
         "description": "some test workflow",
+        "notify_on_change": True,
         "owners": [person_dict(self.random_people[3].id)],
         "task_groups": [{
             "title": "one time task group",
@@ -177,6 +178,7 @@ class TestOneTimeWorkflowNotification(TestCase):
 
     self.one_time_workflow_single_person = {
         "title": "one time test workflow",
+        "notify_on_change": True,
         "description": "some test workflow",
         "owners": [person_dict(user)],
         "task_groups": [{

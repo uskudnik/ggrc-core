@@ -446,18 +446,24 @@ can.Control("CMS.Controllers.InnerNav", {
       widget = this.widget_by_selector(widget);
     }
 
-    widget.attr("force_show", true);
-    this.update_add_more_link();
-    this.options.contexts.attr("active_widget", widget);
-    this.show_active_widget();
+    if (widget !== this.options.contexts.attr("active_widget")) {
+      widget.attr("force_show", true);
+      this.update_add_more_link();
+      this.options.contexts.attr("active_widget", widget);
+      this.show_active_widget();
+    }
   }
 
   , show_active_widget: function (selector) {
     var panel_selector = selector || this.options.contexts.attr('active_widget').selector,
         widget = $(panel_selector),
-        dashboard_controller = this.options.dashboard_controller;
+        dashboard_controller = this.options.dashboard_controller,
+        info_pin_controller = dashboard_controller.info_pin.element.control();
 
-    dashboard_controller.info_pin.element.control().hideInstance();
+    if (info_pin_controller) {
+      info_pin_controller.hideInstance();
+    }
+      
     if (widget.length) {
       dashboard_controller.show_widget_area();
       widget.siblings(':visible').hide().end().show();
@@ -634,8 +640,8 @@ can.Control("CMS.Controllers.InnerNav", {
 
       // see if too wide
       var widths = _.map($el.children(':visible'),
-                         function (el) { 
-                           return $(el).width(); 
+                         function (el) {
+                           return $(el).width();
                          }).reduce(function (m, w) {
                            return m+w;
                          }, 0);

@@ -160,3 +160,15 @@ class GgrcGenerator(Generator):
         random_people.append(person)
     return random_people
 
+  def generate_notification_setting(self, user_id, notif_type, enable_flag):
+    obj_name = "notification_config"
+    data = {
+        obj_name: {
+            "person_id": user_id,
+            "notif_type": notif_type,
+            "enable_flag": enable_flag,
+            "context": None,
+            "type": "NotificationConfig",
+        }
+    }
+    return self.generate(NotificationConfig, obj_name, data)

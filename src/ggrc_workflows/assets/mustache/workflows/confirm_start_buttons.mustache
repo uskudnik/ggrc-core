@@ -10,20 +10,9 @@
     <div class="span6">&nbsp;</div>
     <div class="span6">
       <div class="confirm-buttons">
-        {{#defer 'is_mid_frequency' instance.is_mid_frequency}}
-        {{#if is_mid_frequency}}
-          <a class="btn btn-small btn-info preventdoubleclick" data-toggle="confirm" data-option="next" href="javascript://">
-            No, start next {{instance.frequency_duration}}
-          </a>
-          <a class="btn btn-small btn-info preventdoubleclick" data-option="this" data-toggle="confirm" href="javascript://">
-            Yes
-          </a>
-        {{else}}
         <a class="btn btn-small btn-info preventdoubleclick" data-toggle="confirm" href="javascript://">
           Proceed
         </a>
-        {{/if}}
-        {{/defer}}
       </div>
     </div>
   </div>

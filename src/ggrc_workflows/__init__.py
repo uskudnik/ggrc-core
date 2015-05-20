@@ -604,6 +604,7 @@ def update_workflow_state(workflow):
       # Other cycle attributes will be set in build_cycle.
       # So, no need to set them here.
       build_cycle(cycle, None, previous_cycle_start_date)
+      notification.handle_cycle_created(None, obj=cycle)
 
     # Set the next_cycle_start_date to one frequency period (month, day, year)
     # ahead of the min_start_date

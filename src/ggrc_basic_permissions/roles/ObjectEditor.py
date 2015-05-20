@@ -10,7 +10,7 @@ permissions = {
         "ControlAssertion",
         "Control",
         "ControlAssessment",
-        "Issues",
+        "Issue",
         "ControlControl",
         "ControlSection",
         "DataAsset",
@@ -67,6 +67,8 @@ permissions = {
         "Categorization",
         "Category",
         "Control",
+        "ControlAssessment",
+        "Issue",
         "ControlControl",
         "ControlSection",
         "DataAsset",
@@ -114,6 +116,22 @@ permissions = {
         "Categorization",
         {
             "type": "Category",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
+        {
+            "type": "Issue",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
+        {
+            "type": "ControlAssessment",
             "terms": {
                 "list_property": "owners",
                 "value": "$current_user"
@@ -319,6 +337,22 @@ permissions = {
         },
         {
             "type": "Control",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
+        {
+            "type": "Issue",
+            "terms": {
+                "list_property": "owners",
+                "value": "$current_user"
+            },
+            "condition": "contains"
+        },
+        {
+            "type": "ControlAssessment",
             "terms": {
                 "list_property": "owners",
                 "value": "$current_user"

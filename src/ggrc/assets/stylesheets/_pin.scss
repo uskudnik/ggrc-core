@@ -25,6 +25,25 @@
   .info-widget-footer {
     display: none;
   }
+  select {
+    margin-bottom: 0;
+  }
+}
+
+.inline-date-wrap {
+  input {
+    margin-bottom: 0;
+  }
+}
+
+.inline-date-label {
+  display: inline-block;
+  line-height: 28px;
+  margin-right: 10px;
+  margin-left: 10px;
+  &:first-child {
+    margin-left: 0;
+  }
 }
 
 .pin-action {

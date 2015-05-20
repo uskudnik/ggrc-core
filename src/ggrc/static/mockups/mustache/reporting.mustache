@@ -40,7 +40,7 @@
                   <div class="row-fluid">
                     <div class="span4">
                       <h6>
-                        Anchor object type
+                        Query by Object type
                       </h6>
                       <div class="single-line-filter">
                         <select class="input-xlarge option-type-selector">
@@ -73,7 +73,7 @@
                         <div class="attr-wrap">
                           <h3>
                             Select program attributes to show in report
-                            <a class="popover-close pull-right" href="javascript://">
+                            <a class="popover-close pull-right" href="#">
                               <i class="grcicon-x-grey"></i>
                             </a>
                           </h3>
@@ -151,12 +151,12 @@
                               </label>
                             </li>
                           </ul>
-                          <a href="javascript://" class="btn btn-small btn-success">I'm done</a>
+                          <a href="#" class="btn btn-small btn-success popover-close">I'm done</a>
                         </div>
                       </div>
                     </div>
                     <div class="span4">
-                      <h6>Filter anchor objects</h6>
+                      <h6>Filter Query</h6>
                       <div class="inline-filtering inline-filtering-transparent">
                         <div class="filter-input">
                           <input name="filter_query" type="text" class="input-wide">
@@ -209,18 +209,19 @@
                   <div class="relevant-filter-group">
                     <div class="row-fluid">
                       <div class="span4">
-                        <h6>
-                          Relevant object groups
-                        </h6>
+                        <h6>Include mapped object type</h6>
                       </div>
                       <div class="span4">
-                        <h6>Filter object groups</h6>
+                        <h6>Filter mapped objects</h6>
                       </div>
                     </div>
                     {{#relevantFilter}}
                       <div class="row-fluid">
                         <div class="span4">
                           <div class="single-line-filter">
+                            <button type="submit" class="remove_filter_group">
+                              <i class="grcicon-deleted"></i>
+                            </button>
                             <select class="input-xlarge relevant-set-choose">
                               <option value="Program">Programs</option>
                               <option value="Regulation">Regulations</option>
@@ -242,7 +243,12 @@
                             </select>
                             <a href="#" class="attribute-trigger" data-trigger="focus" tabindex="0"><i class="grcicon-setup-color"></i></a>
                             <div class="attr-wrap">
-                              <h3>Select control attributes to show in report</h3>
+                              <h3>
+                                Select control attributes to show in report
+                                <a class="popover-close pull-right" href="#">
+                                  <i class="grcicon-x-grey"></i>
+                                </a>
+                              </h3>
                               <ul class="attr-list">
                                 <li>
                                   <label>
@@ -365,7 +371,7 @@
                                   </label>
                                 </li>
                               </ul>
-                              <a href="javascript://" class="btn btn-small btn-success">I'm done</a>
+                              <a href="#" class="btn btn-small btn-success popover-close">I'm done</a>
                             </div>
                           </div>
                         </div>
@@ -382,16 +388,7 @@
                       </div>
                     {{/relevantFilter}}
                     <div class="add-rule">
-                      <a href="#" id="addRelevantFilterRule" class="addFilterRule">+ Add Relevant Object Group</a>
-                    </div>
-                  </div>
-
-                  <div class="row-fluid">
-                    <div class="span12">
-                      <label class="checkbox-inline">
-                        <input type="checkbox" id="" name="" checked="checked">
-                        Show only objects relevant to selected anchor objects
-                      </label>
+                      <a href="#" id="addRelevantFilterRule" class="addFilterRule">+ Include another object type</a>
                     </div>
                   </div>
 
@@ -399,9 +396,15 @@
 
                 <div class="white-widget">
                   <div class="save-template-wrap white">
+                    <div class="left-content">
+                      <label class="checkbox-inline">
+                        <input type="checkbox" id="" name="" checked="checked">
+                        Show only objects relevant to selected anchor objects
+                      </label>
+                    </div>
                     <div class="save-template">
                       <label class="small">
-                        <input type="checkbox" name="" id="" checked="checked" placeholder="enter report name">
+                        <input type="checkbox" class="report-save-check" name="" id="" checked="checked" placeholder="enter report name">
                         Save report as
                       </label>
                       <input type="text" id="custom_report_name" class="input-medium" placeholder="Enter report name">
@@ -620,7 +623,7 @@
                   <div class="save-template-wrap white">
                     <div class="save-template">
                       <label class="small">
-                        <input type="checkbox" name="" id="" checked="checked" placeholder="enter report name">
+                        <input type="checkbox" class="report-save-check-bottom" name="" id="" checked="checked" placeholder="enter report name">
                         Save report as
                       </label>
                       <input type="text" id="custom_report_name" class="input-medium" placeholder="Enter report name">

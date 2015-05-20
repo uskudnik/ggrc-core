@@ -1329,6 +1329,20 @@ ul.new-tree {
       }
     }
   }
+  &.status-wrap {
+    float: none;
+    clear: both;
+    margin-left: 0;
+    width: auto;
+    margin-top: 0;
+    .dropdown-toggle {
+      display: inline-block;
+    }
+    .dropdown-menu {
+      right: auto;
+      left: 0;
+    }
+  }
 }
 
 .selector-list {

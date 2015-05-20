@@ -78,6 +78,19 @@ Maintained By: miha@reciprocitylabs.com
                   </ul>
                 {% endif %}
 
+                {% if digest['cycle_start_failed'] %}
+                  <h2 {{ style.sub_title() }} >These workflow cycles failed to start</h2>
+                  <ul {{ style.list_wrap() }} >
+                  {% for workflow_id, workflow in digest['cycle_start_failed'].items() %}
+                    <li {{ style.list_item() }} >
+                      New cycle of
+                      <a href="{{ workflow['workflow_url'] }}" {{ style.link_text() }} >
+                        {{ workflow['title'] }}</a>
+                    </li>
+                  {% endfor %}
+                  </ul>
+                {% endif %}
+
                 {% if digest['all_tasks_completed'] %}
                   <h2 {{ style.sub_title() }} >All tasks completed in the following cycle(s)</h2>
                   <ul {{ style.list_wrap() }} >

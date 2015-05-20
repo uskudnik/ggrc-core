@@ -7,7 +7,7 @@
 from collections import defaultdict
 from datetime import date, datetime
 from ggrc.extensions import get_extension_modules
-from ggrc.models import Notification
+from ggrc.models import Notification, NotificationConfig
 from ggrc.utils import merge_dict
 from ggrc import db
 from sqlalchemy import and_
@@ -34,12 +34,24 @@ class NotificationServices():
       raise ValueError("unknown service name: %s" % name)
     return self.services[name]
 
-  def call_service(self, name, pn):
+  def call_service(self, name, notification):
     service = self.get_service_function(name)
-    return service(pn)
+    return service(notification)
 
 
 services = NotificationServices()
+
+
+def get_filter_data(notification):
+  result = {}
+  data = services.call_service(notification.object_type.name, notification)
+
+  for user, user_data in data.iteritems():
+    if should_receive(notification,
+                      user_data["force_notifications"][notification.id],
+                      user_data["user"]["id"]):
+      result[user] = user_data
+  return result
 
 
 def get_notification_data(notifications):
@@ -47,13 +59,9 @@ def get_notification_data(notifications):
     return {}
   aggregate_data = {}
 
-  def merge_into(destination, source):
-    if destination is None:
-      return source
-
-  for pn in notifications:
-    data = services.call_service(pn.object_type.name, pn)
-    aggregate_data = merge_dict(aggregate_data, data)
+  for notification in notifications:
+    filtered_data = get_filter_data(notification)
+    aggregate_data = merge_dict(aggregate_data, filtered_data)
 
   return aggregate_data
 
@@ -90,3 +98,23 @@ def generate_notification_email(data):
 
 def dispatch_notifications():
   pass
+
+
+def should_receive(notif, force_notif, person_id, nightly_cron=True):
+  def is_enabled(notif_type):
+    result = NotificationConfig.query.filter(
+        and_(NotificationConfig.person_id == person_id,
+             NotificationConfig.notif_type == notif_type))
+    # TODO: create_user function should make entries in the notification
+    # config table. The code below should not make sure we have default
+    # values for new users.
+    if result.count() == 0:
+      # If we have no results, we need to use the default value, which is
+      # true for digest emails.
+      return notif_type == "Email_Digest"
+    return result.one().enable_flag
+
+  has_instant = force_notif or is_enabled("Email_Now")
+  has_digest = force_notif or is_enabled("Email_Digest")
+
+  return has_digest

@@ -1075,6 +1075,7 @@
   padding-bottom: 40px;
   .white-widget & {
     background: $white;
+    border-top: 1px solid $infoMessageBorder;
   }
   h2 {
     line-height: 36px;
@@ -1324,6 +1325,10 @@
 // Report
 .save-template-wrap {
   @include clearfix();
+  .left-content {
+    float: left;
+    padding: 15px 20px 10px;
+  }
 }
 .save-template {
   float: right;
@@ -1406,10 +1411,16 @@ ul.attr-list {
   .relevance-filters & {
     margin-bottom: 6px;
   }
+  .relevant-filter-group & {
+    margin-bottom: 6px;
+  }
   .input-xlarge {
     width: 85%;
     box-sizing: border-box;
     height: 28px;
+    .relevant-filter-group & {
+      width: 79%;
+    }
   }
 }
 
@@ -1442,8 +1453,26 @@ ul.attr-list {
   overflow-x: auto;
   table {
     @include border-radius(0);
+    font-size: 12px;
+    line-height: 20px;
     th, td {
       min-width: 70px;
+    }
+    th {
+      i {
+        @include opacity(.4);
+      }
+      &:hover {
+        i {
+          @include opacity(1);
+        }
+      }
+      &.open {
+        i {
+          @include opacity(1);
+          background-position: -198px -416px;
+        }
+      }
     }
     .dropdown-menu {
       min-width: 240px;
@@ -1472,8 +1501,14 @@ ul.attr-list {
     }
     tr {
       background: lighten($lightGray,2%);
+      &:hover {
+        background: darken($lightGray,5%);
+      }
       &:nth-child(odd) {
         background: lighten($lightGray,5%);
+        &:hover {
+          background: darken($lightGray,5%);
+        }
       }
       th {
         background: darken($lightGray,3%);

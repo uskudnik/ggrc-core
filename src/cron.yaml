@@ -6,12 +6,7 @@
 # See https://developers.google.com/appengine/docs/python/config/appconfig
 
 cron:
-- description: gGRC daily notification email digests
-  url: /_notifications/send_todays_digest
-  schedule: every day 01:00
-  timezone: US/Pacific
-
-- description: gGRC workflow - start cycles for workflows with a new period starting today
-  url: /start_recurring_cycles
+- description: gGRC workflow - starting point for all batch jobs
+  url: /nightly_cron_endpoint
   schedule: every day 12:01
   timezone: US/Pacific

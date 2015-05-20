@@ -7,20 +7,48 @@ Create Date: 2015-04-23 17:37:06.366115
 
 """
 
-from datetime import date
+from datetime import timedelta, date
 from sqlalchemy import and_
 from ggrc import db
 from ggrc.models import Notification
 from ggrc_workflows.models import CycleTaskGroupObjectTask, Workflow
 from ggrc_workflows.notification.notification_handler import (
     add_cycle_task_due_notifications,
-    handle_workflow_modify,
     get_notification_type,
+    get_notification,
+    add_notif,
+    handle_task_group_task
 )
 
 # revision identifiers, used by Alembic.
 revision = '2b89912f95f1'
 down_revision = '27b09c761b4e'
+
+
+def _handle_workflow_modify(sender, obj=None, src=None, service=None):
+  """
+  _handle_workflow_modify is a copy of handle_workflow_modify from
+  notification_handler. We are usning a copy because the original function
+  will change as we add new notification_types which will cause
+  this migration to fail.
+  """
+  if obj.status != "Active" or obj.frequency == "one_time":
+    return
+
+  if not obj.next_cycle_start_date:
+    obj.next_cycle_start_date = date.today()
+
+  notification = get_notification(obj)
+  notif_type = get_notification_type(
+      "{}_workflow_starts_in".format(obj.frequency))
+
+  if not notification:
+    send_on = obj.next_cycle_start_date - timedelta(notif_type.advance_notice)
+    add_notif(obj, notif_type, send_on)
+
+  for task_group in obj.task_groups:
+    for task_group_task in task_group.task_group_tasks:
+      handle_task_group_task(task_group_task, notif_type)
 
 
 def upgrade():
@@ -37,7 +65,7 @@ def upgrade():
       Workflow.next_cycle_start_date >= date.today()
   ))
   for wf in existing_wfs:
-    handle_workflow_modify(None, wf)
+    _handle_workflow_modify(None, wf)
 
   db.session.commit()
 

@@ -253,6 +253,7 @@ class TestCycleTaskStatusChange(TestCase):
 
     self.one_time_workflow_1 = {
         "title": "one time test workflow",
+        "notify_on_change": True,
         "description": "some test workflow",
         "owners": [person_dict(self.user.id)],
         "task_groups": [{
@@ -270,6 +271,7 @@ class TestCycleTaskStatusChange(TestCase):
 
     self.one_time_workflow_2 = {
         "title": "one time test workflow",
+        "notify_on_change": True,
         "description": "some test workflow",
         "owners": [person_dict(self.user.id)],
         "task_groups": [{

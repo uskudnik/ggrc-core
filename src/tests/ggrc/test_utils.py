@@ -94,3 +94,228 @@ class TestOneTimeWorkflowNotification(TestCase):
     self.assertIn("d", result["a"]["b"])
     self.assertIn("e", result["a"]["b"]["d"])
     self.assertEquals(result["a"]["b"]["f"]["e"], 2)
+
+  def test_emails_dict(self):
+
+    aggregate_data = {
+        "all@emails.me": {
+            "cycle_started": {
+                "2": {
+                    "custom_message": "",
+                    "cycle_title": "monthly",
+                    "cycle_url": "http://localhost:8080/workflows/2#current_widget/cycle/2",
+                    "manually": False,
+                    "my_tasks": {
+                        "2": {
+                            "cycle_task_url": "http://localhost:8080/workflows/2#current_widget/cycle/2/cycle_task_group/2//cycle_task_group_object_task/2",
+                            "end_date": "05/18/2015",
+                            "fuzzy_due_in": "in 5 days",
+                            "object_title": "",
+                            "title": "all emails task"
+                        }
+                    },
+                    "workflow_owners": {
+                        "1": {
+                            "email": "user@example.com",
+                            "id": 1,
+                            "name": "Example User"
+                        }
+                    }
+                }
+            },
+            "force_notifications": {
+                "8": False,
+                "9": False,
+                "12": False
+            },
+            "user": {
+                "email": "all@emails.me",
+                "id": 2,
+                "name": "All Emails"
+            }
+        },
+        "default@emails.me": {
+            "cycle_started": {
+                "2": {
+                    "custom_message": "",
+                    "cycle_title": "monthly",
+                    "cycle_url": "http://localhost:8080/workflows/2#current_widget/cycle/2",
+                    "manually": False,
+                    "workflow_owners": {
+                        "1": {
+                            "email": "user@example.com",
+                            "id": 1,
+                            "name": "Example User"
+                        }
+                    }
+                }
+            },
+            "force_notifications": {
+                "8": False
+            },
+            "user": {
+                "email": "default@emails.me",
+                "id": 4,
+                "name": "Defaullt Emails"
+            }
+        },
+        "digest@only.me": {
+            "cycle_started": {
+                "2": {
+                    "custom_message": "",
+                    "cycle_title": "monthly",
+                    "cycle_url": "http://localhost:8080/workflows/2#current_widget/cycle/2",
+                    "manually": False,
+                    "workflow_owners": {
+                        "1": {
+                            "email": "user@example.com",
+                            "id": 1,
+                            "name": "Example User"
+                        }
+                    }
+                }
+            },
+            "force_notifications": {
+                "8": False
+            },
+            "user": {
+                "email": "digest@only.me",
+                "id": 3,
+                "name": "Digest Only"
+            }
+        },
+        "user@example.com": {
+            "cycle_started": {
+                "1": {
+                    "custom_message": "",
+                    "cycle_title": "onetime",
+                    "cycle_url": "http://localhost:8080/workflows/1#current_widget/cycle/1",
+                    "manually": True,
+                    "my_task_groups": {
+                        "1": {
+                            "1": {
+                                "cycle_task_url": "http://localhost:8080/workflows/1#current_widget/cycle/1/cycle_task_group/1//cycle_task_group_object_task/1",
+                                "end_date": "05/29/2015",
+                                "fuzzy_due_in": "in 16 days",
+                                "object_title": "",
+                                "title": "task"
+                            }
+                        }
+                    },
+                    "my_tasks": {
+                        "1": {
+                            "cycle_task_url": "http://localhost:8080/workflows/1#current_widget/cycle/1/cycle_task_group/1//cycle_task_group_object_task/1",
+                            "end_date": "05/29/2015",
+                            "fuzzy_due_in": "in 16 days",
+                            "object_title": "",
+                            "title": "task"
+                        }
+                    },
+                    "workflow_owners": {
+                        "1": {
+                            "email": "user@example.com",
+                            "id": 1,
+                            "name": "Example User"
+                        }
+                    },
+                    "workflow_tasks": {
+                        "1": {
+                            "cycle_task_url": "http://localhost:8080/workflows/1#current_widget/cycle/1/cycle_task_group/1//cycle_task_group_object_task/1",
+                            "end_date": "05/29/2015",
+                            "fuzzy_due_in": "in 16 days",
+                            "object_title": "",
+                            "title": "task"
+                        }
+                    }
+                },
+                "2": {
+                    "custom_message": "",
+                    "cycle_title": "monthly",
+                    "cycle_url": "http://localhost:8080/workflows/2#current_widget/cycle/2",
+                    "manually": False,
+                    "my_task_groups": {
+                        "2": {
+                            "2": {
+                                "cycle_task_url": "http://localhost:8080/workflows/2#current_widget/cycle/2/cycle_task_group/2//cycle_task_group_object_task/2",
+                                "end_date": "05/18/2015",
+                                "fuzzy_due_in": "in 5 days",
+                                "object_title": "",
+                                "title": "all emails task"
+                            }
+                        }
+                    },
+                    "workflow_owners": {
+                        "1": {
+                            "email": "user@example.com",
+                            "id": 1,
+                            "name": "Example User"
+                        }
+                    },
+                    "workflow_tasks": {
+                        "2": {
+                            "cycle_task_url": "http://localhost:8080/workflows/2#current_widget/cycle/2/cycle_task_group/2//cycle_task_group_object_task/2",
+                            "end_date": "05/18/2015",
+                            "fuzzy_due_in": "in 5 days",
+                            "object_title": "",
+                            "title": "all emails task"
+                        }
+                    }
+                }
+            },
+            "force_notifications": {
+                "1": False,
+                "2": False,
+                "5": False,
+                "8": False,
+                "9": False,
+                "12": False
+            },
+            "user": {
+                "email": "user@example.com",
+                "id": 1,
+                "name": "Example User"
+            }
+        }
+    }
+
+    user_data = {
+        "user@example.com": {
+            "cycle_started": {
+                "2": {
+                    "my_task_groups": {
+                        "2": {
+                            "3": {
+                                "cycle_task_url": "http://localhost:8080/workflows/2#current_widget/cycle/2/cycle_task_group/2//cycle_task_group_object_task/3",
+                                "end_date": "05/18/2015",
+                                "fuzzy_due_in": "in 5 days",
+                                "object_title": "",
+                                "title": "no emails task"
+                            }
+                        }
+                    },
+                    "workflow_tasks": {
+                        "3": {
+                            "cycle_task_url": "http://localhost:8080/workflows/2#current_widget/cycle/2/cycle_task_group/2//cycle_task_group_object_task/3",
+                            "end_date": "05/18/2015",
+                            "fuzzy_due_in": "in 5 days",
+                            "object_title": "",
+                            "title": "no emails task"
+                        }
+                    }
+                }
+            },
+            "force_notifications": {
+                "15": False
+            },
+            "user": {
+                "email": "user@example.com",
+                "id": 1,
+                "name": "Example User"
+            }
+        }
+    }
+
+    merged_data = merge_dict(aggregate_data, user_data)
+
+
+    self.assertNotIn("3", merged_data["all@emails.me"]["cycle_started"]["2"]["my_tasks"])

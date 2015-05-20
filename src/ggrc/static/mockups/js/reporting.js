@@ -28,28 +28,6 @@ $(document).ready(function() {
       ],
       relevantFilter: [
       ]
-
-      /*
-      attr_select: function() {
-        $(".attribute-trigger").popover({
-          container: "body",
-          html: true,
-          content: function(){
-            return $(this).next('.attr-wrap').html();
-          },
-          placement: "bottom",
-          template: '<div class="popover" role="tooltip"><div class="popover-content"></div></div>'
-        });
-
-        $('.attribute-trigger').on('shown.bs.popover', function () {
-          $(this).addClass("active");
-        });
-
-        $('.attribute-trigger').on('hidden.bs.popover', function () {
-          $(this).removeClass("active");
-        });
-      }
-      */
     },
     template: "<content/>",
     helpers: {
@@ -119,6 +97,12 @@ $(document).ready(function() {
             index = $item.index(),
             rule = this.scope.filterRules;
         rule.splice(index - 1, 1);
+      },
+      ".remove_filter_group click": function(el) {
+        var $item = el.closest(".single-line-filter"),
+            index = $item.index(),
+            rules = this.scope.relevantFilter;
+        rules.splice(index - 1, 1);
       }
     }
   });

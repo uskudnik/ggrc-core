@@ -19,8 +19,10 @@
 
   {{#if is_mid_frequency}}
   <p>
-    Do you want to create first workflow cycle starting this
-    <b>{{instance.frequency_duration}}</b>?
+    {{!
+      TODO: Fix for CORE-1678, our current/next start date isn't working as expected
+    }}
+    Are you sure you want to generate a cycle?
   </p>
   {{/if}}
   {{else}}

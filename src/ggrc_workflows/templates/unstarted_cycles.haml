@@ -1,0 +1,35 @@
+-# Copyright (C) 2013 Google Inc., authors, and contributors <see AUTHORS file>
+-# Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+-# Created By: brad@reciprocitylabs.com
+-# Maintained By: brad@reciprocitylabs.com
+
+-extends "layouts/dashboard.haml"
+
+-block title
+  Admin Dashboard
+
+-block extra_javascript
+  =super()
+
+-block header
+  .row-fluid
+    .span12
+      %h1
+        %i.grciconlarge-dashboard
+        Unstarted Cycles
+
+-block main
+  .clearfix
+    .object-area
+      #show_columns.column-set{ 'data-resize': "true" }
+        #middle_column
+          .row-fluid
+            .span12.full-width
+              .inner-content
+                %a.btn{ 'href': "/admin/start_unstarted_cycles"}
+                  Start Unstarted Cycles
+              %br
+              - for workflow in workflows
+                .inner-content
+                  %a.dropdown-toggle{ 'href': "/workflows/{{ workflow.id }}" }
+                    {{ workflow.title }}

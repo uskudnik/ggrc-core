@@ -283,6 +283,7 @@ class TestOneTimeWfEndDateChange(TestCase):
 
     self.one_time_workflow_1 = {
         "title": "one time test workflow",
+        "notify_on_change": True,
         "description": "some test workflow",
         "owners": [person_dict(self.user.id)],
         "task_groups": [{

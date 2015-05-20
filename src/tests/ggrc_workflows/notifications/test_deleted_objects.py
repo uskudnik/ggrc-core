@@ -88,6 +88,7 @@ class TestNotificationsForDeletedObjects(TestCase):
 
     self.quarterly_wf_1 = {
         "title": "quarterly wf 1",
+        "notify_on_change": True,
         "description": "",
         "owners": [person_dict(self.user.id)],
         "frequency": "quarterly",
