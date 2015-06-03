@@ -425,6 +425,9 @@ class WorkflowDateCalculator(object):
       previous_cycle_start_date(start_date, frequency)
 
   def _min_start_year_from_tasks(self):
+    if self.workflow.frequency != "one_time":
+      return None
+
     min_start_year = None
     for tg in self.workflow.task_groups:
       for t in tg.task_group_tasks:
@@ -434,6 +437,9 @@ class WorkflowDateCalculator(object):
     return min_start_year
 
   def _max_end_year_from_tasks(self):
+    if self.workflow.frequency != "one_time":
+      return None
+
     max_end_year = None
     for tg in self.workflow.task_groups:
       for t in tg.task_group_tasks:
