@@ -126,6 +126,8 @@ class WorkflowDateCalculator(object):
 
   def nearest_start_date_after_basedate(self, basedate):
     frequency = self.workflow.frequency
+
+    min_start_year = self._min_start_year_from_tasks()
     min_relative_start_day = self._min_relative_start_day_from_tasks()
     min_relative_start_month = self._min_relative_start_month_from_tasks()
 
@@ -134,17 +136,17 @@ class WorkflowDateCalculator(object):
       return None
 
     return WorkflowDateCalculator.nearest_start_date_after_basedate_from_dates(
-      basedate, frequency, min_relative_start_month, min_relative_start_day)
+      basedate, frequency, min_relative_start_month, min_relative_start_day, min_start_year)
 
   @staticmethod
   def nearest_start_date_after_basedate_from_dates(
-      basedate, frequency, relative_start_month, relative_start_day):
+      basedate, frequency, relative_start_month, relative_start_day, start_year=None):
 
     if basedate is None:
       return None
 
     if "one_time" == frequency:
-      return date(year=basedate.year, month=relative_start_month, day=relative_start_day)
+      return date(year=start_year, month=relative_start_month, day=relative_start_day)
     elif "weekly" == frequency:
       if relative_start_day == basedate.isoweekday():
         return basedate
@@ -228,22 +230,23 @@ class WorkflowDateCalculator(object):
 
   def nearest_end_date_after_start_date(self, start_date):
     frequency = self.workflow.frequency
+
     #TODO: fix the entire logic here. months and days can't be calculated separately
+    max_end_year = self._max_end_year_from_tasks()
     max_relative_end_day = self._max_relative_end_day_from_tasks()
     max_relative_end_month = self._max_relative_end_month_from_tasks()
     return WorkflowDateCalculator.nearest_end_date_after_start_date_from_dates(
-      frequency, start_date, max_relative_end_month, max_relative_end_day)
+      frequency, start_date, max_relative_end_month, max_relative_end_day, max_end_year)
 
   @staticmethod
-  def nearest_end_date_after_start_date_from_dates(frequency, start_date, end_month, end_day):
+  def nearest_end_date_after_start_date_from_dates(frequency, start_date, end_month, end_day, end_year=None):
     # Handle no start_date, which will happen when the workflow has no tasks.
     if start_date is None:
       return None
 
-
     if "one_time" == frequency:
       end_day = min(monthrange(start_date.year, end_month)[1], end_day)
-      end_date = date(year=start_date.year, month=end_month, day=end_day)
+      end_date = date(year=end_year, month=end_month, day=end_day)
       if end_date < start_date:
           raise ValueError("End date cannot be before start date.")
       return end_date
@@ -420,6 +423,24 @@ class WorkflowDateCalculator(object):
     frequency = self.workflow.frequency
     return WorkflowDateCalculator.\
       previous_cycle_start_date(start_date, frequency)
+
+  def _min_start_year_from_tasks(self):
+    min_start_year = None
+    for tg in self.workflow.task_groups:
+      for t in tg.task_group_tasks:
+        start_year = t.start_date.year
+        if min_start_year is None or start_year < min_start_year:
+          min_start_year = start_year
+    return min_start_year
+
+  def _max_end_year_from_tasks(self):
+    max_end_year = None
+    for tg in self.workflow.task_groups:
+      for t in tg.task_group_tasks:
+        end_year = t.end_date.year
+        if max_end_year is None or end_year < max_end_year:
+          max_end_year = end_year
+    return max_end_year
 
   def _min_relative_start_month_from_tasks(self):
     min_start_month = None

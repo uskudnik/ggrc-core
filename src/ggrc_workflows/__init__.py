@@ -223,11 +223,15 @@ def _create_cycle_task(task_group_task, cycle, cycle_task_group, current_user,
   if "one_time" == frequency:
     sd = task_group_task.start_date
     ed = task_group_task.end_date
+    rsy = sd.year
     rsm = WorkflowDateCalculator.relative_month_from_date(sd, frequency)
     rsd = WorkflowDateCalculator.relative_day_from_date(sd, frequency)
+    rey = ed.year
     rem = WorkflowDateCalculator.relative_month_from_date(ed, frequency)
     red = WorkflowDateCalculator.relative_day_from_date(ed, frequency)
   else:
+    rsy = None
+    rey = None
     rsm = task_group_task.relative_start_month
     rsd = task_group_task.relative_start_day
     rem = task_group_task.relative_end_month
@@ -238,11 +242,11 @@ def _create_cycle_task(task_group_task, cycle, cycle_task_group, current_user,
 
   start_date = WorkflowDateCalculator.\
       nearest_start_date_after_basedate_from_dates(
-          base_date, frequency, rsm, rsd)
+          base_date, frequency, rsm, rsd, rsy)
   start_date = WorkflowDateCalculator.adjust_start_date(frequency, start_date)
   end_date = WorkflowDateCalculator.\
       nearest_end_date_after_start_date_from_dates(
-          frequency, start_date, rem, red)
+          frequency, start_date, rem, red, rey)
   end_date = WorkflowDateCalculator.adjust_end_date(frequency, end_date)
   cycle_task_group_object_task = models.CycleTaskGroupObjectTask(
       context=cycle.context,
