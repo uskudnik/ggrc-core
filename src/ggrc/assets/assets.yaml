@@ -135,6 +135,7 @@ dashboard-js-template-files:
   - base_objects/search_actions.mustache
   - base_objects/search_result.mustache
   - base_objects/tree.mustache
+  - base_objects/tree_placeholder.mustache
   - base_objects/tree_footer_no_access.mustache
   - base_objects/tree_footer_zero.mustache
   - base_objects/tree_header.mustache
