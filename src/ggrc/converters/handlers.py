@@ -487,7 +487,11 @@ class OptionColumnHandler(ColumnHandler):
         and_(Option.title == self.raw_value.strip(),
              or_(Option.role == self.key,
                  Option.role == prefixed_key))).first()
-    return item
+    if item:
+      if callable(item.title):
+        return item.title()
+      return item.title
+    return None
 
   def get_value(self):
     option = getattr(self.row_converter.obj, self.key, None)
