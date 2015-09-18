@@ -195,22 +195,22 @@
         this.scope.attr("mapper.is_saving", true);
         que.enqueue(instance).trigger().done(function (inst) {
           data["context"] = instance.context || null;
-          _.each(this.scope.attr("mapper.selected"), function (desination) {
+          _.each(this.scope.attr("mapper.selected"), function (destination) {
             var modelInstance,
-                isMapped = GGRC.Utils.is_mapped(instance, desination),
-                isAllowed = GGRC.Utils.allowed_to_map(instance, desination);
+                isMapped = GGRC.Utils.is_mapped(instance, destination),
+                isAllowed = GGRC.Utils.allowed_to_map(instance, destination);
 
             if (isMapped || !isAllowed) {
               return;
             }
-            mapping = GGRC.Mappings.get_canonical_mapping(object, isAllObject ? desination.type : type);
+            mapping = GGRC.Mappings.get_canonical_mapping(object, isAllObject ? destination.type : type);
             Model = CMS.Models[mapping.model_name];
             data[mapping.object_attr] = {
               href: instance.href,
               type: instance.type,
               id: instance.id
             };
-            data[mapping.option_attr] = desination;
+            data[mapping.option_attr] = destination;
             modelInstance = new Model(data);
             defer.push(modelInstance.save());
           }, this);

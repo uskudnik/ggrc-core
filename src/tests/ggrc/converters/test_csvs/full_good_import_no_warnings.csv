@@ -139,12 +139,12 @@ Not Launched
 In Scope
 Not in Scope
 Deprecated",,,,MM/DD/YYYY,MM/DD/YYYY,,,,,,,
-Regulation,code*,title*,description ,owner,state,notes,primary contact,secondary contact,effective date,stop date,regulation url,reference url,,,,,
-,reg-1,reg 1,test,user1@ggrc.com,Draft,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
-,reg-2,reg 2,test,user1@ggrc.com,Final,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
-,reg-3,reg 3,test,user1@ggrc.com,Effective,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
-,reg-4,reg 4,test,user1@ggrc.com,Ineffective,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
-,reg-5,reg 5,test,user1@ggrc.com,Launched,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
+Regulation,code*,title*,description ,owner,state,notes,primary contact,secondary contact,effective date,stop date,regulation url,reference url,map:Person,,,,
+,reg-1,reg 1,test,user1@ggrc.com,Draft,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,user14@ggrc.com,,,,
+,reg-2,reg 2,test,user1@ggrc.com,Final,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,user15@ggrc.com,,,,
+,reg-3,reg 3,test,user1@ggrc.com,Effective,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,user16@ggrc.com,,,,
+,reg-4,reg 4,test,user1@ggrc.com,Ineffective,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,user17@ggrc.com,,,,
+,reg-5,reg 5,test,user1@ggrc.com,Launched,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,user18@ggrc.com,,,,
 ,reg-6,reg 6,test,user1@ggrc.com,Not Launched,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
 ,reg-7,reg 7,test,user1@ggrc.com,In Scope,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,
 ,reg-8,reg 8,test,user1@ggrc.com,Not in Scope,this is a note,user1@ggrc.com,user2@ggrc.com,7/1/2015,7/15/2015,google.com,ggrc.com,,,,,

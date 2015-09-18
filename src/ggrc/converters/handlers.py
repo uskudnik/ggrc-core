@@ -122,7 +122,7 @@ class DeleteColumnHandler(ColumnHandler):
     try:
       tr.session.delete(obj)
       deleted = len([o for o in tr.session.deleted
-                    if o.type not in self.delete_whitelist])
+                     if o.type not in self.delete_whitelist])
       if deleted != 1:
         self.add_error(errors.DELETE_CASCADE_ERROR,
                        object_type=obj.type, slug=obj.slug)
@@ -695,6 +695,12 @@ class AuditObjectColumnHandler(ColumnHandler):
 
 class ObjectPersonColumnHandler(UserColumnHandler):
 
+  """
+  ObjectPerson handler for all specific columns such as "owner" or any other
+  role. This handler will remove all people not listed in the value and will
+  add people that are missing.
+  """
+
   def parse_item(self):
     return self.get_users_list()
 
@@ -718,13 +724,49 @@ class ObjectPersonColumnHandler(UserColumnHandler):
     if self.dry_run or not self.value:
       return
     self.remove_current_people()
-    for owner in self.value:
-      user_role = ObjectPerson(
+    for person in self.value:
+      object_person = ObjectPerson(
           personable=self.row_converter.obj,
-          person=owner,
+          person=person,
           context=self.row_converter.obj.context
       )
-      db.session.add(user_role)
+      db.session.add(object_person)
+    self.dry_run = True
+
+
+class PersonMappingColumnHandler(ObjectPersonColumnHandler):
+
+  """
+  This handler will only add people listed in self.value if they are not yet
+  connected to the current object.
+  """
+
+  def remove_current_people(self):
+    obj = self.row_converter.obj
+    self.value = [person for person in self.value
+                  if not ObjectPerson.query.filter_by(
+                      personable_id=obj.id,
+                      personable_type=obj.__class__.__name__,
+                      person=person).count()
+                  ]
+
+
+class PersonUnmappingColumnHandler(ObjectPersonColumnHandler):
+
+  """
+  This handler will only remove people listed in self.value if they are already
+  connected to the current object.
+  """
+
+  def insert_object(self):
+    if self.dry_run or not self.value:
+      return
+    for person in self.value:
+      ObjectPerson.query.filter_by(
+          personable_id=self.row_converter.obj.id,
+          personable_type=self.row_converter.obj.__class__.__name__,
+          person=person
+      ).delete()
     self.dry_run = True
 
 

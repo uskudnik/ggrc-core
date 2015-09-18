@@ -113,7 +113,14 @@ class QueryHelper(object):
       ids = expression.get("ids", [])
       ids.extend(self.slugs_to_ids(expression["object_name"], slugs))
       expression["ids"] = ids
-    expression["ids"] = map(int, expression.get("ids", []))
+    try:
+      expression["ids"] = map(int, expression.get("ids", []))
+    except ValueError as e:
+      # catch missing relevant filter (undefined id)
+      if expression.get("op", {}).get("name", "") == "relevant":
+        raise BadQueryException("Invalid relevant filter for {}".format(
+                                expression.get("object_name", "")))
+      raise e
     self.clean_filters(expression.get("left"))
     self.clean_filters(expression.get("right"))
 

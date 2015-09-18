@@ -5,7 +5,7 @@
 
 """ Module for all special column handlers for workflow objects """
 
-from datetime import date
+import datetime
 
 from ggrc import db
 from ggrc.converters import errors
@@ -152,15 +152,26 @@ class TaskStartColumnHandler(TaskDateColumnHandler):
                        column_name=self.display_name)
         return
       month, day, year = self.value
-      self.row_converter.obj.end_date = date(year, month, day)
+      try:
+        self.row_converter.obj.end_date = datetime.date(year, month, day)
+      except ValueError:
+        self.add_error(errors.WRONG_VALUE_ERROR,
+                       column_name=self.display_name)
+        return
+      self.row_converter.obj.end_date = datetime.date(year, month, day)
     elif freq in ["weekly", "monthly"]:
-      if len(self.value) != 1:
+      if len(self.value) != 1 or \
+         (freq == "weekly" and not (1 <= self.value[0] <= 5)) or \
+         (freq == "monthly" and not (1 <= self.value[0] <= 31)):
         self.add_error(errors.WRONG_VALUE_ERROR,
                        column_name=self.display_name)
         return
       self.row_converter.obj.relative_start_day = self.value[0]
     elif freq in ["quarterly", "annually"]:
-      if len(self.value) != 2:
+      if len(self.value) != 2 or \
+         (freq == "quarterly" and not (1 <= self.value[0] <= 3)) or \
+         (freq == "annually" and not (1 <= self.value[0] <= 12)) or \
+         not (1 <= self.value[1] <= 31):
         self.add_error(errors.WRONG_VALUE_ERROR,
                        column_name=self.display_name)
         return
@@ -185,15 +196,25 @@ class TaskEndColumnHandler(TaskDateColumnHandler):
                        column_name=self.display_name)
         return
       month, day, year = self.value
-      self.row_converter.obj.end_date = date(year, month, day)
+      try:
+        self.row_converter.obj.end_date = datetime.date(year, month, day)
+      except ValueError:
+        self.add_error(errors.WRONG_VALUE_ERROR,
+                       column_name=self.display_name)
+        return
     elif freq in ["weekly", "monthly"]:
-      if len(self.value) != 1:
+      if len(self.value) != 1 or \
+         (freq == "weekly" and not (1 <= self.value[0] <= 5)) or \
+         (freq == "monthly" and not (1 <= self.value[0] <= 31)):
         self.add_error(errors.WRONG_VALUE_ERROR,
                        column_name=self.display_name)
         return
       self.row_converter.obj.relative_end_day = self.value[0]
     elif freq in ["quarterly", "annually"]:
-      if len(self.value) != 2:
+      if len(self.value) != 2 or \
+         (freq == "quarterly" and not (1 <= self.value[0] <= 3)) or \
+         (freq == "annually" and not (1 <= self.value[0] <= 12)) or \
+         not (1 <= self.value[1] <= 31):
         self.add_error(errors.WRONG_VALUE_ERROR,
                        column_name=self.display_name)
         return
@@ -315,6 +336,7 @@ class ObjectsColumnHandler(ColumnHandler):
       tgo = TaskGroupObject(
           task_group=obj,
           object=object_,
+          context=obj.context,
       )
       db.session.add(tgo)
     db.session.flush()

@@ -421,8 +421,19 @@ class Slugged(Base):
 
   @classmethod
   def generate_slug_for(cls, obj):
-    id = obj.id if hasattr(obj, 'id') else uuid1()
-    obj.slug = "{0}-{1}".format(cls.generate_slug_prefix_for(obj), id)
+    _id = getattr(obj, 'id', uuid1())
+    obj.slug = "{0}-{1}".format(cls.generate_slug_prefix_for(obj), _id)
+    # We need to make sure the generated slug is not already present in the
+    # database. If it is, we increment the id until we find a slug that is
+    # unique.
+    # A better approach would be to query the database for slug uniqueness
+    # only if the there was a conflict, but because we can't easily catch a
+    # session rollback at this point we are sticking with a
+    # suboptimal solution for now.
+    INCREMENT = 1000
+    while cls.query.filter(cls.slug == obj.slug).count():
+      _id += INCREMENT
+      obj.slug = "{0}-{1}".format(cls.generate_slug_prefix_for(obj), _id)
 
   @classmethod
   def generate_slug_prefix_for(cls, obj):
