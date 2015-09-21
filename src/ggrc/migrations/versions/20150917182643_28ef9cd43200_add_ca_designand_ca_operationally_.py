@@ -1,5 +1,9 @@
+# Copyright (C) 2015 Google Inc., authors, and contributors <see AUTHORS file>
+# Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+# Created By: urban@reciprocitylabs.com
+# Maintained By: urban@reciprocitylabs.com
 
-"""Add CA.designand CA.operationally columns to options table
+"""Add CA.design and CA.operationally columns to options table
 
 Revision ID: 28ef9cd43200
 Revises: 2d8a46b1e4a4
@@ -12,11 +16,9 @@ revision = '28ef9cd43200'
 down_revision = '2d8a46b1e4a4'
 
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
+
 
 def upgrade():
-    # Insert
     op.execute("""INSERT INTO options (created_at, updated_at, role, title) VALUES
       (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'control_assessment_design', 'Effective'),
       (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'control_assessment_design', 'Material weakness'),
@@ -29,9 +31,6 @@ def upgrade():
       (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'control_assessment_operationally', 'Significant deficiency'),
       (CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'control_assessment_operationally', 'Not Applicable');
     """)
-
-
-
 
 
 def downgrade():
