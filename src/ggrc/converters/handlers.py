@@ -30,6 +30,7 @@ from ggrc.models import Relationship
 from ggrc.models import Request
 from ggrc.models import Response
 from ggrc.models import Standard
+from ggrc.models import ControlAssessment
 from ggrc.models import all_models
 from ggrc.models.relationship_helper import RelationshipHelper
 from ggrc.rbac import permissions
@@ -477,6 +478,16 @@ class CustomAttributeColumHandler(TextColumnHandler):
     if self.mandatory and not self.raw_value:
       self.add_error(errors.MISSING_VALUE_ERROR, column_name=self.display_name)
     return self.raw_value
+
+
+class ConclusionColumnHandler(ColumnHandler):
+
+  """ Handler for design and operationally columns in ControlAssesments """
+
+  def parse_item(self):
+    conclusion_map = {i.lower(): i for i in
+                      ControlAssessment.VALID_CONCLUSIONS}
+    return conclusion_map.get(self.raw_value.lower(), "")
 
 
 class OptionColumnHandler(ColumnHandler):
