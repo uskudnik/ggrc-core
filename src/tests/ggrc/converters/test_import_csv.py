@@ -140,7 +140,7 @@ class TestBasicCsvImport(TestCase):
     self.assertEquals(ca.contact.email, "danny@reciprocitylabs.com")
     self.assertIsNone(Relationship.find_related(ca, au))
 
-    filename = "ca_update.csv"
+    filename = "pci_program_update.csv"
     response = self.import_file(filename)
 
     for response_block in response:
