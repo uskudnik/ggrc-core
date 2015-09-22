@@ -5,6 +5,7 @@
 
 from sqlalchemy import orm
 from sqlalchemy.orm import validates
+from uuid import uuid1
 
 from ggrc import db
 from ggrc.models.mixins import BusinessObject
@@ -36,8 +37,8 @@ class ControlAssessment(HasObjectState, TestPlanned, CustomAttributable,
   audit = {}  # we add this for the sake of client side error checking
 
   VALID_CONCLUSIONS = frozenset([
-      "Effective", "Material weakness", "Needs improvement",
-      "Significant deficiency", "Not Applicable"
+      "Effective", "Ineffective", "Needs improvement",
+      "Not Applicable"
   ])
 
   # REST properties
@@ -87,5 +88,11 @@ class ControlAssessment(HasObjectState, TestPlanned, CustomAttributable,
 
     query = super(ControlAssessment, cls).eager_query()
     return query.options(orm.subqueryload('control'))
+
+  @classmethod
+  def generate_slug_for(cls, obj):
+    id = getattr(obj, 'id', uuid1())
+    control = getattr(getattr(obj, "control", None), "slug", "")
+    obj.slug = "{}.CA-{}".format(control, id)
 
 track_state_for_class(ControlAssessment)

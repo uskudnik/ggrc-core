@@ -5,8 +5,12 @@
 
 -extends "layouts/dashboard.haml"
 
+-block extra_javascript
+  =super()
+  GGRC.Bootstrap.exportable = ={ export_definitions()|safe };
+
 -block title
-  Import/Export
+  Export
 
 -block header
   -include 'base_objects/_page_header.haml'

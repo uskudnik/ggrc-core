@@ -195,7 +195,7 @@
         </label>
         <select class="input-block-level" name="design" null-if-empty="null-if-empty" tabindex="7">
           <option value="" {{#if_equals design ""}}selected{{/if_equals}}>---</option>
-          {{#iterate 'Effective' 'Material weakness' 'Needs improvement' 'Significant deficiency' 'Not Applicable'}}
+          {{#iterate 'Effective' 'Ineffective' 'Needs improvement' 'Not Applicable'}}
             <option {{#if_equals iterator design}}selected="true"{{/if_equals}}>{{iterator}}</option>
           {{/iterate}}
         </select>
@@ -209,7 +209,7 @@
         </label>
         <select class="input-block-level" name="operationally" null-if-empty="null-if-empty" tabindex="8">
           <option value="" {{#if_equals operationally ""}}selected{{/if_equals}}>---</option>
-          {{#iterate 'Effective' 'Material weakness' 'Needs improvement' 'Significant deficiency' 'Not Applicable'}}
+          {{#iterate 'Effective' 'Ineffective' 'Needs improvement' 'Not Applicable'}}
             <option {{#if_equals iterator operationally}}selected="true"{{/if_equals}}>{{iterator}}</option>
           {{/iterate}}
         </select>

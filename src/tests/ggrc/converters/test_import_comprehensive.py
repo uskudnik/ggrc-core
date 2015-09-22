@@ -5,6 +5,7 @@
 
 from ggrc import db
 from ggrc.models import Program
+from ggrc.converters import errors
 from ggrc_basic_permissions import Role
 from ggrc_basic_permissions import UserRole
 from tests.ggrc.converters import TestCase
@@ -217,6 +218,36 @@ class TestComprehensiveSheets(TestCase):
     for block in response:
       for message in messages:
         self.assertEquals(set(), set(block[message]))
+
+  def test_errors_and_warnings(self):
+    """
+    This test should test for all possible warnings and errors but it is still
+    incomplete.
+    """
+    filename = "import_with_all_warnings_and_errors.csv"
+
+    dry_response = self.import_file(filename, dry_run=True)
+
+    response = self.import_file(filename)
+
+    block_messages = [
+        {  # warnings and error of the first imported block
+            "block_errors": set([
+                errors.DUPLICATE_COLUMN.format(
+                    line=1, duplicates="Notes, Test Plan"),
+            ])
+        }
+    ]
+    self.assertEquals(dry_response, response)
+
+    messages = ("block_errors", "block_warnings", "row_errors", "row_warnings")
+
+    for message_block, response_block in zip(block_messages, response):
+      for message in messages:
+        self.assertEquals(
+            message_block.get(message, set()),
+            set(response_block[message])
+        )
 
   def create_custom_attributes(self):
     gen = self.generator.generate_custom_attribute

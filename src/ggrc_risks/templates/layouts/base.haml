@@ -49,7 +49,7 @@
           GGRC.Tracker.timing("dashboard", "exec_ready_handlers", Date.now() - st, "last document.ready handler fired");
         });
       })
-      
+
 
     -#FIXME: (?) HTML5 shim?
 
@@ -60,7 +60,6 @@
     -# Google Web Font(s)
     -#NOTE: This resource occasionally hangs and prevents page from rendering, so loaded after the fact via jquery
     :javascript
-      jQuery(function($) { $('head').append("<link href='https://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'></link>"); });
       window.onerror = function(message, url, linenumber) {
         if(window.$) {
           $(document.body).trigger("ajax:flash", {"error" : message});

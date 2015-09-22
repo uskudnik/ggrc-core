@@ -24,6 +24,7 @@ src/ggrc/static/.webassets-cache
 src/ggrc/static/webassets-external
 src/ggrc/static/assets.manifest
 src/ggrc/static/dashboard*
+src/ggrc/static/mockup.js
 src/ggrc/assets/stylesheets/dashboard.css
 src/ggrc/assets/stylesheets/design.css
 src/ggrc/.sass-cache
@@ -41,6 +42,8 @@ Session.vim
 COMMIT_MSG
 
 node_modules
+bower_components
+src/ggrc/static/flash
 
 # Some editors automagically compile sass
 src/**/.sass-cache

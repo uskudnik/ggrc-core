@@ -11,7 +11,8 @@
         'Program Regulation Policy Standard Contract Clause Section'.split(' '),
         'Control Objective'.split(' '),
         'OrgGroup Vendor'.split(' '),
-        'System Process DataAsset Product Project Facility Market Issue'.split(' ')
+        'System Process DataAsset Product Project Facility Market Issue ControlAssessment'.split(' '),
+        'Risk ThreatActor'.split(' ')
       ),
       _task_sort_function = function(a, b) {
         var date_a = +new Date(a.end_date),
@@ -45,7 +46,6 @@
       'cycle_task_group': CMS.Models.CycleTaskGroup,
       'cycle_task_group_object': CMS.Models.CycleTaskGroupObject,
       'cycle_task_group_object_task': CMS.Models.CycleTaskGroupObjectTask,
-
       'task_group': CMS.Models.TaskGroup,
       'workflow': CMS.Models.Workflow
     };
@@ -248,7 +248,11 @@
 
     // Insert `workflows` mappings to all business object types
     can.each(_workflow_object_types, function (type) {
-      CMS.Models[type].attributes.cycle_objects = 'CMS.Models.CycleTaskGroupObject.stubs';
+      var model = CMS.Models[type];
+      if (model === undefined || model === null) {
+        return;
+      }
+      model.attributes.cycle_objects = 'CMS.Models.CycleTaskGroupObject.stubs';
       mappings[type] = {
         task_groups: new GGRC.ListLoaders.ProxyListLoader('TaskGroupObject', 'object', 'task_group', 'task_group_objects', null),
         cycle_objects: Direct('CycleTaskGroupObject', 'object', 'cycle_task_group_objects'),
@@ -606,7 +610,11 @@
     }
   });
   can.each(_workflow_object_types, function(model_name) {
-    draft_on_update_mixin.add_to(CMS.Models[model_name]);
+    var model = CMS.Models[model_name];
+    if (model === undefined || model === null) {
+      return;
+    }
+    draft_on_update_mixin.add_to(model);
   });
 
 })(this.can.$, this.CMS, this.GGRC);

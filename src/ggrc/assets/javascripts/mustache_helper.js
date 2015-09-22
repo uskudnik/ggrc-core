@@ -764,6 +764,29 @@ Mustache.registerHelper("get_permalink", function () {
   return window.location.href;
 });
 
+Mustache.registerHelper("get_view_link", function (instance, options) {
+  function finish(link) {
+    return "<a href=" + link.viewLink + " target=\"_blank\"><i class=\"grcicon-to-right\"></i></a>";
+  }
+  instance = resolve_computed(instance);
+  var props = {
+      "Request": "audit",
+      "TaskGroupTask": "task_group:workflow",
+      "TaskGroup": "workflow",
+      "CycleTaskGroupObjectTask": "cycle:workflow",
+      "InterviewResponse": "request:audit",
+      "DocumentationResponse": "request:audit"
+    },
+    hasProp = _.has(props, instance.type);
+
+  if (!instance.viewLink && !hasProp) {
+    return "";
+  }
+  if (instance && !hasProp) {
+    return finish(instance);
+  }
+  return defer_render("a", finish, instance.refresh_all.apply(instance, props[instance.type].split(":")));
+});
 
 Mustache.registerHelper("schemed_url", function (url) {
   var domain, max_label, url_split;
@@ -2744,7 +2767,6 @@ Mustache.registerHelper("find_template", function (base_name, instance, options)
     //binding result case
     instance = instance.instance;
   }
-
   if (GGRC.Templates[instance.constructor.table_plural + "/" + base_name]) {
     tmpl = "/static/mustache/" + instance.constructor.table_plural + "/" + base_name + ".mustache";
   } else if (GGRC.Templates["base_objects/" + base_name]) {

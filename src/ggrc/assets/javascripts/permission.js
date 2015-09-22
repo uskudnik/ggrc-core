@@ -138,13 +138,11 @@ can.Construct("Permission", {
   }
 
   , is_allowed_any : function(action, resource_type) {
-    var allowed = this.is_allowed(action, resource_type)
-    , perms = permissions_compute();
+    var allowed = this.is_allowed(action, resource_type),
+        perms = permissions_compute();
+
     if (!allowed) {
-      allowed = perms[action] &&
-                perms[action][resource_type] &&
-                perms[action][resource_type].contexts &&
-                perms[action][resource_type].contexts.length;
+      allowed = _.exists(perms, action, resource_type, "contexts", "length");
     }
     return !!allowed;
   }

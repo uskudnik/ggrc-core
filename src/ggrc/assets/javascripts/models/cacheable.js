@@ -941,7 +941,7 @@ can.Model("can.Model.Cacheable", {
     if(!this._pending_refresh) {
       this._pending_refresh = {
         dfd : new $.Deferred()
-        , fn : $.throttle(1000, true, function() {
+        , fn : _.throttle(function() {
           var dfd = that._pending_refresh.dfd;
           can.ajax({
             url : href
@@ -961,7 +961,7 @@ can.Model("can.Model.Cacheable", {
           .fail(function() {
             dfd.reject.apply(dfd, arguments);
           });
-        })
+        }, 1000, {trailing: false})
       };
     }
     dfd = this._pending_refresh.dfd
@@ -1300,17 +1300,19 @@ can.Observe.List.prototype.stubs = function() {
 can.Observe.prototype.reify = function() {
   var type, model;
 
-  if (this instanceof can.Model)
+  if (this instanceof can.Model) {
     return this;
-  if (!(this instanceof can.Stub))
+  }
+  if (!(this instanceof can.Stub)) {
     console.debug("`reify()` called on non-stub, non-instance object", this);
+  }
 
   type = this.type;
   model = CMS.Models[type] || GGRC.Models[type];
 
-  if (!model)
+  if (!model) {
     console.debug("`reify()` called with unrecognized type", this);
-
+  }
   return model.model(this);
 };
 

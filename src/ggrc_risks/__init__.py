@@ -6,40 +6,34 @@
 # Created By: silas@reciprocitylabs.com
 # Maintained By: silas@reciprocitylabs.com
 
-from datetime import date, timedelta
-import calendar
 from flask import Blueprint
-from sqlalchemy import inspect
 
-from ggrc import settings, db
-from ggrc.login import get_current_user
-#from ggrc.rbac import permissions
 from ggrc.services.registry import service
 import ggrc_risks.models as models
 from ggrc_basic_permissions.contributed_roles import RoleContributions
-
+from ggrc_risks.converters import IMPORTABLE
+from ggrc.models import all_models
+import ggrc_risks.views
 
 # Initialize signal handler for status changes
 from blinker import Namespace
 signals = Namespace()
 status_change = signals.signal(
-  'Status Changed',
-  """
-  This is used to signal any listeners of any changes in model object status
-  attribute
-  """)
+    'Status Changed',
+    """
+    This is used to signal any listeners of any changes in model object status
+    attribute
+    """)
 
 # Initialize Flask Blueprint for extension
 blueprint = Blueprint(
-  'ggrc_risks',
-  __name__,
-  template_folder='templates',
-  static_folder='static',
-  static_url_path='/static/ggrc_risks',
+    'ggrc_risks',
+    __name__,
+    template_folder='templates',
+    static_folder='static',
+    static_url_path='/static/ggrc_risks',
 )
 
-
-from ggrc.models import all_models
 
 _risk_object_types = [
     "Program",
@@ -47,13 +41,13 @@ _risk_object_types = [
     "Objective", "Control", "Section", "Clause",
     "System", "Process",
     "DataAsset", "Facility", "Market", "Product", "Project"
-    ]
+]
 
 for type_ in _risk_object_types:
   model = getattr(all_models, type_)
   model.__bases__ = (
-    models.risk_object.Riskable,
-    ) + model.__bases__
+      models.risk_object.Riskable,
+  ) + model.__bases__
   model.late_init_riskable()
 
 
@@ -68,7 +62,7 @@ def contributed_services():
       service('risks', models.Risk),
       service('risk_objects', models.RiskObject),
       service('threat_actors', models.ThreatActor),
-      ]
+  ]
 
 
 def contributed_object_views():
@@ -77,11 +71,10 @@ def contributed_object_views():
   return [
       object_view(models.Risk),
       object_view(models.ThreatActor),
-      ]
+  ]
+
 
 # Initialize non-RESTful views
-import ggrc_risks.views
-
 def init_extra_views(app):
   ggrc_risks.views.init_extra_views(app)
 
@@ -103,3 +96,5 @@ class RiskRoleContributions(RoleContributions):
   }
 
 ROLE_CONTRIBUTIONS = RiskRoleContributions()
+
+contributed_importables = IMPORTABLE

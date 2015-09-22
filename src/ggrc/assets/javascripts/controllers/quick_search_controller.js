@@ -199,9 +199,9 @@ can.Control("CMS.Controllers.LHN", {
       // Set up a scroll handler to capture the current scroll-Y position on the
       // whole LHN search panel.  scroll events do not bubble, so this cannot be
       // set as a delegate on the controller element.
-      self.lhs_holder_onscroll = $.debounce(250, function() {
+      self.lhs_holder_onscroll = _.debounce(function() {
         self.options.display_prefs.setLHNState({ "panel_scroll" : this.scrollTop });
-      });
+      }, 250);
       this.element.find(".lhs-holder").on("scroll", self.lhs_holder_onscroll);
     }
 
@@ -666,9 +666,9 @@ can.Control("CMS.Controllers.LHN_Search", {
         self.post_init();
         self.element.find(".sub-level")
           .cms_controllers_infinite_scroll()
-          .on("scroll", $.debounce(250, function() {
+          .on("scroll", _.debounce(function() {
             self.options.display_prefs.setLHNState("category_scroll", this.scrollTop);
-          }));
+          }, 250));
 
         initial_term = self.options.display_prefs.getLHNState().search_text || "";
         if (self.options.observer.my_work) {

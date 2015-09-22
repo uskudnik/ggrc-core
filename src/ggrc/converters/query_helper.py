@@ -12,7 +12,7 @@ import datetime
 from ggrc.models.custom_attribute_value import CustomAttributeValue
 from ggrc.models.reflection import AttributeInfo
 from ggrc.models.relationship_helper import RelationshipHelper
-from ggrc.converters import get_importables
+from ggrc.converters import get_exportables
 
 
 class BadQueryException(Exception):
@@ -53,7 +53,7 @@ class QueryHelper(object):
   """
 
   def __init__(self, query):
-    importable = get_importables()
+    importable = get_exportables()
     self.object_map = {o.__name__: o for o in importable.values()}
     self.query = self.clean_query(query)
     self.set_attr_name_map()

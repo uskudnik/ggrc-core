@@ -5,6 +5,7 @@
 
 from collections import defaultdict
 from collections import OrderedDict
+from collections import Counter
 from flask import current_app
 
 from ggrc import db
@@ -86,10 +87,19 @@ class BlockConverter(object):
     self.object_headers = get_object_column_definitions(self.object_class)
     all_header_names = map(unicode, self.get_header_names().keys())  # noqa
     raw_headers = options.get("raw_headers", all_header_names)
+    self.check_for_duplicate_columns(raw_headers)
     self.headers = self.clean_headers(raw_headers)
     self.unique_counts = self.get_unique_counts_dict(self.object_class)
     self.name = self.object_class._inflector.human_singular.title()
     self.organize_fields(options.get("fields", []))
+
+  def check_for_duplicate_columns(self, raw_headers):
+    counter = Counter(raw_headers)
+    duplicates = [header for header, count in counter.items() if count > 1]
+    if duplicates:
+      self.add_errors(errors.DUPLICATE_COLUMN,
+                      line=self.offset + 1,
+                      duplicates=", ".join(duplicates))
 
   def organize_fields(self, fields):
     if fields == "all":

@@ -7,7 +7,7 @@
 SCRIPTPATH=$( cd "$(dirname "$0")" ; pwd -P )
 
 cd "${SCRIPTPATH}/../src"
-mysql -u root -e "DROP DATABASE IF EXISTS ggrcdevtest; CREATE DATABASE ggrcdevtest;"
+mysql -u root -e "DROP DATABASE IF EXISTS ggrcdevtest; CREATE DATABASE ggrcdevtest CHARACTER SET utf8;"
 
 export GGRC_SETTINGS_MODULE="testing travis ggrc_basic_permissions.settings.development ggrc_gdrive_integration.settings.development ggrc_risk_assessments.settings.development ggrc_risks.settings.development ggrc_workflows.settings.development"
 

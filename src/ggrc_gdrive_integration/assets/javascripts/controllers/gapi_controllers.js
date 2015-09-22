@@ -48,7 +48,7 @@
     , o2dfd : null
     , drivedfd : null
     , gapidfd : new $.Deferred()
-  
+
     , authorize : function(newscopes, force) {
       return this.canonical_instance.authorize(newscopes, force);
     }
@@ -189,21 +189,21 @@
         this.constructor.canonical_instance = this;
       }
 
-      this.doGAuthWithScopes = can.debounce(500, $.proxy(this.constructor, "doGAuth", this.options.scopes, false));
+      this.doGAuthWithScopes = _.debounce($.proxy(this.constructor, "doGAuth", this.options.scopes, false), 500);
     }
 
     , authorize : function(newscopes, force) {
       var dfd, f, old_dfd
       , that = this
       , found = false;
-      
+
       can.each(newscopes, function(ns) {
         if(!~can.inArray(ns, that.options.scopes)) {
           that.options.scopes.push(ns);
           found = true;
         }
       });
-      
+
       if(force ||
           (found
             ? window.oauth_dfd.state() !== "pending"

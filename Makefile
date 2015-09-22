@@ -28,6 +28,9 @@ APPENGINE_PACKAGES_DIR=$(DEV_PREFIX)/opt/gae_packages
 APPENGINE_ENV_DIR=$(DEV_PREFIX)/opt/gae_virtualenv
 APPENGINE_REQUIREMENTS_TXT=$(PREFIX)/src/requirements.txt
 
+FLASH_PATH=$(PREFIX)/src/ggrc/static/flash
+BOWER_PATH=$(PREFIX)/bower_components
+
 $(APPENGINE_SDK_PATH) : $(APPENGINE_ZIP_PATH)
 	@echo $( dirname $(APPENGINE_ZIP_PATH) )
 	cd `dirname $(APPENGINE_SDK_PATH)`; \
@@ -145,11 +148,20 @@ src/app.yaml : src/app.yaml.dist
 		MAX_INSTANCES="$(MAX_INSTANCES)" \
 		AUTHORIZED_DOMAINS="$(AUTHORIZED_DOMAINS)"
 
-deploy : appengine_packages_zip src/ggrc/static/assets.manifest src/app.yaml
+bower_components : bower.json
+	mkdir -p $(BOWER_PATH)
+	mkdir -p $(FLASH_PATH)
+	bower install
+	cp $(BOWER_PATH)/zeroclipboard/dist/ZeroClipboard.swf $(FLASH_PATH)/ZeroClipboard.swf
+
+clean_bower_components :
+	rm -rf $(BOWER_PATH) $(FLASH_PATH)
+
+deploy : appengine_packages_zip bower_components src/ggrc/static/assets.manifest src/app.yaml
 
 clean_deploy :
 	rm -f src/ggrc/assets/stylesheets/dashboard.css
 	rm -f src/ggrc/static/dashboard-*.* src/ggrc/static/assets.manifest
 	rm -f src/app.yaml
 
-clean : clean_deploy
+clean : clean_deploy clean_bower_components

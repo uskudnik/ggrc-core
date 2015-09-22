@@ -5,7 +5,6 @@
 -# Maintained By: brad@reciprocitylabs.com
 -#
 !!! 5
-
 %html{ lang:"en" }
   %head
     %meta{ content:"text/html; charset=utf-8", 'http-equiv':"Content-Type" }
@@ -22,11 +21,14 @@
     -endassets
 
     %link{ 'href': '={ url_for("static", filename="favicon.ico") }', 'rel':'icon', 'type':'image/x-icon' }
+
   %body
     -block body
 
     %script
       GGRC = window.GGRC || {};
+      GGRC.Settings = {};
+      GGRC.Bootstrap = {};
       -include "scripts/tracker-prefix.js"
       window.st=Date.now();
       -block extra_javascript
@@ -42,8 +44,6 @@
     :javascript
       GGRC.Tracker.timing("dashboard", "exec_scripts", Date.now() - st, "dashboard.js finished executing");
       window.st=Date.now();
-
-    :javascript
       GGRC.Tracker.timing("dashboard", "load_templates", Date.now() - st, "dashboard-templates.js finished loading and executing");
       $(function() {
         GGRC.Tracker.timing("dashboard", "exec_ready_handlers", Date.now() - st, "last document.ready handler fired");
@@ -52,7 +52,6 @@
     -# Google Web Font(s)
     -#NOTE: This resource occasionally hangs and prevents page from rendering, so loaded after the fact via jquery
     :javascript
-      jQuery(function($) { $('head').append("<link href='https://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'></link>"); });
       (function (win, doc, GGRC, $) {
         var originalError = win.onerror;
         win.onerror = function (message, url, linenumber) {

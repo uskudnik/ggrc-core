@@ -5,37 +5,39 @@
 
 dashboard-js-files:
   - tracker.js
-  - jquery.js
-  - rails.js
-  - lodash.js
-  - jquery-ui.js
-  - jquery.ba-throttle-debounce.js
-  - bootstrap-alert.js
-  - bootstrap-collapse.js
-  - bootstrap-dropdown.js
-  - bootstrap-modal.js
-  - bootstrap-tab.js
-  - bootstrap-tooltip.js
-  - bootstrap-popover.js
-  - bootstrap/sticky-popover.js
-  - bootstrap/modal-form.js
-  - zeroclipboard/ZeroClipboard.min.js
-  - stickyfill.js
-  - mousetrap.min.js
-  - can.jquery.js
-  - can.construct.super.js
-  - can.map.validations.js
-  - can.control.plugin.js
-  - can.construct.proxy.js
-  - can.map.attributes.js
-  - can.map.backup.js
-  - bootstrap/modal-ajax.js
-  - wysihtml5_parser_rules/advanced.js
-  - wysihtml5-0.4.0pre.js
-  - bootstrap-wysihtml5-0.0.2.js
+  # 3rd party:
+  - jquery/dist/jquery.min.js
+  - lodash/lodash.min.js
+  - jquery-ui/jquery-ui.min.js
+  - bootstrap/js/bootstrap-alert.js
+  - bootstrap/js/bootstrap-collapse.js
+  - bootstrap/js/bootstrap-dropdown.js
+  - bootstrap/js/bootstrap-modal.js
+  - bootstrap/js/bootstrap-tab.js
+  - bootstrap/js/bootstrap-tooltip.js
+  - bootstrap/js/bootstrap-popover.js
+  - zeroclipboard/dist/ZeroClipboard.min.js
+  - stickyfill/stickyfill.js
+  - mousetrap/mousetrap.min.js
+  - canjs/can.jquery.js
+  - canjs/can.construct.super.js
+  - canjs/can.map.validations.js
+  - canjs/can.control.plugin.js
+  - canjs/can.construct.proxy.js
+  - canjs/can.map.attributes.js
+  - canjs/can.map.backup.js
+  - wysihtml5/advanced.js
+  - wysihtml5/wysihtml5-0.4.0pre.js
+  - wysihtml5/bootstrap-wysihtml5-0.0.2.js
+  - moment/min/moment.min.js
+  - spinjs/spin.js
+  # end 3rd party
   - bootstrap/wysihtml5.js
-  - moment.js
+  - bootstrap/sticky-popover.js
+  - bootstrap/modal-ajax.js
+  - bootstrap/modal-form.js
   - permission.js
+  - plugins/lodash_helpers.js
   - plugins/persistent_notifier.js
   - ggrc_base.js
   - plugins/ggrc_utils.js
@@ -48,8 +50,6 @@ dashboard-js-files:
   - plugins/popover.js
   - plugins/popover_template.js
   - application.js
-  - jquerypp.custom.js
-  - spin.min.js
   - client_record_replay.js
   - mustache_helper.js
   - generated/ggrc_filter_query_parser.js
@@ -103,8 +103,6 @@ dashboard-js-files:
   - apps/dashboard.js
   - apps/custom_attributes.js
   - dashboard.js
-  - jquery.iframe-transport.js
-  - jquery.remotipart-patched.js
   - components/link_to_clipboard.js
   - components/relevant_filters.js
   - components/csv/export.js
@@ -303,6 +301,8 @@ dashboard-js-template-files:
   - requests/tree_add_item.mustache
   - requests/tree_header.mustache
   - requests/modal_content.mustache
+  - requests/tier2_content.mustache
+  - requests/general_info.mustache
   - objectives/autocomplete_result.mustache
   - responses/confirm_delete_evidence.mustache
   - responses/tree.mustache
@@ -344,12 +344,11 @@ dashboard-js-template-files:
   - import_export/export/filter_query.mustache
   - mapper/relevant_filter.mustache
 
-
 dashboard-css-files:
   # dashboard.css is generated automatically from `compass watch -c compass.config.rb`
   - dashboard.css
-  - bootstrap-wysihtml5-0.0.2.css
-  - jquery-ui.css
+  - wysihtml5/bootstrap-wysihtml5-0.0.2.css
+  - jquery/jquery-ui.css
 
 dashboard-js-spec-files:
   - spec_setup.js
@@ -361,5 +360,19 @@ dashboard-js-spec-files:
   - models/cacheable_spec.js
 
 dashboard-js-spec-helpers:
-  - jasmine-fixture.js
+  - jasmine-fixture/dist/jasmine-fixture.min.js
   - spec_helpers.js
+
+mockup-js-files:
+  # 3rd party
+  - jquery/dist/jquery.js
+  - jquery-ui/jquery-ui.min.js
+  - bootstrap/js/bootstrap-modal.js
+  - bootstrap/js/bootstrap-collapse.js
+  - bootstrap/js/bootstrap-dropdown.js
+  - bootstrap/js/bootstrap-tooltip.js
+  - bootstrap/js/bootstrap-popover.js
+  - bootstrap/js/bootstrap-transition.js
+  - canjs/can.jquery.js
+  - canjs/can.object.js
+  # 3rd party end

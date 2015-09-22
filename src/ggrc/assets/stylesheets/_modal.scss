@@ -1023,7 +1023,7 @@ p.modal-value {
   overflow: visible;
   top: 28px;
   left: 24px;
-  z-index: 100;
+  z-index: 2000; /* Needs to be greater than modals */
   &.in {
     border: 1px solid $tabTitle;
     overflow: visible;

@@ -7,21 +7,18 @@
 
 {{#is_allowed_to_map parent_instance model.shortName}}
 {{#if allow_mapping_or_creating}}
-    <a
-      class="section-add"
-      href="javascript://"
-      rel="tooltip"
-      data-placement="left"
-      data-toggle="modal-ajax-form"
-      data-modal-class="modal-wide"
-      data-object-singular="ControlAssessment"
-      data-object-plural="control_assessments"
-      data-object-singular-override=""
-      data-object-params='{ "{{parent_instance.class.table_singular}}": { "id" : {{parent_instance.id}}, "type": "{{parent_instance.type}}", "title" : "{{parent_instance.title}}" }, "context": { "id" : {{firstnonempty parent_instance.context.id "null"}}, "href" : "{{parent_instance.context.href}}", "type" : "{{parent_instance.context.type}}" } }'
-      data-original-title="Map Control Assessment to this Audit"
-      data-target="#ajax-modal-javascript:--"
-      >
-      <i class="grcicon-add-black"></i>
-    </a>
+  <a
+    class="section-add"
+    href="javascript://"
+    rel="tooltip"
+    data-placement="left"
+    data-toggle="unified-mapper"
+    data-join-mapping="{{mapping}}"
+    data-join-option-type="{{model.shortName}}"
+    data-join-object-id="{{parent_instance.id}}"
+    data-join-object-type="{{parent_instance.class.shortName}}"
+    data-original-title="Map {{firstnonempty title_singular model.title_singular 'Object'}} to this {{firstnonempty parent_instance.class.title_singular 'Object'}}">
+    <i class="grcicon-add-black"></i>
+  </a>
 {{/if}}
 {{/is_allowed_to_map}}

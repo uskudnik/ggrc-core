@@ -1,0 +1,36 @@
+{{!
+    Copyright (C) 2015 Google Inc., authors, and contributors <see AUTHORS file>
+    Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+    Created By: ivan@reciprocitylabs.com
+    Maintained By: ivan@reciprocitylabs.com
+}}
+
+{{#if_helpers "\
+   #is_allowed" "view_object_page" instance "\
+   or #if" options.allow_mapping "\
+   or #is_allowed" "update" instance}}
+<div class="details-wrap">
+  <a class="btn btn-small btn-draft dropdown-toggle" href="#" data-toggle="dropdown"><i class="grcicon-setup-color"></i></a>
+  <ul class="dropdown-menu" aria-labelledby="drop1" role="menu">
+    {{#if instance.viewLink}}
+      {{#is_allowed "view_object_page" instance}}
+        <li>
+          <a href="{{instance.viewLink}}">
+            <i class="grcicon-goto"></i>
+            View {{instance.class.title_singular}}
+          </a>
+        </li>
+      {{/is_allowed}}
+    {{/if}}
+    {{> /static/mustache/base_objects/unmap.mustache}}
+    {{> /static/mustache/base_objects/edit_object_link.mustache}}
+  </ul>
+</div>
+{{/if_helpers}}
+
+<div class="tier-content">
+  {{{render '/static/mustache/requests/general_info.mustache' instance=instance }}}
+  {{{renderLive '/static/mustache/base_objects/mappings_detail.mustache' result=result parent_instance=parent_instance}}}
+  {{{renderLive '/static/mustache/base_objects/urls.mustache' instance=instance}}}
+  {{{renderLive '/static/mustache/base_objects/notes_and_code.mustache' instance=instance}}}
+</div>

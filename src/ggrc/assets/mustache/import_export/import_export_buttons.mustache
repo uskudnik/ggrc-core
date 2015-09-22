@@ -5,6 +5,7 @@
   Maintained By: miha@reciprocitylabs.com
 }}
 
+{{^if_instance_of parent_instance 'ControlAssessment'}}
 <li>
   <a href="/import" 
     class="section-import" rel="tooltip" data-placement="left" 
@@ -21,3 +22,4 @@
     </a>
   </li>
 {{/if}}
+{{/if_instance_of}}

@@ -97,7 +97,7 @@
           {{#is_allowed 'update' instance context='for'}}
             <select class="input-medium visual-selector" name="design">
               <option value="" {{#if_equals design ""}}selected{{/if_equals}}>---</option>
-              {{#iterate 'Effective' 'Material weakness' 'Needs improvement' 'Significant deficiency' 'Not Applicable'}}
+              {{#iterate 'Effective' 'Ineffective' 'Needs improvement' 'Not Applicable'}}
                 <option {{#if_equals iterator design}}selected="true"{{/if_equals}}>{{iterator}}</option>
               {{/iterate}}
             </select>
@@ -111,7 +111,7 @@
           {{#is_allowed 'update' instance context='for'}}
             <select class="input-medium visual-selector" name="operationally">
               <option value="" {{#if_equals operationally ""}}selected{{/if_equals}}>---</option>
-              {{#iterate 'Effective' 'Material weakness' 'Needs improvement' 'Significant deficiency' 'Not Applicable'}}
+              {{#iterate 'Effective' 'Ineffective' 'Needs improvement' 'Not Applicable'}}
                 <option {{#if_equals iterator operationally}}selected="true"{{/if_equals}}>{{iterator}}</option>
               {{/iterate}}
             </select>

@@ -73,7 +73,6 @@
         related_systems: TypeFilter("related_objects", "System"),
         related_controls: TypeFilter("related_objects", "Control"),
         related_clauses: TypeFilter("related_objects", "Clause"),
-        related_objectives: TypeFilter("related_objects", "Objecitve"),
         related_sections: TypeFilter("related_objects", "Section"),
         related_regulations: TypeFilter("related_objects", "Regulation"),
         related_contracts: TypeFilter("related_objects", "Contract"),
@@ -127,10 +126,14 @@
         is_my_work = function is_my_work() {
           return page_instance.type === "Person";
         },
-        related_or_owned = is_my_work() ? 'owned_' : 'related_';
+        related_or_owned = is_my_work() ? 'owned_' : 'related_',
+        sorted_widget_types = _.sortBy(_risk_object_types, function(type) {
+          var model = CMS.Models[type] || {};
+          return model.title_plural || type;
+        });
 
     // Init widget descriptors:
-    can.each(_risk_object_types, function (model_name) {
+    can.each(sorted_widget_types, function (model_name) {
 
       if (model_name === 'MultitypeSearch') {
         return;
@@ -155,7 +158,7 @@
           model: model,
           mapping: "related_" + model.table_plural,
         }
-      }
+      };
     });
     threat_actor_descriptor = {
       content_controller: CMS.Controllers.TreeView,
@@ -254,7 +257,7 @@
 
 
 
-  GGRC.register_hook("LHN.Sections", GGRC.mustache_path + "/dashboard/lhn_risks");
+  GGRC.register_hook("LHN.Sections_risk", GGRC.mustache_path + "/dashboard/lhn_risks");
 
   RisksExtension.init_mappings();
 

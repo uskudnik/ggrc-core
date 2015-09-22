@@ -30,6 +30,7 @@ ggrc_global_npm_modules:
   - name: karma-cli
   - name: jasmine-core
   - name: mkdirp
+  - name: bower
 
 ggrc_local_npm_modules:
   - name: karma

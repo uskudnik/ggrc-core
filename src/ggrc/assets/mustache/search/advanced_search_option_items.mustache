@@ -19,7 +19,7 @@
             <div class="span8">
               <div class="tree-title-area">
                 <i class="grcicon-{{instance.class.table_singular}}-color"></i>
-                {{firstexist instance.name instance.title}}
+                {{firstexist instance.name instance.title instance.description}}
                 <span class="url-link">
                 {{firstexist instance.email instance.link}}
                 </span>
@@ -27,11 +27,9 @@
             </div> <!-- span8 end -->
             <div class="span4">
               <div class="show-details">
-                {{#if instance.viewLink}}
-                  {{#is_allowed "view_object_page" instance}}
-                    <a href="{{instance.viewLink}}" target="_blank"><i class="grcicon-to-right"></i></a>
-                  {{/is_allowed}}
-                {{/if}}
+                {{#is_allowed "view_object_page" instance}}
+                  {{{get_view_link instance}}}
+                {{/is_allowed}}
               </div>
             </div>
           </div> <!-- row-fluid end -->

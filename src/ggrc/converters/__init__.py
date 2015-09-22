@@ -8,7 +8,7 @@
 from ggrc.extensions import get_extension_modules
 from ggrc.models import (
     Audit, Control, ControlAssessment, DataAsset, Contract,
-    Policy, Regulation, Standard, Facility, Market, Objective, Option,
+    Policy, Regulation, Standard, Facility, Market, Objective,
     OrgGroup, Vendor, Person, Product, Program, Project, Request, Response,
     Section, Clause, System, Process, Issue,
 )
@@ -66,15 +66,30 @@ GGRC_IMPORTABLE = {
     "issue": Issue,
 }
 
+GGRC_EXPORTABLE = {}
+
+
+def _get_types(attr):
+  res = {}
+  for extension_module in get_extension_modules():
+    contributed = getattr(extension_module, attr, None)
+    if callable(contributed):
+      res.update(contributed())
+    elif isinstance(contributed, dict):
+      res.update(contributed)
+  return res
+
 
 def get_importables():
   """ Get a dict of all importable objects from all modules """
   importable = GGRC_IMPORTABLE
-  for extension_module in get_extension_modules():
-    contributed_importables = getattr(
-        extension_module, "contributed_importables", None)
-    if callable(contributed_importables):
-      importable.update(contributed_importables())
-    elif isinstance(contributed_importables, dict):
-      importable.update(contributed_importables)
+  importable.update(_get_types("contributed_importables"))
   return importable
+
+
+def get_exportables():
+  """ Get a dict of all exportable objects from all modules """
+  exportable = GGRC_EXPORTABLE
+  exportable.update(get_importables())
+  exportable.update(_get_types("contributed_exportables"))
+  return exportable

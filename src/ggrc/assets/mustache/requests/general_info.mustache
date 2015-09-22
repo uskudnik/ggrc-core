@@ -1,0 +1,30 @@
+{{!
+    Copyright (C) 2015 Google Inc., authors, and contributors <see AUTHORS file>
+    Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+    Created By: ivan@reciprocitylabs.com
+    Maintained By: ivan@reciprocitylabs.com
+}}
+
+{{! transcluded via renderLive in, for example, assets/mustache/sections/tier2_content.mustache }}
+{{#instance}}
+  <div class="row-fluid wrap-row">
+    <div class="span6">
+      <h6>Title</h6>
+      <h3>{{instance.description}}</h3>
+    </div>
+    <div class="span6">
+      {{#if status}}
+        <h6>State</h6>
+        <span class="state-value state-{{to_class status '_'}}">{{status}}</span>
+      {{/if}}
+    </div>
+  </div>
+  <div class="row-fluid wrap-row">
+    <div class="span12">
+      <h6>Object Review</h6>
+      {{#if class}}
+        {{{render_hooks instance.class.shortName 'info_widget_actions'}}}
+      {{/if}}
+    </div>
+  </div>
+{{/instance}}

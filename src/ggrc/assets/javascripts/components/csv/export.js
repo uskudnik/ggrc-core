@@ -44,42 +44,7 @@
         data_grid: can.compute(function () {
           return _.has(url, "data_grid");
         })
-      }),
-      importable = [
-        {model_singular: "Audit", title_plural: "Audits"},
-        {model_singular: "Clause", title_plural: "Clauses"},
-        {model_singular: "Contract", title_plural: "Contracts"},
-        {model_singular: "Control", title_plural: "Controls"},
-        {model_singular: "ControlAssessment", title_plural: "Control Assessments"},
-        {model_singular: "DataAsset", title_plural: "Data Assets"},
-        {model_singular: "Facility", title_plural: "Facilities"},
-        {model_singular: "Issue", title_plural: "Issues"},
-        {model_singular: "Market", title_plural: "Markets"},
-        {model_singular: "Objective", title_plural: "Objectives"},
-        {model_singular: "OrgGroup", title_plural: "Org Groups"},
-        {model_singular: "Person", title_plural: "Persons"},
-        {model_singular: "Policy", title_plural: "Policies"},
-        {model_singular: "Process", title_plural: "Processes"},
-        {model_singular: "Product", title_plural: "Products"},
-        {model_singular: "Program", title_plural: "Programs"},
-        {model_singular: "Project", title_plural: "Projects"},
-        {model_singular: "Regulation", title_plural: "Regulations"},
-        {model_singular: "Request", title_plural: "Requests"},
-        {model_singular: "Response", title_plural: "Responses"},
-        {model_singular: "RiskAssessment", title_plural: "Risk Assessments"},
-        {model_singular: "Section", title_plural: "Sections"},
-        {model_singular: "Standard", title_plural: "Standards"},
-        {model_singular: "System", title_plural: "Systems"},
-        {model_singular: "TaskGroup", title_plural: "Task Groups"},
-        {model_singular: "TaskGroupTask", title_plural: "Tasks"},
-        {model_singular: "Vendor", title_plural: "Vendors"},
-        {model_singular: "Workflow", title_plural: "Workflows"}
-      ],
-      exportable = _.sortBy(importable.concat([
-        {model_singular: "Cycle", title_plural: "Cycles"},
-        {model_singular: "CycleTaskGroup", title_plural: "Cycle Task Groups"},
-        {model_singular: "CycleTaskGroupObjectTask", title_plural: "Cycle Tasks"}
-      ]), "title_plural");
+      });
 
 
   can.Component.extend({
@@ -88,11 +53,7 @@
     scope: {
       url: "/_service/export_csv",
       selected: [],
-      importable: importable
-      // TODO: change importable to a list of model names
-      // importable: _.compact(_.map(importable, function(name){
-      //   return CMS.Models[name];
-      // }))
+      importable: GGRC.Bootstrap.importable,
     },
     events: {
       "#importSelect change": function (el, ev) {
@@ -258,11 +219,7 @@
     tag: "export-panel",
     template: "<content></content>",
     scope: {
-      exportable: exportable,
-      // TODO: change exportable to a list of model names
-      // exportable: _.compact(_.map(exportable, function(name){
-      //   return CMS.Models[name];
-      // }))
+      exportable: GGRC.Bootstrap.exportable,
       panel_number: "@",
       has_parent: false,
       fetch_relevant_data: function (id, type) {

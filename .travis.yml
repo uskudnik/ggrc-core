@@ -25,9 +25,11 @@ install:
   - "pip install --user webob"
   - 'gem install sass --version "=3.4.9"'
   - 'gem install compass --version "=1.0.1"'
-  - npm install karma karma-jasmine jasmine-core phantomjs karma-chrome-launcher
+  - npm install karma karma-jasmine jasmine-core phantomjs karma-chrome-launcher bower
+  - bower install
 before_script:
   - "source bin/init_env"
+  - make bower_components
   - build_compass
   - build_assets
 script:

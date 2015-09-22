@@ -5,3 +5,14 @@
 # with any third party without the express written consent of Reciprocity, Inc.
 # Created By: anze@reciprocitylabs.com
 # Maintained By: anze@reciprocitylabs.com
+
+
+""" Module for handling import and export of all risk models """
+
+from ggrc_risks import models
+
+IMPORTABLE = {
+    "risk": models.Risk,
+    "threat actor": models.ThreatActor,
+    "threat_actor": models.ThreatActor,
+}

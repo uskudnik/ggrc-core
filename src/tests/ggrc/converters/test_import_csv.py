@@ -3,9 +3,11 @@
 # Created By: miha@reciprocitylabs.com
 # Maintained By: miha@reciprocitylabs.com
 
+from ggrc.converters import errors
+from ggrc.models import Audit
+from ggrc.models import ControlAssessment
 from ggrc.models import Policy
 from ggrc.models import Relationship
-from ggrc.converters import errors
 from tests.ggrc.converters import TestCase
 from tests.ggrc.generator import ObjectGenerator
 
@@ -44,10 +46,6 @@ class TestBasicCsvImport(TestCase):
         errors.OWNER_MISSING.format(line=4),
         errors.UNKNOWN_USER_WARNING.format(line=6, email="not@a.user"),
         errors.OWNER_MISSING.format(line=6),
-        errors.WRONG_REQUIRED_VALUE.format(line=5, value="",
-                                           column_name="State"),
-        errors.WRONG_REQUIRED_VALUE.format(line=6, value="",
-                                           column_name="State"),
     ])
     response_warnings = response_json[0]["row_warnings"]
     self.assertEqual(expected_warnings, set(response_warnings))
@@ -124,3 +122,33 @@ class TestBasicCsvImport(TestCase):
     response_warnings = response_json[0]["row_warnings"]
     self.assertEqual(set(), set(response_warnings))
     self.assertEqual(4, Relationship.query.count())
+
+  def test_control_assessments_import_update(self):
+    messages = ("block_errors", "block_warnings", "row_errors", "row_warnings")
+
+    filename = "pci_program.csv"
+    response = self.import_file(filename)
+
+    for response_block in response:
+      for message in messages:
+        self.assertEquals(set(), set(response_block[message]))
+
+    ca = ControlAssessment.query.filter_by(slug="CA.PCI 1.1").first()
+    au = Audit.query.filter_by(slug="AUDIT-Consolidated").first()
+    self.assertEquals(len(ca.owners), 1)
+    self.assertEquals(ca.owners[0].email, "danny@reciprocitylabs.com")
+    self.assertEquals(ca.contact.email, "danny@reciprocitylabs.com")
+    self.assertIsNone(Relationship.find_related(ca, au))
+
+    filename = "ca_update.csv"
+    response = self.import_file(filename)
+
+    for response_block in response:
+      for message in messages:
+        self.assertEquals(set(), set(response_block[message]))
+
+    ca = ControlAssessment.query.filter_by(slug="CA.PCI 1.1").first()
+    au = Audit.query.filter_by(slug="AUDIT-Consolidated").first()
+    self.assertEquals(ca.owners[0].email, "miha@reciprocitylabs.com")
+    self.assertEquals(ca.contact.email, "albert@reciprocitylabs.com")
+    self.assertIsNotNone(Relationship.find_related(ca, au))

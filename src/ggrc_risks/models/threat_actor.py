@@ -19,3 +19,9 @@ class ThreatActor(
     HasObjectState, CustomAttributable, Documentable, Personable,
     Relatable, Timeboxed, Ownable, BusinessObject, db.Model):
   __tablename__ = 'threat_actors'
+
+  _aliases = {
+      "contact": "Contact",
+      "secondary_contact": None,
+      "url": "Threat Actor URL",
+  }

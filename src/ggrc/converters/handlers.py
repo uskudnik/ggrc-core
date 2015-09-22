@@ -150,10 +150,11 @@ class StatusColumnHandler(ColumnHandler):
     value = self.raw_value.lower()
     status = self.state_mappings.get(value)
     if status is None:
-      self.add_warning(errors.WRONG_REQUIRED_VALUE,
-                       value=value[:20],
-                       column_name=self.display_name)
       status = self.get_default()
+      if value:
+        self.add_warning(errors.WRONG_REQUIRED_VALUE,
+                         value=value[:20],
+                         column_name=self.display_name)
     return status
 
 

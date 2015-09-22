@@ -7,7 +7,7 @@
 SCRIPTPATH=$( cd "$(dirname "$0")" ; pwd -P )
 cd "${SCRIPTPATH}/../src"
 find . -iname "*.pyc" -delete
-mysql -uroot -proot -e "DROP DATABASE IF EXISTS ggrcdevtest; CREATE DATABASE ggrcdevtest; USE ggrcdevtest;"
+mysql -uroot -proot -e "DROP DATABASE IF EXISTS ggrcdevtest; CREATE DATABASE ggrcdevtest CHARACTER SET utf8; USE ggrcdevtest;"
 export GGRC_SETTINGS_MODULE="testing ggrc_basic_permissions.settings.development ggrc_gdrive_integration.settings.development ggrc_risk_assessments.settings.development ggrc_risks.settings.development ggrc_workflows.settings.development"
 db_migrate
 

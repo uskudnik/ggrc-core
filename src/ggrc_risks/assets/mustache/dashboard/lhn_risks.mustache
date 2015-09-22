@@ -8,8 +8,16 @@
     Maintained By: anze@reciprocitylabs.com
 }}
 
-<h2 class="risk">Risks</h2>
-<ul class="top-level">
-  {{{renderLive '/static/mustache/dashboard/lhn_search.mustache' type="Risk" li_class="risk"}}}
-  {{{renderLive '/static/mustache/dashboard/lhn_search.mustache' type="ThreatActor" li_class="risk"}}}
-</ul>
+<li class="risk accordion-group">
+  <a class="risk list-toggle top" href="#">
+    <i class="grcicon-arrow-right"></i>
+    Risks/Threat Actors
+  </a>
+  <div class="content">
+    <ul class="mid-level">
+      {{{renderLive '/static/mustache/dashboard/lhn_search.mustache' type="Risk" li_class="risk"}}}
+      {{{renderLive '/static/mustache/dashboard/lhn_search.mustache' type="ThreatActor" li_class="risk"}}}
+    </ul>
+  </div>
+</li>
+

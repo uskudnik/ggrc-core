@@ -14,6 +14,7 @@ from ggrc import models
 from ggrc import settings
 from ggrc.app import app
 from ggrc.app import db
+from ggrc.converters import get_importables, get_exportables
 from ggrc.builder.json import publish
 from ggrc.builder.json import publish_representation
 from ggrc.extensions import get_extension_modules
@@ -111,6 +112,25 @@ def get_attributes_json():
   return as_json(published)
 
 
+def get_import_types(export_only=False):
+  types = get_exportables if export_only else get_importables
+  data = []
+  for model in set(types().values()):
+    data.append({
+      "model_singular": model.__name__,
+      "title_plural": model._inflector.title_plural
+    })
+  data.sort()
+  response_json = json.dumps(data)
+  return response_json
+
+
+def get_export_definitions():
+  return get_import_types(export_only=True)
+
+def get_import_definitions():
+  return get_import_types(export_only=False)
+
 def get_all_attributes_json():
   """Get a list of all attribute definitions
 
@@ -134,6 +154,8 @@ def base_context():
       current_user_json=get_current_user_json,
       attributes_json=get_attributes_json,
       all_attributes_json=get_all_attributes_json,
+      import_definitions=get_import_definitions,
+      export_definitions=get_export_definitions,
   )
 
 
