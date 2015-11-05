@@ -109,6 +109,7 @@ dashboard-js-files:
   - components/csv/export.js
   - components/csv/import.js
   - components/mapper.js
+  - components/people_list.js
   #- d3.v2.js
   #- related_graph.js
 
