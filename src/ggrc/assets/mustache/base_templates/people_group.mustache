@@ -1,0 +1,41 @@
+{{!
+    Copyright (C) 2015 Google Inc., authors, and contributors <see AUTHORS file>
+    Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+    Created By: ivan@reciprocitylabs.com
+    Maintained By: ivan@reciprocitylabs.com
+}}
+
+<div class="side-content">
+  <ul class="label-list">
+    <li>
+      <label>
+        <span class="person-label {{type}}"></span>
+        {{capitalize type}}
+        {{#if editable}}
+          <span class="required">*</span>
+        {{/if}}
+      </label>
+      <ul>
+        {{#each people}}
+          {{^if_equals person_state "deleted"}}
+          <li>
+            {{#if editable}}
+            <span class="file-controls">
+              <a class="js-trigger--person-delete" data-index="{{@index}}" {{data "person"}} href="javascript://"><i class="grcicon-deleted"></i></a>
+              {{! <a href="javascript://"><i class="grcicon-edit"></i></a> }}
+            </span>
+            {{/if}}
+            {{#using person=.}}
+              {{> /static/mustache/people/popover.mustache}}
+            {{/using}}
+          </li>
+          {{/if_equals}}
+        {{/each}}
+      </ul>
+    </li>
+  </ul>
+</div>
+
+{{#show_add}}
+  {{> /static/mockups/base_templates/add_people.mustache }}
+{{/show_add}}

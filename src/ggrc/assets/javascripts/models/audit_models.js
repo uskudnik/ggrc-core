@@ -28,8 +28,10 @@ function update_program_authorizations(programs, person) {
             return ab.instance.person.reify();
           }
         });
-
-    if(Permission.is_allowed("create", "UserRole", program.context.id)
+    if (!person) {
+      return;
+    }
+    if (Permission.is_allowed("create", "UserRole", program.context.id)
       && !~can.inArray(
         person.reify(),
         editor_authorized_people
@@ -383,7 +385,6 @@ can.Model.Cacheable("CMS.Models.Request", {
     , attr_list : [
       {attr_title: 'Title', attr_name: 'title'},
       {attr_title: 'Description', attr_name: 'description'},
-      {attr_title: 'Assignee', attr_name: 'assignee'},
       {attr_title: 'Status', attr_name: 'status'},
       {attr_title: 'Last Updated', attr_name: 'updated_at'},
       {attr_title: 'Request Date', attr_name: 'requested_on', attr_sort_field: 'report_start_date'},
@@ -407,8 +408,9 @@ can.Model.Cacheable("CMS.Models.Request", {
     this.validateNonBlank("description");
     this.validateNonBlank("due_on");
     this.validateNonBlank("requested_on");
-    this.validatePresenceOf("assignee");
+    this.validateNonBlank("people");
     this.validatePresenceOf("audit");
+
     if(this === CMS.Models.Request) {
       this.bind("created", function(ev, instance) {
         if(instance.constructor === CMS.Models.Request) {
@@ -508,6 +510,44 @@ can.Model.Cacheable("CMS.Models.Request", {
     });
     return refresh_queue.trigger();
   },
+  get_assignees: function() {
+    var assignees = {};
+    var rq_rel = new RefreshQueue();
+    var rq_person = new RefreshQueue();
+    this.related_destinations.each(rq_rel.enqueue.bind(rq_rel));
+    this.related_sources.each(rq_rel.enqueue.bind(rq_rel));
+    return rq_rel.trigger().then(function(relationships) {
+      _.each(relationships, function(r) {
+        if (r.attrs && r.attrs.AssigneeType) {
+          var type = r.attrs.AssigneeType;
+          var person = undefined;
+          if (r.source.type === "Person") {
+            person = r.source;
+          } else if (r.destination.type === "Person") {
+            person = r.destination;
+          }
+          if (person !== undefined) {
+            if (!assignees[type]) {
+              assignees[type] = [];
+            }
+            assignees[type].push({
+              "relationship": r,
+              "person": person
+            });
+            rq_person.enqueue(person);
+          }
+        }
+      });
+      return rq_person.trigger().then(function() {
+        _.each(assignees, function(entries, type) {
+          _.each(entries, function(entry) {
+            entry.person = entry.person.reify();
+          });
+        });
+        return assignees;
+      });
+    });
+  }
 });
 
 can.Model.Cacheable("CMS.Models.Response", {

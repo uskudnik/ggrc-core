@@ -12,10 +12,11 @@ from ggrc.models.context import HasOwnContext
 from ggrc.models.exceptions import ValidationError
 from ggrc.models.mixins import deferred, Base, CustomAttributable
 from ggrc.models.reflection import PublishOnly
+from ggrc.models.relationship import Relatable
 from ggrc.models.utils import validate_option
 
 
-class Person(CustomAttributable, HasOwnContext, Base, db.Model):
+class Person(CustomAttributable, HasOwnContext, Relatable, Base, db.Model):
 
   __tablename__ = 'people'
 

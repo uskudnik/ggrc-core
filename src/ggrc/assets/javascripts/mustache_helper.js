@@ -1416,6 +1416,11 @@ can.each({
   });
 });
 
+Mustache.registerHelper("capitalize", function (value, options) {
+  value = resolve_computed(value) || "";
+  return can.capitalize(value);
+});
+
 Mustache.registerHelper("local_time_range", function (value, start, end, options) {
   var tokens = [];
   var sod;

@@ -26,6 +26,7 @@ dashboard-js-files:
   - canjs/can.construct.proxy.js
   - canjs/can.map.attributes.js
   - canjs/can.map.backup.js
+  - canjs/can.map.define.js
   - wysihtml5/advanced.js
   - wysihtml5/wysihtml5-0.4.0pre.js
   - wysihtml5/bootstrap-wysihtml5-0.0.2.js
@@ -110,6 +111,7 @@ dashboard-js-files:
   - components/csv/export.js
   - components/csv/import.js
   - components/mapper.js
+  - components/people_list.js
   #- d3.v2.js
   #- related_graph.js
 
@@ -172,6 +174,8 @@ dashboard-js-template-files:
   - base_templates/mapped_objects.mustache
   - base_templates/notes.mustache
   - base_templates/people_list.mustache
+  - base_templates/add_people.mustache
+  - base_templates/people_group.mustache
   - base_templates/request_type.mustache
   - base_templates/test.mustache
   - base_templates/urls.mustache
