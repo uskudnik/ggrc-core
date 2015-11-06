@@ -31,6 +31,7 @@ dashboard-js-files:
   - wysihtml5/bootstrap-wysihtml5-0.0.2.js
   - moment/min/moment.min.js
   - spinjs/spin.js
+  - string-natural-compare/natural-compare.min.js
   # end 3rd party
   - bootstrap/wysihtml5.js
   - bootstrap/sticky-popover.js

@@ -322,7 +322,7 @@ can.Model("can.Model.Cacheable", {
             if(xhr.status === 409) {
               obj = that.findInCacheById(id);
               attrs = obj.attr();
-              base_attrs = obj._backupStore;
+              base_attrs = obj._backupStore();
               return obj.refresh().then(function(obj) {
                 var conflict = false,
                     remote_attrs = obj.attr();
@@ -967,42 +967,6 @@ can.Model("can.Model.Cacheable", {
     dfd = this._pending_refresh.dfd
     this._pending_refresh.fn();
     return dfd;
-  }
-  , serialize : function() {
-    var that = this, serial = {};
-    if(arguments.length) {
-      return this._super.apply(this, arguments);
-    }
-    this.each(function(val, name) {
-      var fun_name;
-      if(that.constructor.attributes && that.constructor.attributes[name]) {
-        fun_name = that.constructor.attributes[name];
-        fun_name = fun_name.substr(fun_name.lastIndexOf(".") + 1);
-        if (fun_name === "stubs" || fun_name === "get_stubs"
-            ||fun_name === "models" || fun_name === "get_instances") {
-          // val can be null in some cases
-          val && (serial[name] = val.stubs().serialize());
-        } else if (fun_name === "stub" || fun_name === "get_stub"
-                   || fun_name === "model" || fun_name === "get_instance") {
-          serial[name] = (val ? val.stub().serialize() : null);
-        } else {
-          serial[name] = that._super(name);
-        }
-      } else if(val && typeof val.save === "function") {
-        serial[name] = val.stub().serialize();
-      } else if(typeof val === "object" && val != null && val.length != null) {
-        serial[name] = can.map(val, function(v) {
-          return (v && typeof v.save === "function") ? v.stub().serialize() : (v.serialize ? v.serialize() : v);
-        });
-      } else if(typeof val !== 'function') {
-        if(that[name] && that[name].isComputed) {
-          serial[name] = val && val.serialize ? val.serialize() : val;
-        } else {
-          serial[name] = that[name] && that[name].serialize ? that[name].serialize() : that._super(name);
-        }
-      }
-    });
-    return serial;
   }
   , display_name : function() {
     return this.title || this.name;

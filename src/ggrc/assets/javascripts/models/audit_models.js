@@ -66,6 +66,7 @@ can.Model.Cacheable("CMS.Models.Audit", {
   root_object : "audit"
   , root_collection : "audits"
   , category : "programs"
+  , findAll : "GET /api/audits"
   , findOne : "GET /api/audits/{id}"
   , update : "PUT /api/audits/{id}"
   , destroy : "DELETE /api/audits/{id}"
@@ -331,6 +332,8 @@ can.Model.Cacheable("CMS.Models.Request", {
     "request type": "request_type",
   },
   root_collection : "requests"
+  , findAll: "GET /api/requests"
+  , findOne : "GET /api/requests/{id}"
   , create : "POST /api/requests"
   , update : "PUT /api/requests/{id}"
   , destroy : "DELETE /api/requests/{id}"
@@ -796,6 +799,7 @@ can.Model.Cacheable("CMS.Models.ControlAssessment", {
   root_object : "control_assessment",
   root_collection : "control_assessments",
   findOne : "GET /api/control_assessments/{id}",
+  findAll : "GET /api/control_assessments",
   update : "PUT /api/control_assessments/{id}",
   destroy : "DELETE /api/control_assessments/{id}",
   create : "POST /api/control_assessments",

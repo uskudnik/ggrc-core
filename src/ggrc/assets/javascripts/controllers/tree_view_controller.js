@@ -30,7 +30,7 @@ function _display_tree_subpath(el, path, attempt_counter) {
   var rest = path.split("/")
     , type = rest.shift()
     , id = rest.shift()
-    , selector = "[data-object-type=" + type + "][data-object-id=" + id + "]"
+    , selector = "[data-object-type='" + type + "'][data-object-id=" + id + "]"
     , $node
     , $next_node
     , node_controller
@@ -1325,24 +1325,12 @@ CMS.Controllers.TreeLoader("CMS.Controllers.TreeView", {
           order_factor = order === "asc" ? 1 : -1;
 
       var comparator = function (a, b) {
-        if (typeof a === "string") {
-          a = a.toLowerCase();
-        };
-        if (typeof b === "string") {
-          b = b.toLowerCase();
-        };
-        if (a > b) {
-          return order_factor;
-        }
-        if (b > a) {
-          return -order_factor;
-        }
-        return 0;
+        return String.naturalCaseCompare(a, b) * order_factor;
       };
       this.options.sort_function = function (val1, val2) {
         var a = val1.get_deep_property(key_tree),
             b = val2.get_deep_property(key_tree);
-        return comparator(a,b);
+        return comparator(a, b);
       };
 
       this.options.sort_function.deep_property = key_tree;

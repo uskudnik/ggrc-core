@@ -5,10 +5,13 @@
 # Maintained By: miha@reciprocitylabs.com
 
 SCRIPTPATH=$( cd "$(dirname "$0")" ; pwd -P )
-cd "${SCRIPTPATH}/../src"
+cd "${SCRIPTPATH}/../test"
 find . -iname "*.pyc" -delete
 mysql -uroot -proot -e "DROP DATABASE IF EXISTS ggrcdevtest; CREATE DATABASE ggrcdevtest CHARACTER SET utf8; USE ggrcdevtest;"
 export GGRC_SETTINGS_MODULE="testing ggrc_basic_permissions.settings.development ggrc_gdrive_integration.settings.development ggrc_risk_assessments.settings.development ggrc_risks.settings.development ggrc_workflows.settings.development"
 db_migrate
 
-nosetests tests --logging-clear-handlers ${@:1}
+echo -e "\nRunning unit tests"
+nosetests unit --logging-clear-handlers ${@:1}
+echo -e "\nRunning integration tests"
+nosetests integration --logging-clear-handlers ${@:1}

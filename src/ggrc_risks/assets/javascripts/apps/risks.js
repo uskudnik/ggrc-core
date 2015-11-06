@@ -21,7 +21,7 @@
       "Person", "OrgGroup", "Vendor"
     ],
     related_object_descriptors = {},
-    threat_actor_descriptor, risk_descriptor;
+    threat_descriptor, risk_descriptor;
 
   // Register `risks` extension with GGRC
   GGRC.extensions.push(RisksExtension);
@@ -32,7 +32,7 @@
   RisksExtension.object_type_decision_tree = function () {
     return {
       "risk": CMS.Models.Risk,
-      "threat_actor": CMS.Models.ThreatActor
+      "threat": CMS.Models.Threat
     };
   };
 
@@ -50,6 +50,7 @@
 
     // Add mappings for risk objects
     var mappings = {
+
       related: {
         related_objects_as_source: Proxy(
           null, "destination", "Relationship", "source", "related_destinations"),
@@ -92,32 +93,32 @@
         },
         related_risks: TypeFilter("related_objects", "Risk"),
       },
-      related_threat_actor: {
+      related_threat: {
         _canonical: {
-          "related_objects_as_source": ['ThreatActor'].concat(_risk_object_types)
+          "related_objects_as_source": ['Threat'].concat(_risk_object_types)
         },
-        related_threat_actors: TypeFilter("related_objects", "ThreatActor"),
+        related_threats: TypeFilter("related_objects", "Threat"),
       },
       Risk: {
-        _mixins: ['related', 'related_objects', 'related_threat_actor'],
+        _mixins: ['related', 'related_objects', 'related_threat'],
         orphaned_objects: Multi([]),
       },
-      ThreatActor: {
+      Threat: {
         _mixins: ['related', 'related_objects', 'related_risk'],
         orphaned_objects: Multi([])
       },
       Person: {
         owned_risks: Indirect("Risk", "contact"),
-        owned_threat_actors: Indirect("ThreatActor", "contact"),
+        owned_threats: Indirect("Threat", "contact"),
       },
     };
 
     can.each(_risk_object_types, function (type) {
         mappings[type] = _.extend(mappings[type] || {}, {
           _canonical: {
-            "related_objects_as_source": ["Risk", "ThreatActor"]
+            "related_objects_as_source": ["Risk", "Threat"]
           },
-          _mixins: ["related", "related_risk", "related_threat_actor"],
+          _mixins: ["related", "related_risk", "related_threat"],
         });
     });
     new GGRC.Mappings("ggrc_risks", mappings);
@@ -146,7 +147,7 @@
       var model = CMS.Models[model_name],
           widgets_by_type = GGRC.tree_view.base_widgets_by_type;
 
-      widgets_by_type[model_name] = widgets_by_type[model_name].concat(["Risk", "ThreatActor"]);
+      widgets_by_type[model_name] = widgets_by_type[model_name].concat(["Risk", "Threat"]);
 
       related_object_descriptors[model_name] = {
         content_controller: CMS.Controllers.TreeView,
@@ -164,19 +165,19 @@
         }
       };
     });
-    threat_actor_descriptor = {
+    threat_descriptor = {
       content_controller: CMS.Controllers.TreeView,
       content_controller_selector: "ul",
       widget_initial_content: '<ul class="tree-structure new-tree"></ul>',
-      widget_id: CMS.Models.ThreatActor.table_plural,
-      widget_name: CMS.Models.ThreatActor.title_plural,
-      widget_icon: CMS.Models.ThreatActor.table_singular,
+      widget_id: CMS.Models.Threat.table_plural,
+      widget_name: CMS.Models.Threat.title_plural,
+      widget_icon: CMS.Models.Threat.table_singular,
       content_controller_options: {
         child_options: [],
         draw_children: false,
         parent_instance: page_instance,
-        model: CMS.Models.ThreatActor,
-        mapping: related_or_owned + CMS.Models.ThreatActor.table_plural,
+        model: CMS.Models.Threat,
+        mapping: related_or_owned + CMS.Models.Threat.table_plural,
         footer_view: is_my_work() ? null : GGRC.mustache_path + "/base_objects/tree_footer.mustache"
       }
     };
@@ -199,8 +200,8 @@
 
     if (page_instance instanceof CMS.Models.Risk) {
       RisksExtension.init_widgets_for_risk_page();
-    } else if (page_instance instanceof CMS.Models.ThreatActor) {
-      RisksExtension.init_widgets_for_threat_actor_page();
+    } else if (page_instance instanceof CMS.Models.Threat) {
+      RisksExtension.init_widgets_for_threat_page();
     } else if (page_instance instanceof CMS.Models.Person) {
       RisksExtension.init_widgets_for_person_page();
     } else {
@@ -212,7 +213,7 @@
     function init_widgets_for_risk_page() {
       var risk_descriptors = $.extend({},
         related_object_descriptors, {
-          ThreatActor: threat_actor_descriptor
+          Threat: threat_descriptor
         }
       );
       new GGRC.WidgetList("ggrc_risks", {
@@ -220,22 +221,22 @@
       });
   };
 
-  RisksExtension.init_widgets_for_threat_actor_page =
-    function init_widgets_for_threat_actor_page() {
-      var threat_actor_descriptors = $.extend({},
+  RisksExtension.init_widgets_for_threat_page =
+    function init_widgets_for_threat_page() {
+      var threat_descriptors = $.extend({},
         related_object_descriptors, {
           Risk: risk_descriptor
         }
       );
       new GGRC.WidgetList("ggrc_risks", {
-        ThreatActor: threat_actor_descriptors
+        Threat: threat_descriptors
       });
   };
 
   RisksExtension.init_widgets_for_person_page =
     function init_widgets_for_person_page() {
       var people_widgets = $.extend({}, {
-          ThreatActor: threat_actor_descriptor
+          Threat: threat_descriptor
         }, {
           Risk: risk_descriptor
         }
@@ -253,7 +254,7 @@
       if (page_instance && ~can.inArray(page_instance.constructor.shortName, _risk_object_types)) {
         descriptor[page_instance.constructor.shortName] = {
           risk: risk_descriptor,
-          threat_actor: threat_actor_descriptor,
+          threat: threat_descriptor,
         };
       }
       new GGRC.WidgetList("ggrc_risks", descriptor);
