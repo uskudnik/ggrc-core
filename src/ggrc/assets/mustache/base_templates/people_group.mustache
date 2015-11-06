@@ -17,7 +17,7 @@
       </label>
       <ul>
         {{#each people}}
-          {{^if_equals person_state "deleted"}}
+          {{^if_equals instance.person_state "deleted"}}
           <li>
             {{#if editable}}
             <span class="file-controls">
@@ -25,7 +25,7 @@
               {{! <a href="javascript://"><i class="grcicon-edit"></i></a> }}
             </span>
             {{/if}}
-            {{#using person=.}}
+            {{#using person=instance}}
               {{> /static/mustache/people/popover.mustache}}
             {{/using}}
           </li>

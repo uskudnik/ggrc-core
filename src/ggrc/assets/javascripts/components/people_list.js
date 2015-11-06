@@ -38,30 +38,11 @@
 
         this.viewModel.attr("groups").each(function (group, type) {
           group = group.filter(function (person) {
-            return person.attr("person_state") !== "deleted";
+            return person.instance.attr("person_state") !== "deleted";
           });
           isAllowed.push(group.length);
         });
         instance.attr("people", _.every(isAllowed));
-      },
-      inserted: function () {
-        // this.scope.instance.get_assignees().then(function (assignees) {
-        //   assignees = _.mapKeys(assignees, function (val, key) {
-        //     return key.toLowerCase();
-        //   });
-        //   _.each(["verifier", "assignee", "requester"], function(type) {
-        //     if (!assignees[type]) {
-        //       assignees[type] = [];
-        //     }
-        //   });
-        //   assignees = _.mapValues(assignees, function (users) {
-        //     return _.map(users, function (user) {
-        //       user.person.relationship_id = user.relationship.id;
-        //       return user.person;
-        //     });
-        //   });
-        //   this.viewModel.attr("groups", assignees);
-        // }.bind(this));
       },
       "getRelationship": function (person, destination, type, action) {
         if (action === "deleted") {
@@ -132,13 +113,18 @@
           type: "number"
         }
       },
+      binding: "@",
       limit: "@",
       required: "@",
       type: "@"
     },
     events: {
+      "inserted": function () {
+        var scope = this.viewModel;
+        scope.attr("people", scope.attr("instance").get_mapping(scope.attr("binding")));
+      },
       ".js-trigger--person-delete click": function (el, ev) {
-        var person = el.data("person");
+        var person = el.data("person").instance;
         if (person.attr("person_state")) {
           person.attr("person_state", null);
           return this.viewModel.attr("people").splice(el.data("index"), 1);
@@ -146,16 +132,20 @@
         person.attr("person_state", "deleted");
       },
       ".person-selector input autocomplete:select": function (el, ev, ui) {
-        var person = _.findWhere(this.viewModel.attr("people"), {id: ui.item.id});
-        if (person) {
-          if (person.attr("person_state") === "deleted") {
-            person.attr("person_state", null);
+        var person = _.filter(this.viewModel.attr("people"), function (person) {
+              return person.instance.id === ui.item.id;
+            });
+        if (person.length) {
+          if (person.instance.attr("person_state") === "deleted") {
+            person.instance.attr("person_state", null);
           }
           return;
         }
-        this.viewModel.attr("people").push(_.extend(ui.item, {
-          "person_state": "added"
-        }));
+        this.viewModel.attr("people").push({
+          instance: _.extend(ui.item, {
+            "person_state": "added"
+          })
+        });
       }
     },
     helpers: {
@@ -163,7 +153,7 @@
         if (this.attr("editable")) {
           if (_.isNull(this.attr("limit")) ||
               this.attr("limit") > this.attr("people").filter(function (person) {
-                return person.attr("person_state") !== "deleted";
+                return person.instance.attr("person_state") !== "deleted";
               }).length) {
             return options.fn();
           }
