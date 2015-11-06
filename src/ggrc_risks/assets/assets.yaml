@@ -10,7 +10,7 @@ dashboard-js-files:
   - apps/risks.js
   - models/risk.js
   - models/risk_join_models.js
-  - models/threat_actor.js
+  - models/threat.js
   - controllers/workflow_page.js
 
 dashboard-js-spec-files:
@@ -19,7 +19,7 @@ dashboard-js-template-files:
   - dashboard/lhn_risks.mustache
   - risks/modal_content.mustache
   - risks/info.mustache
-  - threat_actors/modal_content.mustache
+  - threats/modal_content.mustache
   - risk_objects/tree_footer.mustache
   - selectors/object_selector_base_modal.mustache
   - selectors/object_selector_option_column.mustache

@@ -1184,7 +1184,7 @@ Mustache.registerHelper("date", function (date) {
   if (no_time) {
     return m.format("MM/DD/YYYY");
   }
-  return m.zone(dst ? "-0700" : "-0800").format("MM/DD/YYYY hh:mm:ssa") + " " + (dst ? 'PDT' : 'PST');
+  return m.utcOffset(dst ? "-0700" : "-0800").format("MM/DD/YYYY hh:mm:ssa") + " " + (dst ? 'PDT' : 'PST');
 });
 
 /**

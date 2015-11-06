@@ -14,6 +14,7 @@ can.Model.Cacheable("CMS.Models.Document", {
     , title_plural : "References"
     , category : "business"
     , findAll : "GET /api/documents"
+    , findOne : "GET /api/documents/{id}"
     , create : "POST /api/documents"
     , update : "PUT /api/documents/{id}"
     , destroy : "DELETE /api/documents/{id}"

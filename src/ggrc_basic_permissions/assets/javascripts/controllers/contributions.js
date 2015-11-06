@@ -380,18 +380,19 @@
         , li = el.closest('li')
         , clicked_option = li.data('option') || {}
         , join
+        , delete_dfds
         ;
 
       // Look for and remove the existing join.
-      $.map(li.parent().children(), function(el){
+      delete_dfds = $.map(li.parent().children(), function(el){
         var el = $(el)
         , option = el.closest('li').data('option')
         , join = self.find_join(option.id)
         ;
 
         if(join) {
-          join.refresh().done(function() {
-            join.destroy().then(function() {
+          return join.refresh().done(function() {
+            return join.destroy().then(function() {
               self.element.trigger("relationshipdestroyed", join);
             });
           });
@@ -400,12 +401,14 @@
 
       // Create the new join (skipping "No Access" role, with id == 0)
       if (clicked_option.id > 0) {
-        join = self.get_new_join(
-            clicked_option.id, clicked_option.scope, clicked_option.constructor.shortName);
-        join.save().then(function() {
-            self.join_list.push(join);
-            self.refresh_option_list();
-            self.element.trigger("relationshipcreated", join);
+        $.when.apply($, delete_dfds).then(function() {
+          join = self.get_new_join(
+              clicked_option.id, clicked_option.scope, clicked_option.constructor.shortName);
+          join.save().then(function() {
+              self.join_list.push(join);
+              self.refresh_option_list();
+              self.element.trigger("relationshipcreated", join);
+          });
         });
       }
     },

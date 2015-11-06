@@ -804,7 +804,8 @@
                 var new_result = self.make_result(result.instance, [result], binding);
                 new_result.compute = can.compute(function() {
                   return self.filter_fn(result);
-                }).bind("change", $.proxy(self, "process_result", binding, result, new_result));
+                });
+                new_result.compute.bind("change", $.proxy(self, "process_result", binding, result, new_result));
                 self.process_result(binding, result, new_result, new_result.compute());
               });
             });
@@ -831,7 +832,8 @@
                 var new_result = self.make_result(result.instance, [result], binding);
                 new_result.compute = can.compute(function() {
                   return self.filter_fn(result);
-                }).bind("change", $.proxy(self, "process_result", binding, result, new_result));
+                })
+                new_result.compute.bind("change", $.proxy(self, "process_result", binding, result, new_result));
                 self.process_result(binding, result, new_result, new_result.compute());
               });
             });

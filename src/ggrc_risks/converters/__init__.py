@@ -13,6 +13,5 @@ from ggrc_risks import models
 
 IMPORTABLE = {
     "risk": models.Risk,
-    "threat actor": models.ThreatActor,
-    "threat_actor": models.ThreatActor,
+    "threat": models.Threat,
 }

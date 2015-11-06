@@ -93,6 +93,11 @@ can.Model.Cacheable("CMS.Models.Program", {
 
 can.Model.Cacheable("CMS.Models.Option", {
   root_object : "option"
+  , findAll : "GET /api/options"
+  , findOne : "GET /api/options/{id}"
+  , create : "POST /api/options"
+  , update : "PUT /api/options/{id}"
+  , destroy : "DELETE /api/options/{id}"
   , root_collection : "options"
   , cache_by_role: {}
   , for_role: function(role) {

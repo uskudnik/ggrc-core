@@ -17,6 +17,8 @@ describe("can.Model.Cacheable", function() {
       // The string update key has to be here to make the update conflict tests work.
       //  See can.Model.Cacheable.init for details on how the software
       //  under test is broken. --BM
+      findOne: 'GET /api/dummy_models/{id}',
+      findAll: 'GET /api/dummy_models/',
       update: "PUT /api/dummy_models/{id}",
       mixins: ["dummyable"],
       attributes: { dummy_attribute: "dummy_convert" },
@@ -38,7 +40,7 @@ describe("can.Model.Cacheable", function() {
   describe("::setup", function() {
 
     it("prefers pre-set static names over root object & collection", function() {
-      var Model = can.Model.Cacheable.extend({
+      var Model = can.Model.Cacheable.extend("CSM.Models.Dummy", {
         root_object: "wrong_name",
         root_collection: "wrong_names",
         model_singular: "RightName",
@@ -77,7 +79,7 @@ describe("can.Model.Cacheable", function() {
 
     it("sets findAll to default based on root_collection if not set", function() {
       spyOn(can.Model, "setup");
-      var Model = can.Model.Cacheable.extend({ root_collection: "foos" }, {});
+      var Model = can.Model.Cacheable.extend("CMS.Models.DummyFind", { root_collection: "foos" }, {});
       expect(Model.findAll).toBe("GET /api/foos");
     });
 
@@ -187,7 +189,7 @@ describe("can.Model.Cacheable", function() {
         var obj = _obj;
         obj.attr("foo", "bar");
         obj.backup();
-        expect(obj._backupStore).toEqual(jasmine.objectContaining({ id: obj.id, foo: "bar" }));
+        expect(obj._backupStore()).toEqual(jasmine.objectContaining({ id: obj.id, foo: "bar" }));
         obj.attr("foo", "plonk");
         spyOn($.fn, "trigger").and.callThrough();
         spyOn(obj, "save").and.callFake(function() {
@@ -240,7 +242,7 @@ describe("can.Model.Cacheable", function() {
         var obj = _obj;
         obj.attr("foo", "bar");
         obj.backup();
-        expect(obj._backupStore).toEqual(jasmine.objectContaining({ id: obj.id, foo: "bar" }));
+        expect(obj._backupStore()).toEqual(jasmine.objectContaining({ id: obj.id, foo: "bar" }));
         obj.attr("foo", "plonk");
         spyOn(obj, "save").and.returnValue($.when(obj));
         spyOn(obj, "refresh").and.callFake(function() {

@@ -61,7 +61,7 @@ def contributed_services():
   return [
       service('risks', models.Risk),
       service('risk_objects', models.RiskObject),
-      service('threat_actors', models.ThreatActor),
+      service('threats', models.Threat),
   ]
 
 
@@ -70,7 +70,7 @@ def contributed_object_views():
   from ggrc.views.registry import object_view
   return [
       object_view(models.Risk),
-      object_view(models.ThreatActor),
+      object_view(models.Threat),
   ]
 
 
@@ -83,15 +83,15 @@ class RiskRoleContributions(RoleContributions):
   contributions = {
       'Creator': {
           'read': [],
-          'create': ['ThreatActor', 'Risk'],
+          'create': ['Threat', 'Risk'],
       },
       'Editor': {
-          'read': ['ThreatActor', 'Risk'],
-          'create': ['ThreatActor', 'Risk'],
+          'read': ['Threat', 'Risk'],
+          'create': ['Threat', 'Risk'],
       },
       'Reader': {
-          'read': ['ThreatActor', 'Risk'],
-          'create': ['ThreatActor', 'Risk'],
+          'read': ['Threat', 'Risk'],
+          'create': ['Threat', 'Risk'],
       },
   }
 

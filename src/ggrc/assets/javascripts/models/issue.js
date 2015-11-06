@@ -10,6 +10,7 @@
     root_object : "issue",
     root_collection : "issues",
     findOne : "GET /api/issues/{id}",
+    findAll : "GET /api/issues",
     update : "PUT /api/issues/{id}",
     destroy : "DELETE /api/issues/{id}",
     create : "POST /api/issues",
