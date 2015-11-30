@@ -27,7 +27,7 @@
       </label>
         <div class="objective-selector">
           {{#using audit=instance.audit }}
-            <input tabindex="11" type="text" name="audit.title" class="span12 search-icon" data-lookup="Audit" data-permission-type="update" placeholder="Enter text to search for Audit" null-if-empty="false" value="{{firstnonempty audit.title ''}}">
+            <input tabindex="11" type="text" name="audit.title" class="span12 search-icon" data-lookup="Audit" data-permission-type="update" placeholder="Enter text to search for Audit" null-if-empty="false" value="{{firstnonempty audit.title ''}}" {{^if new_object_form}}disabled{{/if}}>
           {{/using}}
         </div>
     </div>
