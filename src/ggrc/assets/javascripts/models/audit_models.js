@@ -499,6 +499,21 @@ can.Model.Cacheable("CMS.Models.Request", {
 
     return vals;
   },
+  after_save: function() {
+    _create_audit_request_relationship = function(request) {
+      if (!request.audit.context) {
+        var ctx = request.audit.reify().context;
+      }
+      return new CMS.Models.Relationship({
+            source: request.audit,
+            destination: request,
+            context: ctx
+      }).save();
+    }
+
+    var audit_dfd = _create_audit_request_relationship(this);
+    GGRC.delay_leaving_page_until($.when(audit_dfd));
+  },
   save: function() {
       // Make sure the context is always set to the parent audit
       if (!this.context || !this.context.id) {
