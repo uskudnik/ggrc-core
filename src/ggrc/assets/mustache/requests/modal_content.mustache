@@ -128,7 +128,7 @@
       </ggrc-modal-connector>
     </div>
     <div class="span6">
-      <people-list instance="instance" editable="true" deferred="true"></people-list>
+      <people-list instance="instance" editable="true" {{^instance.id}}deferred="true"{{/instance.id}}></people-list>
     </div>
   </div>
   <div class="row-fluid">
