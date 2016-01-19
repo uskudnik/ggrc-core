@@ -103,12 +103,15 @@ def build_bulk_insert_rel_attr_object(rel_id, attr_value):
   }
 
 
-def get_requests_for_processing(connection, status):
-  """Get requests in certain state"""
-  return {rid[0] for rid in connection.execute(
-      select([requests_table.c.id]).where(
-          requests_table.c.status == status)
-  ).fetchall()}
+def get_requests_for_processing(connection):
+  """Returns a tuple of two sets, first containing requests in Final status
+  and second with Verified status"""
+  result = connection.execute(
+      select([requests_table.c.id, requests_table.c.status]).where(
+          requests_table.c.status.in_(["Final", "Verified"]))
+  ).fetchall()
+  return ({rid for rid, rstatus in result if rstatus == "Final"},
+          {rid for rid, rstatus in result if rstatus == "Verified"})
 
 
 def _get_max_relationship_id(connection):
@@ -300,24 +303,23 @@ def upgrade():
 
   # Gather data for processing
   # Requests that we can touch (only Final and Verified)
-  verified_requests = get_requests_for_processing(connection, "Verified")
-  final_requests = get_requests_for_processing(connection, "Final")
-  requests = verified_requests | final_requests
+  final_requests, verified_requests = get_requests_for_processing(connection)
 
   # Get contexts for auditors and program owners
   audits_contexts = get_auditors_contexts(connection)
   programs_contexts = get_programowners_contexts(connection)
 
   # Get requests that are missing requesters and verifiers
-  missing_requesters = get_requests_with_no_attr(connection, "Requester")
-  missing_verifiers = get_requests_with_no_attr(connection, "Verifier")
+  missing_requesters, missing_verifiers = \
+      get_requests_with_missing_assigneetype(connection)
 
   # Get existing request to person mappings with associated current attribute
   # values. This is needed in case a person is already an assignee/requester
   # somewhere and only needs one new role.
-  # It returns a dictionary with RequestID-PersonID keys and
+  # It returns a dictionary with RequestID-PersonID keys and a list of roles as
+  # values
   existing_person_attr_values = \
-      get_attr_values_for_processed_requests(connection, requests)
+      get_attr_values_for_processed_requests(connection)
 
   # Get contexts from audits and programs
   request_audit_program_contexts = get_program_audit_contexts(connection)
