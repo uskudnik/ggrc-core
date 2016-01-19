@@ -58,6 +58,14 @@ user_roles_table = table(
     column('person_id'),
 )
 
+
+roles_table = table(
+    'roles',
+    column('id'),
+    column('name'),
+)
+
+
 relationships_table = table(
     'relationships',
     column('id'),
@@ -120,9 +128,13 @@ def get_auditors_contexts(connection):
   }
   """
   try:
-    context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
-                            connection.execute(user_roles_table.select().where(
-                                user_roles_table.c.role_id == 14)).fetchall()]
+    s = select(
+        [user_roles_table.c.context_id,
+         user_roles_table.c.person_id]).select_from(
+        user_roles_table.join(roles_table,
+                              user_roles_table.c.role_id == roles_table.c.id)
+    ).where(roles_table.c.name == "Auditor")
+    context_audit_select = connection.execute(s)
   except ProgrammingError:
     # On empty database, user_roles table doesn't exist yet,
     # ggrc_basic_permissions module creates it
