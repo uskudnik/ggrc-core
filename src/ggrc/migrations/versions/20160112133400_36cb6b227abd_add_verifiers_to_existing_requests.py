@@ -176,7 +176,6 @@ def get_requests_with_no_attr(connection, attr_value):
               relationships_table.c.id)
   ).where(requests_table.c.status.in_(["Final", "Verified"]))
 
-  print connection.execute(s).keys()
   result = connection.execute(s).fetchall()
 
   #  requests.id,
