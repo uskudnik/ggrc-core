@@ -262,7 +262,7 @@ def add_request_person_mappings(existing_person_attr_values, req, ctx, pid,
 
 
 def get_program_audit_contexts(connection):
-  """For every request returns it's audit's context and context from program
+  """For every request returns its audits context and context from program
   that audit is belonging to."""
   s = select([
       requests_table.c.id,
