@@ -152,14 +152,18 @@ def get_programowners_contexts(connection):
   list of all program owners for that context.
   """
   try:
-    context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
-                            connection.execute(user_roles_table.select().where(
-                                user_roles_table.c.role_id == 1)).fetchall()]
+    s = select(
+        [user_roles_table.c.context_id,
+         user_roles_table.c.person_id]).select_from(
+        user_roles_table.join(roles_table,
+                              user_roles_table.c.role_id == roles_table.c.id)
+    ).where(roles_table.c.name == "ProgramOwner")
+    context_program_select = connection.execute(s)
   except ProgrammingError:
     return {}
 
   contexts = defaultdict(list)
-  for ctxid, person_id in context_audit_select:
+  for ctxid, person_id in context_program_select:
     contexts[ctxid] += [person_id]
   return contexts
 
