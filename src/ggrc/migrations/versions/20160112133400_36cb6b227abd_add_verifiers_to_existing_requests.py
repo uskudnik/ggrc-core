@@ -339,7 +339,7 @@ def upgrade():
   # 2. We never forget existing role
   # 3. If something is missing, all person(s) will get new roles (all auditors
   #   or all program owners)
-  # 4. We look for persons in the following order:
+  # 4. We look for people to assign in the following order:
   #   4.1 Auditors from Request's Audit
   #   4.2 Audit's Internal Audit Lead
   #   4.3 Audit's Program's Program Owners
