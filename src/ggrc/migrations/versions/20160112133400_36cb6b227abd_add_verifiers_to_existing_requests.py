@@ -171,10 +171,9 @@ def get_programowners_contexts(connection):
   return contexts
 
 
-def get_requests_with_no_attr(connection, attr_value):
-  """Returns a list of all Final/Verified requests that don't have at least one
-   person with `attr_value` specified as relationship_attr for request - person
-   relationships.
+def get_requests_with_missing_assigneetype(connection):
+  """Returns two lists of requests (in either Final or Verified state), first
+  with missing Requesters and second with missing Verifiers.
   """
   s = select([requests_table.c.id,
               relationships_table,
@@ -212,7 +211,8 @@ def get_requests_with_no_attr(connection, attr_value):
        rattr_relid, rattr_value) in result:
     requests[reqid] += rattr_value
 
-  return {k for k, v in requests.items() if attr_value not in v}
+  return ({k for k, v in requests.items() if "Requester" not in v},
+          {k for k, v in requests.items() if "Verifier" not in v})
 
 
 def get_request_person_key(stype, sid, did):
