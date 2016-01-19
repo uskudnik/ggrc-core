@@ -19,6 +19,7 @@ down_revision = '297131e22e28'
 
 from alembic import op
 from sqlalchemy import Integer
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql import column
 from sqlalchemy.sql import func
 from sqlalchemy.sql import table
@@ -118,9 +119,14 @@ def get_auditors_contexts(connection):
     [context_id]: [person_id 1, person_id 2, ...]
   }
   """
-  context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
-                          connection.execute(user_roles_table.select().where(
-                              user_roles_table.c.role_id == 14)).fetchall()]
+  try:
+    context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
+                            connection.execute(user_roles_table.select().where(
+                                user_roles_table.c.role_id == 14)).fetchall()]
+  except ProgrammingError:
+    # On empty database, user_roles table doesn't exist yet,
+    # ggrc_basic_permissions module creates it
+    return {}
 
   contexts = defaultdict(list)
   for ctxid, person_id in context_audit_select:
@@ -133,9 +139,12 @@ def get_programowners_contexts(connection):
   Returns all contexts where at least one person is program owner and returns a
   list of all program owners for that context.
   """
-  context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
-                          connection.execute(user_roles_table.select().where(
-                              user_roles_table.c.role_id == 1)).fetchall()]
+  try:
+    context_audit_select = [(ctxid, person_id) for roleid, ctxid, person_id in
+                            connection.execute(user_roles_table.select().where(
+                                user_roles_table.c.role_id == 1)).fetchall()]
+  except ProgrammingError:
+    return {}
 
   contexts = defaultdict(list)
   for ctxid, person_id in context_audit_select:
