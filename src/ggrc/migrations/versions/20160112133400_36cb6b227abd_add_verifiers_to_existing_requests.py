@@ -222,7 +222,7 @@ def get_request_person_key(stype, sid, did):
   return "{}-{}".format(did, sid)
 
 
-def get_attr_values_for_processed_requests(connection, requests):
+def get_attr_values_for_processed_requests(connection):
   """Get existing relationship attributes for requests - persons mappings. We
   need this to ensure that we don't overwrite/remove any existing roles.
   E.g. if request that is verified has requester and assignee specified but not
@@ -257,7 +257,7 @@ def get_attr_values_for_processed_requests(connection, requests):
           relationship_attrs_table,
           relationship_attrs_table.c.relationship_id ==
           relationships_table.c.id)).where(
-      requests_table.c.id.in_(list(requests)))
+      requests_table.c.status.in_(["Final", "Verified"]))
   result = connection.execute(s).fetchall()
 
   person_attr = dict()
