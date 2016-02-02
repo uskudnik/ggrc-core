@@ -6,7 +6,8 @@
 }}
 
 {{#instance}}
-<li>
+<mapped-object data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
+<li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   <span class="person-label {{assignee_types assignee_type}}"></span>
   <div class="w-status">
     <span class="entry-author">
@@ -26,4 +27,5 @@
     </mapping-tree-view>
   </div>
 </li>
+</mapped-object>
 {{/instance}}

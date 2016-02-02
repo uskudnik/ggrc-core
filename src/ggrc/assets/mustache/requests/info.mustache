@@ -121,10 +121,14 @@
           <li class="active"><a href="#tab1" data-toggle="tab">
             Comments and Responses
           </a></li>
+          <li><a href="#tab2" data-toggle="tab">
+            Related Requests
+          </a></li>
         </ul>
 
         <div class="tab-content">
-          <div class="tab-pane fade in active" id="tab1">
+          <!--<div class="tab-pane fade in active" id="tab1">-->
+          <div class="tab-pane" id="tab1">
             {{#if_helpers '\
               ^if_equals' status 'Verified' '\
               and ^if_equals' status 'Final' }}
@@ -135,6 +139,12 @@
             {{/is_allowed}}
             {{/if_equals}}
             {{{render "/static/mustache/base_templates/comment_list.mustache" instance=. update_count="false"}}}
+          </div>
+          <div class="tab-pane fade in active" id="tab2">
+            <div class="tree-item-add">
+              <!--<related-objects data="requests" source_mapping="instance" parent_instance="instance"></related-objects>-->
+              {{> /static/mustache/requests/related_objects.mustache }}
+            </div>
           </div>
         </div>
       </div>

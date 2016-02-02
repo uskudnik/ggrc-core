@@ -336,6 +336,7 @@ dashboard-js-template-files:
   - requests/tier2_content.mustache
   - requests/general_info.mustache
   - requests/subtree.mustache
+  - requests/related_objects.mustache
   - objectives/autocomplete_result.mustache
   - responses/confirm_delete_evidence.mustache
   - responses/tree.mustache

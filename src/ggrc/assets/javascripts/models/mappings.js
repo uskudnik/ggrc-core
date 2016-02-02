@@ -715,6 +715,35 @@
       urls_from_comments: Cross("comments", "urls"),
       all_documents: Multi(["documents", "documents_from_comments"]),
       all_urls: Multi(["urls", "urls_from_comments"]),
+      //related_requests: CustomFilter("related_objects", function(binding) {
+      //
+      //  var related_object = binding.instance.reify(),
+      //      mappings = related_object.get_mapping("related_requests"),
+      //      request_binding = related_object.get_binding("related_requests");
+      //    ;
+      //
+      //  console.log("binding: ", binding);
+      //  console.log("related requests mappings: ", mappings);
+      //  console.log("related requests binding: ", request_binding);
+      //
+      //  var related_reqs = _.filter(
+      //    mappings, function(req_binding){
+      //    return binding.binding.instance.id !== req_binding.instance.id;
+      //  });
+      //  console.log("related_requests: ", related_reqs);
+      //  return related_reqs;
+      //}),
+      //related_requests: CustomFilter("related_objects", function(binding) {
+      //  var related_object = binding.instance.reify(),
+      //      mappings = related_object.get_mapping("related_requests");
+      //  var related_reqs = _.filter(
+      //    mappings, function(req_binding){
+      //    return binding.binding.instance.id !== req_binding.instance.id;
+      //  });
+      //  console.log("related_requests: ", related_reqs);
+      //  return related_reqs;
+      //}),
+      //related_requests_1: Multi(["related_objects", "related_requests"]),
       related_objects_via_search: Search(function (binding) {
         var types = [
           "Program", "Regulation", "Contract", "Policy", "Standard",

@@ -5,6 +5,7 @@
     Maintained By: anze@reciprocitylabs.com
 }}
 
+<mapped-object data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
 <li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   {{#is_allowed 'update' parentInstance context='for'}}
   {{#instance}}
@@ -22,3 +23,4 @@
     <span>{{firstnonempty instance.title instance.link}}</span>
   </a>
 </li>
+</mapped-object>

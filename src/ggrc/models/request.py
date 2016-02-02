@@ -22,10 +22,11 @@ from ggrc.models.mixins import deferred
 from ggrc.models.mixins import Described
 from ggrc.models.mixins import Slugged
 from ggrc.models.mixins import Titled
+from ggrc.models.reflection import PublishOnly
+from ggrc.models.relationship import Relatable
 from ggrc.models.object_document import Documentable
 from ggrc.models.object_document import ObjectDocument
 from ggrc.models.object_person import Personable
-from ggrc.models.relationship import Relatable
 from ggrc.models import relationship
 from ggrc.services.common import Resource
 
@@ -133,6 +134,18 @@ class Request(Assignable, Documentable, Personable, CustomAttributable,
         display_string,
         self.audit.display_name
     )
+
+  def _get_related_objects(self):
+    #TODO: unique it
+    related = self.related_destinations + self.related_sources
+    related_requests = []
+    for obj in related:
+      related_objects = obj.related_destinations + obj.related_sources
+      related_requests += filter(lambda x: x.type == "Request", related_objects)
+
+  def _get_related_evidence(self):
+    pass
+
 
   @classmethod
   def eager_query(cls):

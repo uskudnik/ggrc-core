@@ -6,7 +6,8 @@
 }}
 
 {{#instance}}
-<li>
+<mapped-object data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
+<li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   {{#is_allowed "update" instance}}
   <span class="file-controls">
     <a href="javascript://" class="info-action unmap" data-toggle="unmap">
@@ -23,6 +24,6 @@
       <a class="more" href="{{instance.viewLink}}" target="_blank"><i class="fa fa-long-arrow-right"></i></a>
     {{/is_allowed}}
   {{/if}}
-
 </li>
+</mapped-object>
 {{/instance}}

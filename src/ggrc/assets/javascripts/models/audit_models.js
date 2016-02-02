@@ -384,6 +384,10 @@ can.Model.Cacheable("CMS.Models.Request", {
       mapping: "all_urls",
       show_view: GGRC.mustache_path + "/base_templates/urls.mustache",
     },
+    //related_objects_requests: {
+    //  model: CMS.Models.Request,
+    //  mapping: "related_requests"
+    //}
   }
   , tree_view_options : {
     show_view : GGRC.mustache_path + "/requests/tree.mustache"
@@ -570,7 +574,41 @@ can.Model.Cacheable("CMS.Models.Request", {
       refresh_queue.enqueue(binding.instance);
     });
     return refresh_queue.trigger();
-  }
+  },
+  related_requests: function() {
+    // TODO: filter out existing objects
+    console.log("audit models related requestS: ", this);
+    var that = this,
+        related_requests_dfd = $.Deferred();
+    $.when(this.get_binding("related_objects").refresh_instances()).then(function(related_objects) {
+      var related_requests = {},
+          rr_count = 0,
+          rr_count_done = 0;
+
+      _.each(related_objects, function(ro) {
+        var binding = ro.instance.get_binding("related_requests");
+        if (binding) {
+          rr_count += 1;
+          $.when(binding.refresh_instances()).then(function(rrs) {
+            rr_count_done += 1;
+            _.each(rrs, function(rr) {
+              if (rr.instance.id != that.id &&
+                  related_requests[rr.instance.id] === undefined) {
+                related_requests[rr.instance.id] = rr;
+              }
+            });
+
+            if (rr_count == rr_count_done) {
+              related_requests_dfd.resolve(_.map(related_requests, function(item, index){
+                return item;
+              }));
+            }
+          });
+        }
+      });
+    });
+    return related_requests_dfd;
+  },
 });
 
 can.Model.Cacheable("CMS.Models.Response", {
