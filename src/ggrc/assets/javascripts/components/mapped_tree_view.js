@@ -10,8 +10,8 @@
   can.Component.extend({
     tag: "reuse-objects",
     scope: {
-      parent_instance: "@",
-      dinstance: "@",
+      parentInstance: null,
+      reusedObjects: [],
       _create_relationship: function(source, destination) {
         if (!destination) {
           return $.Deferred().resolve();
@@ -30,8 +30,9 @@
       },
       "inserted": function(el, ev) {
         console.log("init", el, ev);
+        //debugger;
         // kje bi naj sicer prisel tale?
-        this.scope.attr("parent_instance", GGRC.page_instance());
+        //this.scope.attr("parent_instance", GGRC.page_instance());
       },
       ".js-trigger-reuse click": function(el, ev) {
         console.log("blablabla reuse");
@@ -71,6 +72,7 @@
     tag: "mapping-tree-view",
     template: can.view(GGRC.mustache_path + "/base_templates/mapping_tree_view.mustache"),
     scope: {
+      reusable: "@"
     },
     events: {
       "[data-toggle=unmap] click": function (el, ev) {
@@ -88,18 +90,22 @@
             mapping.destroy();
           });
         });
+      },
+      "input change": function (el, ev) {
+        console.log("list: ", this.scope.list);
+        console.log("bla");
       }
     }
   });
 
-  can.Component.extend({
-    tag: "mapped-object",
-    events: {
-      "inserted": function(el, ev) {
-        if (el.parents("reuse-objects")) {
-          el.find("li").append('<input type="checkbox" name="reuseable_objects" data-object-type='+el.attr("data-object-type")+' data-object-id='+el.attr("data-object-id")+' />');
-        }
-      }
-    }
-  });
+  //can.Component.extend({
+  //  tag: "mapped-object",
+  //  events: {
+  //    "inserted": function(el, ev) {
+  //      if (el.parents("reuse-objects")) {
+  //        el.find("li").append('<input type="checkbox" name="reuseable_objects" data-object-type='+el.attr("data-object-type")+' data-object-id='+el.attr("data-object-id")+' />');
+  //      }
+  //    }
+  //  }
+  //});
 })(window.can, window.can.$);

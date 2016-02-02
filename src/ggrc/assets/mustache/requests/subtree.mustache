@@ -5,8 +5,10 @@
     Maintained By: vladan@reciprocitylabs.com
 }}
 
-{{#instance}}
-<mapped-object data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
+{{log "subtree"}}
+{{log .}}
+{{log related_request}}
+{{#using instance=.}}
 <li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   {{#is_allowed "update" instance}}
   <span class="file-controls">
@@ -24,6 +26,8 @@
       <a class="more" href="{{instance.viewLink}}" target="_blank"><i class="fa fa-long-arrow-right"></i></a>
     {{/is_allowed}}
   {{/if}}
+  {{#if reusable}}
+    <input type="checkbox" />
+  {{/if}}
 </li>
-</mapped-object>
-{{/instance}}
+{{/using}}
