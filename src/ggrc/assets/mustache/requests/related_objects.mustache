@@ -5,9 +5,6 @@
     Maintained By: urban@reciprocitylabs.com
 }}
 
-{{#instance}}
-{{#with_page_object_as 'page_instance'}}
-
 <reuse-objects parent-instance="instance">
   <ul class="past-items-list">
   <li class="clearfix list-title">
@@ -29,6 +26,11 @@
   </li>
   {{#defer 'related_requests' instance.related_requests}}
     {{#related_requests }}
+    {{#using related_request=instance}}
+      {{log "related request"}}
+      {{log related_request}}
+      {{log .}}
+    {{/using}}
     <li class="clearfix">
       <div class="mini-col">
         {{localize_date instance.created_at}}
@@ -42,6 +44,7 @@
         <ul class="mapped-list">
             <mapping-tree-view
               reusable="true"
+              reuse-method="create_relationship"
               parent-instance="instance"
               mapping="instance.class.info_pane_options.mapped_objects.mapping"
               item-template="instance.class.info_pane_options.mapped_objects.show_view"
@@ -50,17 +53,23 @@
         </ul>
       </div>
       <div class="large-col">
+        EVIDENCE
         <ul class="file-list">
           <mapping-tree-view
             reusable="true"
+            reuse-method="create_evidence_relationship"
             parent-instance="instance"
             mapping="instance.class.info_pane_options.evidence.mapping"
             item-template="instance.class.info_pane_options.evidence.show_view"
             >
           </mapping-tree-view>
+        </ul>
           <br />
+          URLS
+        <ul class="file-list">
           <mapping-tree-view
-            reusable
+            reusable="true"
+            reuse-method="create_relationship"
             parent-instance="instance"
             mapping="instance.class.info_pane_options.urls.mapping"
             item-template="instance.class.info_pane_options.urls.show_view"
@@ -73,5 +82,3 @@
   {{/defer}}
 </ul>
 </reuse-objects>
-{{/with_page_object_as}}
-{{/instance}}

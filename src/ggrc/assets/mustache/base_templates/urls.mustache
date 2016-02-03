@@ -4,7 +4,7 @@
     Created By: andraz@reciprocitylabs.com
     Maintained By: andraz@reciprocitylabs.com
 }}
-<mapped-object data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
+<reusable-object>
 <li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   {{#is_allowed 'update' parentInstance context='for'}}
   {{#instance}}
@@ -19,5 +19,9 @@
   <a href="{{schemed_url instance.link}}" target="_blank">
     <span>{{firstnonempty instance.title instance.link}}</span>
   </a>
+
+  {{#if_reusable}}
+    <input type="checkbox" />
+  {{/if_reusable}}
 </li>
-</mapped-object>
+</reusable-object>

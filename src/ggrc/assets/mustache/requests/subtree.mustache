@@ -5,29 +5,29 @@
     Maintained By: vladan@reciprocitylabs.com
 }}
 
-{{log "subtree"}}
-{{log .}}
-{{log related_request}}
-{{#using instance=.}}
+{{#instance}}
+<reusable-object>
 <li data-object-id="{{instance.id}}" data-object-type="{{instance.class.table_singular}}">
   {{#is_allowed "update" instance}}
   <span class="file-controls">
     <a href="javascript://" class="info-action unmap" data-toggle="unmap">
-      <span class="result" {{data "result"}}></span>
+      <span class="result" {{instance.data "result"}}></span>
       <i class="fa fa-ban"></i>
     </a>
   </span>
   {{/is_allowed}}
-  <i class="fa fa-{{class.table_singular}} color"></i>
-  {{firstnonempty title description name email}}
+  <i class="fa fa-{{instance.class.table_singular}} color"></i>
+  {{firstnonempty instance.title instance.description instance.name instance.email}}
 
   {{#if instance.viewLink}}
     {{#is_allowed "view_object_page" instance}}
       <a class="more" href="{{instance.viewLink}}" target="_blank"><i class="fa fa-long-arrow-right"></i></a>
     {{/is_allowed}}
   {{/if}}
-  {{#if reusable}}
+
+  {{#if_reusable}}
     <input type="checkbox" />
-  {{/if}}
+  {{/if_reusable}}
 </li>
-{{/using}}
+</reusable-object>
+{{/instance}}
