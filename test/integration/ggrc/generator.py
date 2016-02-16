@@ -10,20 +10,17 @@ import string
 
 from ggrc import db
 from ggrc.app import app
-from ggrc.models import (
-  Person, Policy, Control, Objective, Standard, System, NotificationConfig,
-  CustomAttributeDefinition
-)
-from ggrc.services.common import Resource
-from ggrc_basic_permissions.models import UserRole, Role
-from integration.ggrc.api_helper import Api
+from ggrc import models
+from ggrc.services import common
+from ggrc_basic_permissions import models as permissions_models
+from integration.ggrc import api_helper
 
 
 class Generator():
 
   def __init__(self):
-    self.api = Api()
-    self.resource = Resource()
+    self.api = api_helper.Api()
+    self.resource = common.Resource()
 
   def random_str(self, length=8,
                  chars=string.ascii_uppercase + string.digits + "  _.-"):
@@ -104,7 +101,7 @@ class ObjectGenerator(Generator):
     }
     default[obj_name].update(data)
 
-    return self.generate(Policy, obj_name, default)
+    return self.generate(models.Policy, obj_name, default)
 
   def generate_user_role(self, person, role):
     data = {
@@ -122,7 +119,7 @@ class ObjectGenerator(Generator):
             }
         }
     }
-    return self.generate(UserRole, "user_role", data)
+    return self.generate(permissions_models.UserRole, "user_role", data)
 
   def generate_person(self, data={}, user_role=None):
     obj_name = 'person'
@@ -135,17 +132,23 @@ class ObjectGenerator(Generator):
         }
     }
     default[obj_name].update(data)
-    response, person = self.generate(Person, obj_name, default)
+    response, person = self.generate(models.Person, obj_name, default)
 
     if person and user_role:
-      role = db.session.query(Role).filter(Role.name == user_role).first()
+      role = db.session.query(permissions_models.Role).filter(
+          permissions_models.Role.name == user_role).first()
       self.generate_user_role(person, role)
 
     return response, person
 
   def generate_random_objects(self, count=5):
     random_objects = []
-    classes = [Control, Objective, Standard, System]
+    classes = [
+        models.Control,
+        models.Objective,
+        models.Standard,
+        models.System
+    ]
     for _ in range(count):
       obj_class = random.choice(classes)
       obj_name = obj_class.__name__.lower()
@@ -173,7 +176,7 @@ class ObjectGenerator(Generator):
             "type": "NotificationConfig",
         }
     }
-    return self.generate(NotificationConfig, obj_name, data)
+    return self.generate(models.NotificationConfig, obj_name, data)
 
   def generate_custom_attribute(self, definition_type, **kwargs):
     obj_name = "custom_attribute_definition"
@@ -193,4 +196,4 @@ class ObjectGenerator(Generator):
         }
     }
     data[obj_name].update(kwargs)
-    self.generate(CustomAttributeDefinition, obj_name, data)
+    self.generate(models.CustomAttributeDefinition, obj_name, data)
