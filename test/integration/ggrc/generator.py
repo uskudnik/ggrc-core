@@ -42,7 +42,11 @@ class Generator():
     response = self.api.post(obj_class, data)
     response_obj = None
     if response.json:
-      response_obj = self.get_object(obj_class, response.json[obj_name]['id'])
+      try:
+        response_obj = self.get_object(
+            obj_class, response.json[obj_name]['id'])
+      except TypeError:
+        raise Exception(response.json)
     return response, response_obj
 
   def modify(self, obj, obj_name, data):
