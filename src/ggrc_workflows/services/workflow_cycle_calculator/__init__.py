@@ -3,11 +3,12 @@
 # Created By: urban@reciprocitylabs.com
 # Maintained By: urban@reciprocitylabs.com
 
-from one_time_cycle_calculator import OneTimeCycleCalculator
-from weekly_cycle_calculator import WeeklyCycleCalculator
-from monthly_cycle_calculator import MonthlyCycleCalculator
-from quarterly_cycle_calculator import QuarterlyCycleCalculator
-from annually_cycle_calculator import AnnuallyCycleCalculator
+import annually_cycle_calculator
+import monthly_cycle_calculator
+import one_time_cycle_calculator
+import quarterly_cycle_calculator
+import weekly_cycle_calculator
+
 
 def get_cycle_calculator(workflow, base_date=None):
   """Gets the cycle calculator based on the workflow's frequency.
@@ -19,10 +20,10 @@ def get_cycle_calculator(workflow, base_date=None):
     SomeCalculator(CycleCalculator): CycleCalculator's concrete implementation
   """
   calculators = {
-    "one_time": OneTimeCycleCalculator,
-    "weekly": WeeklyCycleCalculator,
-    "monthly": MonthlyCycleCalculator,
-    "quarterly": QuarterlyCycleCalculator,
-    "annually": AnnuallyCycleCalculator
+      "one_time": one_time_cycle_calculator.OneTimeCycleCalculator,
+      "weekly": weekly_cycle_calculator.WeeklyCycleCalculator,
+      "monthly": monthly_cycle_calculator.MonthlyCycleCalculator,
+      "quarterly": quarterly_cycle_calculator.QuarterlyCycleCalculator,
+      "annually": annually_cycle_calculator.AnnuallyCycleCalculator
   }
   return calculators[workflow.frequency](workflow, base_date)
