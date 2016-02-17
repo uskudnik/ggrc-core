@@ -37,11 +37,11 @@ class WeeklyCycleCalculator(cycle_calculator.CycleCalculator):
 
   @staticmethod
   def get_relative_start(task):
-    return task.relative_start_day
+    return (None, task.relative_start_day)
 
   @staticmethod
   def get_relative_end(task):
-    return task.relative_end_day
+    return (None, task.relative_end_day)
 
   def relative_day_to_date(self, relative_day, relative_month=None,
                            base_date=None):

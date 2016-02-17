@@ -147,7 +147,7 @@ class CycleCalculator(object):
       base_date = datetime.date.today()
 
     if self.tasks:
-      first_month, first_day = self.get_first_task_relative()
+      _, first_day = self.get_first_task_relative()
 
     return datetime.date(
         base_date.year,
