@@ -65,7 +65,7 @@ class AnnuallyCycleCalculator(cycle_calculator.CycleCalculator):
     if relative_day not in AnnuallyCycleCalculator.date_domain:
       raise ValueError
 
-    if not relative_month not in AnnuallyCycleCalculator.month_domain:
+    if relative_month not in AnnuallyCycleCalculator.month_domain:
       raise ValueError
 
     base_date = self.get_base_date(base_date)
