@@ -3,11 +3,16 @@
 # Created By: urban@reciprocitylabs.com
 # Maintained By: urban@reciprocitylabs.com
 
-import annually_cycle_calculator
-import monthly_cycle_calculator
-import one_time_cycle_calculator
-import quarterly_cycle_calculator
-import weekly_cycle_calculator
+from ggrc_workflows.services.workflow_cycle_calculator import \
+    annually_cycle_calculator
+from ggrc_workflows.services.workflow_cycle_calculator import \
+    monthly_cycle_calculator
+from ggrc_workflows.services.workflow_cycle_calculator import \
+    one_time_cycle_calculator
+from ggrc_workflows.services.workflow_cycle_calculator import \
+    quarterly_cycle_calculator
+from ggrc_workflows.services.workflow_cycle_calculator import \
+    weekly_cycle_calculator
 
 
 def get_cycle_calculator(workflow, base_date=None):

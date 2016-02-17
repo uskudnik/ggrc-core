@@ -4,16 +4,12 @@
 # Maintained By: urban@reciprocitylabs.com
 
 import random
-import copy
 from integration.ggrc import TestCase
 
 import os
-from ggrc import db
-from ggrc_workflows.models import Workflow, TaskGroup, CycleTaskGroupObjectTask, Cycle
-from integration.ggrc_workflows.generator import WorkflowsGenerator
-from integration.ggrc.api_helper import Api
-from integration.ggrc.generator import ObjectGenerator
-from nose.plugins.skip import SkipTest
+from integration.ggrc_workflows import generator as workflow_generator
+from integration.ggrc import api_helper
+from integration.ggrc import generator
 
 
 if os.environ.get('TRAVIS', False):
@@ -21,11 +17,12 @@ if os.environ.get('TRAVIS', False):
 
 
 class BaseWorkflowTestCase(TestCase):
+
   def setUp(self):
     TestCase.setUp(self)
-    self.api = Api()
-    self.generator = WorkflowsGenerator()
-    self.object_generator = ObjectGenerator()
+    self.api = api_helper.Api()
+    self.generator = workflow_generator.WorkflowsGenerator()
+    self.object_generator = generator.ObjectGenerator()
 
     self.random_objects = self.object_generator.generate_random_objects()
 
