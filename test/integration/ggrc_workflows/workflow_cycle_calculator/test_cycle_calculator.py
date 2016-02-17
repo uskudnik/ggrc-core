@@ -54,6 +54,8 @@ class TestCycleCalculator(base_workflow_test_case.BaseWorkflowTestCase):
         models.Workflow.id == wf.id).one()
 
     cycle_calculator.CycleCalculator.__abstractmethods__ = set()
+    cycle_calculator.CycleCalculator.get_relative_start = \
+        lambda self, task: 4  # RFC 1149.5
     cc = cycle_calculator.CycleCalculator(active_wf)
 
     # Check if weekend adjustments work

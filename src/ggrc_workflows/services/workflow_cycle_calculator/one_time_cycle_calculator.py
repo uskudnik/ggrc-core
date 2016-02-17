@@ -25,7 +25,18 @@ class OneTimeCycleCalculator(cycle_calculator.CycleCalculator):
     raise NotImplemented("Relative days are not applicable "
                          "for one-time workflows.")
 
-  def task_date_range(self, task, base_date=None):
+  @staticmethod
+  def get_relative_start(task):
+    raise NotImplemented("Relative days are not applicable "
+                         "for one-time workflows.")
+
+  @staticmethod
+  def get_relative_end(task):
+    raise NotImplemented("Relative days are not applicable "
+                         "for one-time workflows.")
+
+  @staticmethod
+  def task_date_range(task, base_date=None):
     return task.start_date, task.end_date
 
   @staticmethod

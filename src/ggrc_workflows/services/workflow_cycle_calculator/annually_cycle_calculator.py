@@ -36,6 +36,14 @@ class AnnuallyCycleCalculator(cycle_calculator.CycleCalculator):
           'relative_end': (task.relative_end_month, task.relative_end_day)
       }
 
+  @staticmethod
+  def get_relative_start(task):
+    return (task.relative_start_month, task.relative_start_day)
+
+  @staticmethod
+  def get_relative_end(task):
+    return (task.relative_end_month, task.relative_end_day)
+
   def relative_day_to_date(self, relative_day, relative_month=None,
                            base_date=None):
     """Converts an annual relative day representation to concrete date object

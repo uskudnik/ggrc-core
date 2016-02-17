@@ -34,6 +34,14 @@ class MonthlyCycleCalculator(cycle_calculator.CycleCalculator):
           'relative_end': task.relative_end_day
       }
 
+  @staticmethod
+  def get_relative_start(task):
+    return task.relative_start_day
+
+  @staticmethod
+  def get_relative_end(task):
+    return task.relative_end_day
+
   def relative_day_to_date(self, relative_day, relative_month=None,
                            base_date=None):
     """Converts a monthly representation of a day into concrete date object.
