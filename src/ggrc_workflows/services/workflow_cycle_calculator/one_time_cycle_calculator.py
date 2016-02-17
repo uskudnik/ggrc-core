@@ -4,21 +4,24 @@
 # Maintained By: urban@reciprocitylabs.com
 import datetime
 
-from ggrc_workflows.services.workflow_cycle_calculator.cycle_calculator import CycleCalculator
+from ggrc_workflows.services.workflow_cycle_calculator import cycle_calculator
 
-class OneTimeCycleCalculator(CycleCalculator):
+
+class OneTimeCycleCalculator(cycle_calculator.CycleCalculator):
   """CycleCalculator implementation for one-time workflows
 
-  Because one-time workflows have concrete start and end dates already specified
-  for tasks, we don't have to implement relative_day_to_date function and
-  we can return all values in their raw format (we don't need to adjust for
+  Because one-time workflows have concrete start and end dates already
+  specified for tasks, we don't have to implement relative_day_to_date function
+  and we can return all values in their raw format (we don't need to adjust for
   holidays).
   """
+
   def __init__(self, workflow, base_date=None):
     super(OneTimeCycleCalculator, self).__init__(workflow)
     self.tasks.sort(key=lambda t: self._date_normalizer(t.start_date))
 
-  def relative_day_to_date(self):
+  def relative_day_to_date(self, relative_day, relative_month=None,
+                           base_date=None):
     raise NotImplemented("Relative days are not applicable "
                          "for one-time workflows.")
 
@@ -33,9 +36,9 @@ class OneTimeCycleCalculator(CycleCalculator):
 
   def workflow_date_range(self):
     tasks_start_dates = [
-      self._date_normalizer(task.start_date) for task in self.tasks]
+        self._date_normalizer(task.start_date) for task in self.tasks]
     tasks_end_dates = [
-      self._date_normalizer(task.end_date) for task in self.tasks]
+        self._date_normalizer(task.end_date) for task in self.tasks]
     return min(tasks_start_dates), max(tasks_end_dates)
 
   def next_cycle_start_date(self, base_date=None):

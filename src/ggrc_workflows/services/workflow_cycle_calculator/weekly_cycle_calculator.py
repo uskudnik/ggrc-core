@@ -6,16 +6,17 @@
 import datetime
 from dateutil import relativedelta
 
-from cycle_calculator import CycleCalculator
+from ggrc_workflows.services.workflow_cycle_calculator import cycle_calculator
 
-class WeeklyCycleCalculator(CycleCalculator):
+
+class WeeklyCycleCalculator(cycle_calculator.CycleCalculator):
   """CycleCalculator implementation for weekly workflows.
 
   Weekly workflows have a date domain of workdays (Monday - Friday),
   calculations are based on relative_start_day and relative_end_day.
   """
   time_delta = datetime.timedelta(weeks=1)
-  date_domain = {1,2,3,4,5}
+  date_domain = {1, 2, 3, 4, 5}
 
   def __init__(self, workflow, base_date=None):
     if not base_date:
@@ -26,12 +27,12 @@ class WeeklyCycleCalculator(CycleCalculator):
     self.reified_tasks = {}
     for task in self.tasks:
       start_date, end_date = self.non_adjusted_task_date_range(
-        task, base_date, initialisation=True)
+          task, base_date, initialisation=True)
       self.reified_tasks[task.id] = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'relative_start': task.relative_start_day,
-        'relative_end': task.relative_end_day
+          'start_date': start_date,
+          'end_date': end_date,
+          'relative_start': task.relative_start_day,
+          'relative_end': task.relative_end_day
       }
 
   def relative_day_to_date(self, relative_day, relative_month=None,
@@ -51,8 +52,8 @@ class WeeklyCycleCalculator(CycleCalculator):
     relative_day = int(relative_day)
     if relative_day not in WeeklyCycleCalculator.date_domain:
       raise ValueError(
-        "Weekly recurring cycles can only have relative day in 1-5 "
-        "(Monday-Friday) range")
+          "Weekly recurring cycles can only have relative day in 1-5 "
+          "(Monday-Friday) range")
 
     if not base_date:
       base_date = today
@@ -61,7 +62,7 @@ class WeeklyCycleCalculator(CycleCalculator):
     # (which could be in the middle of the week)
     # We can use `weekday` method because it's 0-based method (0-6)
     base_date = base_date - relativedelta.relativedelta(
-      days=base_date.weekday())
+        days=base_date.weekday())
 
     return base_date + relativedelta.relativedelta(
-      days=relative_day - 1)  # -1 because we are counting from 1
+        days=relative_day - 1)  # -1 because we are counting from 1

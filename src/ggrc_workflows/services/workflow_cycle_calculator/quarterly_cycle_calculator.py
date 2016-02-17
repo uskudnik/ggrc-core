@@ -6,9 +6,10 @@
 import datetime
 from dateutil import relativedelta
 
-from cycle_calculator import CycleCalculator
+from ggrc_workflows.services.workflow_cycle_calculator import cycle_calculator
 
-class QuarterlyCycleCalculator(CycleCalculator):
+
+class QuarterlyCycleCalculator(cycle_calculator.CycleCalculator):
   """CycleCalculator implementation for quarterly workflows.
 
   Quarterly workflows have a specific date domain that also requires a bit more
@@ -19,9 +20,9 @@ class QuarterlyCycleCalculator(CycleCalculator):
   time_delta = relativedelta.relativedelta(months=3)
 
   date_domain = {
-    1: {1, 4, 7, 10}, # Jan/Apr/Jul/Oct
-    2: {2, 5, 8, 11}, # Feb/May/Aug/Nov
-    3: {3, 6, 9, 12}  # Mar/Jun/Sep/Dec
+      1: {1, 4, 7, 10},  # Jan/Apr/Jul/Oct
+      2: {2, 5, 8, 11},  # Feb/May/Aug/Nov
+      3: {3, 6, 9, 12}  # Mar/Jun/Sep/Dec
   }
 
   def __init__(self, workflow, base_date=None):
@@ -31,12 +32,13 @@ class QuarterlyCycleCalculator(CycleCalculator):
     self.reified_tasks = {}
     for task in self.tasks:
       start_date, end_date = self.non_adjusted_task_date_range(
-        task, base_date, initialisation=True)
+          task, base_date, initialisation=True)
       self.reified_tasks[task.id] = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'relative_start': (task.relative_start_month, task.relative_start_day),
-        'relative_end': (task.relative_start_month, task.relative_end_day)
+          'start_date': start_date,
+          'end_date': end_date,
+          'relative_start': (task.relative_start_month,
+                             task.relative_start_day),
+          'relative_end': (task.relative_start_month, task.relative_end_day)
       }
 
   def relative_day_to_date(self, relative_day, relative_month=None,
@@ -85,8 +87,8 @@ class QuarterlyCycleCalculator(CycleCalculator):
     base_date = self.get_base_date(base_date)
 
     T = [[0, -1, -2], [-2, 0, -1], [-1, -2, 0]]
-    index_T = {0:2, 2:1, 1:0}
-    month_shift = T[relative_month-1][index_T[base_date.month % 3]]
+    index_T = {0: 2, 2: 1, 1: 0}
+    month_shift = T[relative_month - 1][index_T[base_date.month % 3]]
 
     start_date = (datetime.date(base_date.year, base_date.month, 1) +
                   relativedelta.relativedelta(months=month_shift))

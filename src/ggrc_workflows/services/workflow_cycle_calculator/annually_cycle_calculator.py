@@ -6,9 +6,10 @@
 import datetime
 from dateutil import relativedelta
 
-from cycle_calculator import CycleCalculator
+from ggrc_workflows.services.workflow_cycle_calculator import cycle_calculator
 
-class AnnuallyCycleCalculator(CycleCalculator):
+
+class AnnuallyCycleCalculator(cycle_calculator.CycleCalculator):
   """CycleCalculator implementation for annual workflows.
 
   Month domain is 1-12, date domain is 1-31.
@@ -26,12 +27,13 @@ class AnnuallyCycleCalculator(CycleCalculator):
     self.reified_tasks = {}
     for task in self.tasks:
       start_date, end_date = self.non_adjusted_task_date_range(
-        task, base_date, initialisation=True)
+          task, base_date, initialisation=True)
       self.reified_tasks[task.id] = {
-        'start_date': start_date,
-        'end_date': end_date,
-        'relative_start': (task.relative_start_month, task.relative_start_day),
-        'relative_end': (task.relative_end_month, task.relative_end_day)
+          'start_date': start_date,
+          'end_date': end_date,
+          'relative_start': (task.relative_start_month,
+                             task.relative_start_day),
+          'relative_end': (task.relative_end_month, task.relative_end_day)
       }
 
   def relative_day_to_date(self, relative_day, relative_month=None,
@@ -48,15 +50,14 @@ class AnnuallyCycleCalculator(CycleCalculator):
     Afterwards we repeat the math similar to monthly cycle calculator and
     ensure that the day is not overflowing to the next month.
     """
-    today = datetime.date.today()
 
     relative_day = int(relative_day)
     relative_month = int(relative_month)
 
-    if not relative_day in AnnuallyCycleCalculator.date_domain:
+    if relative_day not in AnnuallyCycleCalculator.date_domain:
       raise ValueError
 
-    if not relative_month in AnnuallyCycleCalculator.month_domain:
+    if not relative_month not in AnnuallyCycleCalculator.month_domain:
       raise ValueError
 
     base_date = self.get_base_date(base_date)
