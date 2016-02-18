@@ -21,21 +21,21 @@ class OneTimeCycleCalculator(cycle_calculator.CycleCalculator):
 
   def relative_day_to_date(self, relative_day, relative_month=None,
                            base_date=None):
-    raise NotImplemented("Relative days are not applicable "
-                         "for one-time workflows.")
+    raise NotImplementedError("Relative days are not applicable "
+                              "for one-time workflows.")
 
   def sort_tasks(self):
     self.tasks.sort(key=lambda t: self._date_normalizer(t.start_date))
 
   @staticmethod
   def get_relative_start(task):
-    raise NotImplemented("Relative days are not applicable "
-                         "for one-time workflows.")
+    raise NotImplementedError("Relative days are not applicable "
+                              "for one-time workflows.")
 
   @staticmethod
   def get_relative_end(task):
-    raise NotImplemented("Relative days are not applicable "
-                         "for one-time workflows.")
+    raise NotImplementedError("Relative days are not applicable "
+                              "for one-time workflows.")
 
   @staticmethod
   def task_date_range(task, base_date=None):
