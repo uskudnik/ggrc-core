@@ -141,10 +141,10 @@ class CycleCalculator(object):
     """Base date from which we will calculate must be less than or equal to the
     first tasks' relative day to ensure consistent calculation across different
     tasks."""
-    first_day = 42
-
     if not base_date:
       base_date = datetime.date.today()
+
+    first_day = base_date.day
 
     if self.tasks:
       _, first_day = self.get_first_task_relative()
