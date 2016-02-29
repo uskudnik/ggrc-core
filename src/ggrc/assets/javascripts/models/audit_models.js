@@ -1086,6 +1086,46 @@
       }
       this.mark_for_addition(
         'related_objects_as_destination', this.audit.program);
+    },
+    related_issues: function () {
+      var relevantTypes = {
+        Audit: {
+          objectBinding: 'audits',
+          relatableBinding: 'program_issues',
+          weight: 5
+        },
+        Regulation: {
+          objectBinding: 'related_regulations',
+          relatableBinding: 'related_issues',
+          weight: 3
+        },
+        Control: {
+          objectBinding: 'related_controls',
+          relatableBinding: 'related_issues',
+          weight: 10
+        }
+      };
+      return this._related(relevantTypes);
+    },
+    related_requests: function () {
+      var relevantTypes = {
+        Audit: {
+          objectBinding: 'audits',
+          relatableBinding: 'program_requests',
+          weight: 5
+        },
+        Regulation: {
+          objectBinding: 'related_regulations',
+          relatableBinding: 'related_requests',
+          weight: 3
+        },
+        Control: {
+          objectBinding: 'related_controls',
+          relatableBinding: 'related_requests',
+          weight: 10
+        }
+      };
+      return this._related(relevantTypes);
     }
   });
 })(this.can);

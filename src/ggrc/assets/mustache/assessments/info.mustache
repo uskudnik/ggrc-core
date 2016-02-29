@@ -64,30 +64,6 @@
         <div class="span6">
           {{{render '/static/mustache/base_objects/notes.mustache' instance=instance}}}
         </div>
-        <div class="span6">
-          <ul class="repeated-utility">
-            {{#is_allowed 'update' instance context='for'}}
-            {{#with_mapping 'related_audits' instance}}
-            {{#with_mapping 'related_controls' instance}}
-            {{#using control=control}}
-            {{#with_create_issue_json instance}}
-            <li>
-                <a class="btn btn-small btn-info" href="javascript://" data-toggle="modal-ajax-form" data-modal-class="modal-wide" data-object-singular="Issue" data-object-plural="issues" data-object-params='{{create_issue_json}}'>
-                  Create Issue
-                </a>
-            </li>
-            <li>
-                <a class="btn btn-small btn-info" href="javascript://" data-toggle="modal-ajax-form" data-modal-class="modal-wide" data-object-singular="Request" data-object-plural="requests" data-object-params='{{create_issue_json}}'>
-                  Create Request
-                </a>
-            </li>
-            {{/with_create_issue_json}}
-            {{/using}}
-            {{/with_mapping}}
-            {{/with_mapping}}
-            {{/is_allowed}}
-          </ul>
-        </div>
       </div>
       <div class="row-fluid wrap-row">
         <div class="span12">
@@ -103,6 +79,12 @@
           </a></li>
           <li><a href="#tab2" data-toggle="tab">
             Related Assessments
+          </a></li>
+          <li><a href="#tab3" data-toggle="tab">
+            Requests
+          </a></li>
+          <li><a href="#tab4" data-toggle="tab">
+            Issues
           </a></li>
         </ul>
         <div class="tab-content">
@@ -121,6 +103,12 @@
 
           <div class="tab-pane fade in" id="tab2">
             {{> /static/mustache/assessments/relatable_objects.mustache }}
+          </div>
+          <div class="tab-pane fade in" id="tab3">
+            {{> /static/mustache/assessments/related_requests.mustache }}
+          </div>
+          <div class="tab-pane fade in" id="tab4">
+            {{> /static/mustache/assessments/related_issues.mustache }}
           </div>
 
         </div>
