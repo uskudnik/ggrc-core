@@ -86,6 +86,13 @@ def init_all_models(app):
     if ext_init_models:
       ext_init_models(app)
 
+def init_lazy_mixins(app):
+  from ggrc.models import all_models
+  import inspect
+  for model in all_models.all_models:
+    for mixin in inspect.getmro(model):
+      if hasattr(mixin, '__lazy_init__') and getattr(mixin, '__lazy_init__'):
+        mixin.init(model)
 
 def init_session_monitor_cache():
   from sqlalchemy.orm.session import Session
@@ -167,6 +174,7 @@ def init_sanitization_hooks():
 
 def init_app(app):
   init_all_models(app)
+  init_lazy_mixins(app)
   init_session_monitor_cache()
   init_sanitization_hooks()
 

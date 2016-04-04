@@ -8,6 +8,7 @@ from sqlalchemy.orm import validates
 from ggrc import db
 from ggrc.models import reflection
 from ggrc.models.mixins_assignable import Assignable
+from ggrc.models.mixin_autostatuschangable import AutoStatusChangable
 from ggrc.models.mixins import BusinessObject
 from ggrc.models.mixins import CustomAttributable
 from ggrc.models.mixins import deferred
@@ -22,7 +23,7 @@ from ggrc.models.track_object_state import HasObjectState
 from ggrc.models.track_object_state import track_state_for_class
 
 
-class Assessment(Assignable, HasObjectState, TestPlanned, CustomAttributable,
+class Assessment(AutoStatusChangable, Assignable, HasObjectState, TestPlanned, CustomAttributable,
                  Documentable, Personable, Timeboxed, Ownable,
                  Relatable, BusinessObject, db.Model):
   __tablename__ = 'assessments'
@@ -53,6 +54,21 @@ class Assessment(Assignable, HasObjectState, TestPlanned, CustomAttributable,
       PublishOnly('audit'),
       PublishOnly('object')
   ]
+
+  _tracked_attrs = {
+    'contact_id',
+    'description',
+    'design',
+    'notes',
+    'operationally',
+    'reference_url',
+    'secondary_contact_id',
+    'test_plan',
+    'title',
+    'url',
+  }
+  _tracked_date_attrs = {'start_date', 'end_date'}
+
 
   _aliases = {
       "audit": {

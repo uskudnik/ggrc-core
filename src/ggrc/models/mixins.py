@@ -570,8 +570,11 @@ class CustomAttributable(object):
     )
 
   def custom_attributes(cls, attributes):
+    print "custom attributes edit"
     from ggrc.fulltext.mysql import MysqlRecordProperty
     from ggrc.models.custom_attribute_value import CustomAttributeValue
+    from ggrc.services import signals
+
     if 'custom_attributes' not in attributes:
       return
     attributes = attributes['custom_attributes']
@@ -579,13 +582,43 @@ class CustomAttributable(object):
     #    [ {<id of attribute definition> : attribute value, ... }, ... ]
 
     # 1) Get all custom attribute values for the CustomAttributable instance
-    attr_values = db.session.query(CustomAttributeValue).filter(and_(
-        CustomAttributeValue.attributable_type == cls.__class__.__name__,
-        CustomAttributeValue.attributable_id == cls.id)).all()
+    attr_values = db.session.query(CustomAttributeValue).filter(and_(CustomAttributeValue.attributable_type == cls.__class__.__name__,CustomAttributeValue.attributable_id == cls.id)).all()
 
     attr_value_ids = [v.id for v in attr_values]
     ftrp_properties = [
         "attribute_value_{id}".format(id=_id) for _id in attr_value_ids]
+
+    from collections import defaultdict
+
+    old_values = defaultdict(list)
+    last_values = dict()
+
+    for v in attr_values:
+      old_values[v.custom_attribute_id] += [(v.created_at, v.attribute_value)]
+
+    print "old_values: ", old_values
+    print "\n"*4
+    print "-"*80
+    for key, ovs in old_values.items():
+      last_values[str(key)] = sorted(ovs, key=lambda val: val[0], reverse=True)[0]
+
+    print "custom attribute saving: ", attributes
+    print "last_values: ", last_values
+    print "\n"*2
+
+    # x = [(attributes[unicode(k)], v,  for k, v in last_values.items()]
+    # print x
+    # print any(x)
+
+    # for k, (c, v) in last_values.items():
+    #   print attributes[unicode(k)], v, attributes[unicode(k)] != v
+
+
+    # import ipdb;
+    # ipdb.set_trace()
+
+    # return "bla"
+
 
     # 2) Delete all fulltext_record_properties for the list of values
     if len(attr_value_ids) > 0:
@@ -606,12 +639,18 @@ class CustomAttributable(object):
     # 4) Instantiate custom attribute values for each of the definitions
     #    passed in (keys)
     # pylint: disable=not-an-iterable
+    # print "\n"*4
+    # print "-"*80
+
+
     definitions = {d.id: d for d in cls.get_custom_attribute_definitions()}
     for ad_id in attributes.keys():
+      obj_type = cls.__class__.__name__
+      obj_id = cls.id
       new_value = CustomAttributeValue(
           custom_attribute_id=ad_id,
-          attributable_id=cls.id,
-          attributable_type=cls.__class__.__name__,
+          attributable_id=obj_id,
+          attributable_type=obj_type,
           attribute_value=attributes[ad_id],
       )
       if definitions[int(ad_id)].attribute_type.startswith("Map:"):
@@ -622,7 +661,24 @@ class CustomAttributable(object):
       #    of the custom attributable.
       # TODO: We are ignoring contexts for now
       # new_value.context_id = cls.context_id
+
       db.session.add(new_value)
+      if ad_id in last_values:
+        ca, pv = last_values[ad_id] # created_at, previous_value
+        if pv != attributes[ad_id]:
+          signals.Signals.custom_attribute_changed.send(
+            cls.__class__,
+            obj=cls,
+            src={
+              "type": obj_type,
+              "id": obj_id,
+              "value": new_value
+            }, service=cls.__class__.__name__)
+          print "\n"*3
+          print "emmiting signal: "
+          print "cls: ", cls
+
+
 
   _publish_attrs = ['custom_attribute_values']
   _update_attrs = ['custom_attributes']

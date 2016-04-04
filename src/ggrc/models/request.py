@@ -12,6 +12,7 @@ from ggrc import db
 from ggrc.models import audit
 from ggrc.models import reflection
 from ggrc.models.mixins_assignable import Assignable
+from ggrc.models.mixin_autostatuschangable import AutoStatusChangable
 from ggrc.models.mixins import Base
 from ggrc.models.mixins import CustomAttributable
 from ggrc.models.mixins import deferred
@@ -26,7 +27,7 @@ from ggrc.models import relationship
 from ggrc.services.common import Resource
 
 
-class Request(Assignable, Documentable, Personable, CustomAttributable,
+class Request(AutoStatusChangable, Assignable, Documentable, Personable, CustomAttributable,
               Relatable, Titled, Slugged, Described, Base, db.Model):
   __tablename__ = 'requests'
   _title_uniqueness = False
@@ -73,6 +74,10 @@ class Request(Assignable, Documentable, Personable, CustomAttributable,
       'title',
       'description'
   ]
+
+  _tracked_attrs = (set(_publish_attrs) | {'slug'}) - {'status', 'requested_on', 'due_on'}
+  _tracked_date_attrs = {'requested_on', 'due_on'}
+
   _sanitize_html = [
       'gdrive_upload_path',
       'test',
@@ -159,70 +164,3 @@ class Request(Assignable, Documentable, Personable, CustomAttributable,
   @classmethod
   def default_request_type(cls):
     return cls.VALID_TYPES[0]
-
-
-def _date_has_changes(attr):
-  """Date fields are always interpreted as changed because incoming data is
-    of type datetime.datetime, while database field has type datetime.date.
-    This function normalises this and performs the correct check.
-  """
-  if not attr.history.added or not attr.history.deleted:
-    return False
-  added, deleted = attr.history.added[0], attr.history.deleted[0]
-  if isinstance(added, datetime.datetime):
-    added = added.date()
-  return added != deleted
-
-
-@Resource.model_put.connect_via(Request)
-def handle_request_put(sender, obj=None, src=None, service=None):
-  all_attrs = set(Request._publish_attrs)
-  non_tracked_attrs = {'status'}
-  tracked_date_attrs = {'requested_on', 'due_on'}
-  tracked_attrs = all_attrs - non_tracked_attrs - tracked_date_attrs
-  has_changes = False
-
-  if any(getattr(inspect(obj).attrs, attr).history.has_changes()
-         for attr in tracked_attrs):
-    has_changes = True
-
-  if any(_date_has_changes(getattr(inspect(obj).attrs, attr))
-         for attr in tracked_date_attrs):
-    has_changes = True
-
-  if has_changes and obj.status in {"Open", "Final", "Verified"}:
-    obj.status = "In Progress"
-
-
-@Resource.model_posted.connect_via(relationship.Relationship)
-def handle_relationship_post(sender, obj=None, src=None, service=None):
-  has_changes = False
-  if "Request" in (obj.source.type, obj.destination.type):
-    if obj.source.type == "Request":
-      req = obj.source
-    else:
-      req = obj.destination
-
-    if "Document" in (obj.source.type, obj.destination.type):
-      # This captures the "Add URL" event
-      has_changes = True
-
-    if "Person" in (obj.source.type, obj.destination.type):
-      # This captures assignable addition
-      history = inspect(obj).attrs.relationship_attrs.history
-      if history.has_changes() and req.status in {"Final", "Verified"}:
-        has_changes = True
-
-    if has_changes and req.status in {"Open", "Final", "Verified"}:
-      req.status = "In Progress"
-      db.session.add(req)
-
-
-@Resource.model_posted.connect_via(ObjectDocument)
-def handle_objectdocument_post(sender, obj=None, src=None, service=None):
-  # This captures "Attach Evidence" event
-  if obj.documentable.type == "Request":
-    req = obj.documentable
-    if req.status in {"Open", "Final", "Verified"}:
-      req.status = "In Progress"
-      db.session.add(req)

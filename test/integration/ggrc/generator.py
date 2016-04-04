@@ -12,7 +12,7 @@ from ggrc import db
 from ggrc.app import app
 from ggrc.models import (
   Person, Policy, Control, Objective, Standard, System, NotificationConfig,
-  CustomAttributeDefinition
+  CustomAttributeDefinition, Program, Audit, Assessment, Relationship
 )
 from ggrc.services.common import Resource
 from ggrc_basic_permissions.models import UserRole, Role
@@ -105,6 +105,159 @@ class ObjectGenerator(Generator):
     default[obj_name].update(data)
 
     return self.generate(Policy, obj_name, default)
+
+  def generate_relationship(self, source, destination, attr_type=None, attr=None):
+    print "generate_relationship"
+    print "source: ", source
+    print "destination: ", destination
+    data = {
+      "relationship": {
+        "source": {
+          "id": source.id,
+          "type": source.type
+        },
+        "destination": {
+          "id": destination.id,
+          "type": destination.type
+        },
+        "context": None},
+    }
+    if attr:
+      data["relationship"].update({
+        "attrs": {
+          attr_type: attr
+        }})
+    # print "relationship payload: ", data
+    return self.generate(Relationship, "relationship", data)
+
+  def generate_user_roles(self, user_roles=None):
+    if not user_roles:
+      users_roles = [("creator", "Creator"), ("reader", "Reader"),
+                     ("editor", "Editor"), ("admin", "gGRC Admin")]
+
+    self.users = {}
+    for (name, role) in users_roles:
+      _, user = self.generate_person(
+        data={"name": name}, user_role=role)
+      self.users[name] = user
+    return self.users
+
+  def generate_program(self, person, data={}):
+    print "generate program", person
+    obj_name = "program"
+    default = {
+      obj_name: {
+        "title": "program " + self.random_str(),
+        "contact": {
+          "id": person.id,
+          "href": "/api/people/{}".format(person.id),
+          "type": "Person"
+        },
+        "context": None,
+        "description": "",
+        "end_date": "",
+        "kind": "Directive",
+        "notes": "",
+        "reference_url": "",
+        "secondary_contact": None,
+        "slug": "",
+        "start_date": "",
+        "status": "Draft",
+        "url": "",
+      }
+    }
+
+    default[obj_name].update(data)
+    return self.generate(Program, obj_name, default)
+
+  def generate_audit(self, program, person, data={}):
+    obj_name = "audit"
+    default = {
+      obj_name: {
+        "title": "audit " + self.random_str(),
+        "contact": {
+          "id": person.id,
+          "href": "/api/people/{}".format(person.id),
+          "type": "Person"
+        },
+        "context": {
+          "id": program.context.id,
+          "href": "/api/contexts/{}".format(program.context.id),
+          "type": "Context"
+        },
+        "description":"",
+        "modified_by_id":"150",
+        "object_type":"Assessment",
+        "program": {
+          "id": program.id,
+          "href": "/api/programs/{}".format(program.id),
+          "type": "Program"
+        },
+        "slug":"",
+        "status":"Planned",
+      }
+    }
+    default[obj_name].update(data)
+    return self.generate(Audit, obj_name, default)
+
+  def generate_assessment(self,
+                          program,
+                          audit,
+                          primary_contact,
+                          assessment_object,
+                          assessors, data={}):
+    obj_name = "assessment"
+    default = {
+      obj_name: {
+        "title": "assessment " + self.random_str(),
+        "audit":{
+          "id": audit.id,
+          "href": "/api/audits/{}".format(audit.id),
+          "type": "Audit"
+        },
+        "contact":{
+          "id": primary_contact.id,
+          "href": "/api/people/{}".format(primary_contact.id),
+          "type": "Person"
+        },
+        "context":None,
+        "description":"",
+        "design":None,
+        "notes":"",
+        "object":{
+          "id": assessment_object.id,
+          "href": "/api/{}/{}".format(assessment_object.__tablename__, assessment_object.id),
+          "type": "{}".format(assessment_object.type)
+        },
+        "operationally":None,
+        "owners":[],
+        "reference_url":"",
+        "secondary_contact":None,
+        "slug":"",
+        "status":"Open",
+        "test_plan":"",
+        "url":"",
+        "validate_assessor":True,
+        "validate_creator":True,
+      }
+    }
+    default[obj_name].update(data)
+    assessment_response, assessment = self.generate(
+      Assessment, obj_name, default)
+
+    relationships_to_create = [(program,),(audit,)] + assessors
+
+    created_relationships = []
+    for rel in relationships_to_create:
+      if len(rel) == 1:
+        rel_obj = rel[0]
+        res_rel = self.generate_relationship(assessment, rel_obj)
+        created_relationships += [res_rel]
+      else:
+        rel_obj, rel_attr = rel
+        res_rel = self.generate_relationship(assessment, rel_obj, "AssigneeType", rel_attr)
+        created_relationships+= [res_rel]
+    return (assessment_response, assessment), created_relationships
 
   def generate_user_role(self, person, role):
     data = {

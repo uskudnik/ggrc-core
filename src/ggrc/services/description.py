@@ -7,6 +7,8 @@ import json
 from flask import request, current_app
 from flask.views import MethodView
 
+from ggrc import services
+
 """RESTful service discovery API for gGRC services."""
 
 class ServiceDescription(MethodView):
@@ -14,7 +16,6 @@ class ServiceDescription(MethodView):
   resources, resource collections and services.
   """
   def get(self):
-    from ggrc import services
     endpoints = {}
     for entry in services.all_services():
       service = getattr(services, entry.model_class.__name__)
