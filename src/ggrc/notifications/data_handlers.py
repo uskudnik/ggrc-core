@@ -162,6 +162,19 @@ def get_assignable_data(notif):
   return {}
 
 
+def generate_comment_notification(obj, comment, person):
+  return {
+      "user": get_person_dict(person),
+      "comment_created": {
+          comment.id: {
+              "description": comment.description,
+              "parent_type": obj._inflector.title_singular.title(),
+              "parent_id": obj.id,
+          }
+      }
+  }
+
+
 def get_comment_data(notif):
   """Return data for comment notifications.
 
@@ -177,6 +190,7 @@ def get_comment_data(notif):
     Dict with all data needed for sending comment notifications.
   """
   data = {}
+  recipients = set()
   comment = get_notification_object(notif)
   rel = (models.Relationship.find_related(comment, models.Request()) or
          models.Relationship.find_related(comment, models.Assessment()))
@@ -185,17 +199,15 @@ def get_comment_data(notif):
     comment_obj = (rel.Request_destination or rel.Request_source or
                    rel.Assessment_destination or rel.Assessment_source)
 
-  recipients = set(comment_obj.recipients.split(","))
+  if comment_obj.recipients:
+    recipients = set(comment_obj.recipients.split(","))
+
   for person, assignee_type in comment_obj.assignees:
-    if recipients.intersection(set(assignee_type)):
-      data[person.email] = {
-          "user": get_person_dict(person),
-          "comment_created": {
-              comment.id: {
-                  "description": comment.description,
-                  "parent_type": comment_obj._inflector.title_singular.title(),
-                  "parent_id": comment_obj.id,
-              }
-          }
-      }
+    if recipients:
+      if recipients.intersection(set(assignee_type)):
+        data[person.email] = generate_comment_notification(
+            comment_obj, comment, person)
+    else:
+      data[person.email] = generate_comment_notification(
+          comment_obj, comment, person)
   return data
