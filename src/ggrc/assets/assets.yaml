@@ -142,6 +142,7 @@ dashboard-js-files:
   - components/inline_edit/inline_dropdown.js
   - components/inline_edit/inline_input.js
   - components/inline_edit/inline_text.js
+  - components/cloner.js
   #- d3.v2.js
   #- related_graph.js
 
