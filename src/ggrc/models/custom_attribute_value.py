@@ -1,7 +1,9 @@
-# Copyright (C) 2014 Google Inc., authors, and contributors <see AUTHORS file>
+# Copyright (C) 2016 Google Inc., authors, and contributors <see AUTHORS file>
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 # Created By: laran@reciprocitylabs.com
-# Maintained By: laran@reciprocitylabs.com
+# Maintained By: urban@reciprocitylabs.com
+
+"""Custom attribute value model"""
 
 from sqlalchemy import or_
 
@@ -10,6 +12,8 @@ from ggrc.models.mixins import Base
 
 
 class CustomAttributeValue(Base, db.Model):
+  """Custom attribute value model"""
+
   __tablename__ = 'custom_attribute_values'
 
   custom_attribute_id = db.Column(
@@ -127,3 +131,17 @@ class CustomAttributeValue(Base, db.Model):
           predicate(cls.attribute_value)
       ).exists()
     return filter_by
+
+  def _clone(self, obj):
+    """Clone a custom value to a new object."""
+    data = {
+        "custom_attribute_id": self.custom_attribute_id,
+        "attributable_id": obj.id,
+        "attributable_type": self.attributable_type,
+        "attribute_value": self.attribute_value,
+        "attribute_object_id": self.attribute_object_id
+    }
+    ca_value = CustomAttributeValue(**data)
+    db.session.add(ca_value)
+    db.session.flush()
+    return ca_value
