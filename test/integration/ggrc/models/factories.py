@@ -34,6 +34,34 @@ class ModelFactory(factory.Factory):
     return instance
 
 
+class CustomAttributeDefinitionFactory(ModelFactory):
+  # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
+  # pylint: disable=no-init
+
+  class Meta:
+    model = models.CustomAttributeDefinition
+
+  title = None
+  definition_type = None
+  definition_id = None
+  attribute_type = None
+  multi_choice_options = None
+
+
+class CustomAttributeValueFactory(ModelFactory):
+  # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
+  # pylint: disable=no-init
+
+  class Meta:
+    model = models.CustomAttributeValue
+
+  custom_attribute_id = None
+  attributable_id = None
+  attributable_type = None
+  attribute_value = None
+  attribute_object_id = None
+
+
 class TitledFactory(factory.Factory):
   # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
   # pylint: disable=no-init
@@ -103,6 +131,18 @@ class CategorizationFactory(ModelFactory):
   categorizable_type = None
 
 
+class ContextFactory(ModelFactory):
+  # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
+  # pylint: disable=no-init
+
+  class Meta:
+    model = models.Context
+
+  name = factory.LazyAttribute(
+      lambda obj: random_string("SomeObjectType Context"))
+  related_object = None
+
+
 class ProgramFactory(ModelFactory):
   # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
   # pylint: disable=no-init
@@ -125,6 +165,24 @@ class AuditFactory(ModelFactory):
   slug = factory.LazyAttribute(lambda _: random_string(""))
   status = "Planned"
   program_id = factory.LazyAttribute(lambda _: ProgramFactory().id)
+  context_id = factory.LazyAttribute(lambda _: ContextFactory().id)
+
+
+class AssessmentTemplateFactory(ModelFactory):
+  # pylint: disable=too-few-public-methods,missing-docstring,old-style-class
+  # pylint: disable=no-init
+
+  class Meta:
+    model = models.AssessmentTemplate
+
+  title = factory.LazyAttribute(
+      lambda _: random_string("assessment template title"))
+  template_object_type = None
+  test_plan_procedure = False
+  procedure_description = factory.LazyAttribute(
+      lambda _: random_string("lorem ipsum description"))
+  default_people = \
+      "{\"assessors\":\"Object Owners\",\"verifiers\":\"Object Owners\"}"
 
 
 class ContractFactory(ModelFactory):
