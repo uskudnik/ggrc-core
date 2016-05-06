@@ -6,13 +6,16 @@
 """A module containing the implementation of the assessment template entity."""
 
 from ggrc import db
-from ggrc.models.mixins import Base, Titled
+from ggrc.models import mixins
+from ggrc.models import relationship
+
 from ggrc.models.reflection import PublishOnly
-from ggrc.models.relationship import Relatable
 from ggrc.models.types import JsonType
 
 
-class AssessmentTemplate(Base, Relatable, Titled, db.Model):
+class AssessmentTemplate(mixins.Base, mixins.Titled,
+                         relationship.Relatable,
+                         db.Model):
   """A class representing the assessment template entity.
 
   An Assessment Template is a template that allows users for easier creation of
@@ -56,3 +59,41 @@ class AssessmentTemplate(Base, Relatable, Titled, db.Model):
       "default_people",
       PublishOnly("DEFAULT_PEOPLE_LABELS")
   ]
+
+  def _clone(self):
+    """Assessment Template object clone"""
+    data = {
+        "title": self.title,
+        "template_object_type": self.template_object_type,
+        "test_plan_procedure": self.test_plan_procedure,
+        "procedure_description": self.procedure_description,
+        "default_people": self.default_people,
+    }
+    assessment_template_copy = AssessmentTemplate(**data)
+    db.session.add(assessment_template_copy)
+    db.session.flush()
+    return assessment_template_copy
+
+  def get_custom_attributes(self):
+    """Get custom attributes defined for certain assessment template"""
+    from ggrc.models import CustomAttributeDefinition
+    return CustomAttributeDefinition.query.filter(
+        CustomAttributeDefinition.definition_type == "assessment_template",
+        CustomAttributeDefinition.definition_id == self.id,
+    ).all()
+
+  def clone(self, target):
+    """Clone Assessment Template and related custom attributes."""
+    assessment_template_copy = self._clone()
+    rel = relationship.Relationship(
+        source=target,
+        destination=assessment_template_copy
+    )
+    db.session.add(rel)
+    db.session.flush()
+
+    for cad in self.get_custom_attributes():
+      # pylint: disable=protected-access
+      cad._clone(assessment_template_copy)
+
+    return (assessment_template_copy, rel)
