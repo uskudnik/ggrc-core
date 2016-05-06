@@ -69,6 +69,7 @@
     create: 'POST /api/audits',
     mixins: ['contactable', 'unique_title'],
     is_custom_attributable: true,
+    is_clonable: true,
     attributes: {
       context: 'CMS.Models.Context.stub',
       program: 'CMS.Models.Program.stub',

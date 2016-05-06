@@ -384,6 +384,7 @@ dashboard-js-template-files:
   - audits/tree_header.mustache
   - audits/search_result.mustache
   - audits/extended_info.mustache
+  - audits/cloner.mustache
   - requests/tree.mustache
   - requests/info.mustache
   - requests/tree_footer.mustache
