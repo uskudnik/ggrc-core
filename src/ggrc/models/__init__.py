@@ -110,7 +110,9 @@ def init_lazy_mixins():
   """
   from ggrc.models import all_models
   for model in all_models.all_models:
-    for mixin in inspect.getmro(model):
+    # MRO chain includes base model that we don't want to include here
+    mixins = [mixin for mixin in inspect.getmro(model) if mixin != model]
+    for mixin in mixins:
       if getattr(mixin, '__lazy_init__', False):
         mixin.init(model)
 
