@@ -142,7 +142,7 @@ dashboard-js-files:
   - components/inline_edit/inline_dropdown.js
   - components/inline_edit/inline_input.js
   - components/inline_edit/inline_text.js
-  - components/cloner.js
+  - components/object_cloner/object_cloner.js
   #- d3.v2.js
   #- related_graph.js
 
@@ -384,7 +384,7 @@ dashboard-js-template-files:
   - audits/tree_header.mustache
   - audits/search_result.mustache
   - audits/extended_info.mustache
-  - audits/cloner.mustache
+  - audits/object_cloner.mustache
   - requests/tree.mustache
   - requests/info.mustache
   - requests/tree_footer.mustache

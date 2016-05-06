@@ -54,16 +54,16 @@
 
     {{#if instance.class.is_clonable}}
     <li>
-      <cloner
+      <object-cloner
         instance="instance"
-        modal_title="Cloning {{ instance.type }}"
-        modal_description="Select all that you would like to clone as well?"
+        modal-title="Cloning {{ instance.type }}"
+        modal-description="Select all that you would like to clone as well?"
 
       >
-        <a href="javascript://" can-click="cloner">
+        <a href="javascript://" can-click="cloneObject">
           <i class="fa fa-clone"></i>
           Clone {{ instance.type }}</a>
-      </cloner>
+      </object-cloner>
     </li>
     {{/if}}
 
