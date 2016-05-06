@@ -165,6 +165,25 @@ class Relatable(object):
         backref='{0}_source'.format(cls.__name__),
         cascade='all, delete-orphan')
 
+  def related_objects(self, _types=None):
+    """Get related objects
+
+    If types is specified, only return objects of selected types
+
+    Args:
+      _types: A set of object types
+    Returns:
+      A list (or subset if _types is specified) of related objects.
+    """
+    # pylint: disable=not-an-iterable
+    source_objs = [obj.source for obj in self.related_sources]
+    dest_objs = [obj.destination for obj in self.related_destinations]
+    related = source_objs + dest_objs
+
+    if _types:
+      return [obj for obj in related if obj.type in _types]
+    return related
+
   _publish_attrs = [
       'related_sources',
       'related_destinations'
