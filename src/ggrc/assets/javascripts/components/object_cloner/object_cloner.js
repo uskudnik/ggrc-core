@@ -5,7 +5,9 @@
  Maintained By: urban@reciprocitylabs.com
  */
 (function (can, $) {
-  GGRC.Components('object-cloner', {
+  'use strict';
+
+  GGRC.Components('objectCloner', {
     tag: 'object-cloner',
     template: '<content/>',
     scope: {
