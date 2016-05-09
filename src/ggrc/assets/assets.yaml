@@ -298,6 +298,7 @@ dashboard-js-template-files:
   - mapped_objects/dropdown_menu_tier2.mustache
   - modals/close_buttons.mustache
   - modals/confirm.mustache
+  - modals/prompt_buttons.mustache
   - modals/confirm_buttons.mustache
   - modals/delete_cancel_buttons.mustache
   - modals/done_buttons.mustache
