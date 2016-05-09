@@ -165,11 +165,11 @@ class Audit(mixins_clonable.Clonable,
 
     audit_copy = self._clone()
 
-    related_children = self.related_objects(
-        set([c for c in children if c in self.CLONEABLE_CHILDREN]))
+    if any(children):
+      related_children = self.related_objects(children)
 
-    for obj in related_children:
-      obj.clone(audit_copy)
+      for obj in related_children:
+        obj.clone(audit_copy)
 
     self._operation_data = {
         "clone": {

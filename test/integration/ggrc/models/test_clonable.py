@@ -119,6 +119,146 @@ class TestClonable(integration.ggrc.TestCase):
             assessment_template_1.id
         ).count(), len(assessment_template_attributes_def))
 
+  def test_audit_clone_invalid_values(self):
+    """Test that audit gets copied successfully if invalid input"""
+    audit = factories.AuditFactory()
+    assessment_template_1 = factories.AssessmentTemplateFactory(
+        title="test_audit_clone assessment_template_1")
+    assessment_template_2 = factories.AssessmentTemplateFactory(
+        title="test_audit_clone assessment_template_2")
+
+    factories.RelationshipFactory(
+        source=audit,
+        destination=assessment_template_1)
+    factories.RelationshipFactory(
+        source=audit,
+        destination=assessment_template_2)
+
+    assessment_template_attributes_def = [
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test text field",
+            "attribute_type": "Text",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test RTF",
+            "attribute_type": "Rich Text",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test checkbox",
+            "attribute_type": "Checkbox",
+            "multi_choice_options": "test checkbox label"
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test date field",
+            "attribute_type": "Date",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test dropdown field",
+            "attribute_type": "Dropdown",
+            "multi_choice_options": "ddv1,ddv2,ddv3"
+        },
+    ]
+
+    assessment_template_attributes = []
+    for attribute in assessment_template_attributes_def:
+      attr = factories.CustomAttributeDefinitionFactory(**attribute)
+      assessment_template_attributes += [attr]
+
+    self.clone_object(audit, [u"blaaaaaa", 123])
+
+    self.assertEqual(db.session.query(models.Audit).filter(
+        models.Audit.title.like("%copy%")).count(), 1)
+
+    audit_copy = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%copy%")).first()
+
+    assessment_templates = audit_copy.related_objects({"AssessmentTemplate"})
+
+    self.assertEqual(len(assessment_templates), 0)
+
+  def test_audit_clone_template_not_selected(self):
+    """Test that assessment templates don't get copied"""
+    audit = factories.AuditFactory()
+    assessment_template_1 = factories.AssessmentTemplateFactory(
+        title="test_audit_clone assessment_template_1")
+    assessment_template_2 = factories.AssessmentTemplateFactory(
+        title="test_audit_clone assessment_template_2")
+
+    factories.RelationshipFactory(
+        source=audit,
+        destination=assessment_template_1)
+    factories.RelationshipFactory(
+        source=audit,
+        destination=assessment_template_2)
+
+    assessment_template_attributes_def = [
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test text field",
+            "attribute_type": "Text",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test RTF",
+            "attribute_type": "Rich Text",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test checkbox",
+            "attribute_type": "Checkbox",
+            "multi_choice_options": "test checkbox label"
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test date field",
+            "attribute_type": "Date",
+            "multi_choice_options": ""
+        },
+        {
+            "definition_type": "assessment_template",
+            "definition_id": assessment_template_1.id,
+            "title": "test dropdown field",
+            "attribute_type": "Dropdown",
+            "multi_choice_options": "ddv1,ddv2,ddv3"
+        },
+    ]
+
+    assessment_template_attributes = []
+    for attribute in assessment_template_attributes_def:
+      attr = factories.CustomAttributeDefinitionFactory(**attribute)
+      assessment_template_attributes += [attr]
+
+    self.clone_object(audit, [""])
+
+    self.assertEqual(db.session.query(models.Audit).filter(
+        models.Audit.title.like("%copy%")).count(), 1)
+
+    audit_copy = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%copy%")).first()
+
+    assessment_templates = audit_copy.related_objects({"AssessmentTemplate"})
+
+    self.assertEqual(len(assessment_templates), 0)
+
   def test_audit_clone_auditors(self):
     """Test that auditors get cloned correctly"""
     auditor_role = Role.query.filter_by(name="Auditor").first()

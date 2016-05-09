@@ -27,7 +27,9 @@ class Clonable(object):
     def handle_model_clone(sender, obj=None, src=None, service=None):
       # pylint: disable=unused-argument, unused-variable
       if src.get("operation", "") == u"clone":
-        obj.clone(children=src.get("associatedObjects", []))
+        associated_objects = src.get("associatedObjects", [])
+        obj.clone(children={obj for obj in associated_objects
+                            if obj in model.CLONEABLE_CHILDREN})
 
   def generate_attribute(self, attribute):
     """Generate a new unique attribute as a copy of original"""
