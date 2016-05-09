@@ -182,7 +182,7 @@ class Relatable(object):
 
     if _types:
       return [obj for obj in related if obj.type in _types]
-    return related
+    return set(related)
 
   _publish_attrs = [
       'related_sources',
