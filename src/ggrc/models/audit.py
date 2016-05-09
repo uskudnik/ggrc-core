@@ -104,11 +104,14 @@ class Audit(mixins_clonable.Clonable,
   }
 
   def _clone(self):
-    """Internal audit cloning.
+    """Clone audit and all relevant attributes.
 
     Keeps the internals of actual audit cloning and everything that is related
     to audit itself (auditors, audit firm, context setting,
     custom attribute values, etc.)
+
+    Returns:
+      New audit instance that is flushed but not committed.
     """
     from ggrc_basic_permissions import create_audit_context
 
@@ -137,7 +140,11 @@ class Audit(mixins_clonable.Clonable,
     return audit_copy
 
   def _clone_auditors(self, audit):
-    """Auditors cloning"""
+    """Clone auditors of specified audit.
+
+    Args:
+      audit: Audit instance
+    """
     from ggrc_basic_permissions.models import Role, UserRole
 
     role = Role.query.filter_by(name="Auditor").first()
@@ -154,7 +161,9 @@ class Audit(mixins_clonable.Clonable,
     db.session.flush()
 
   def clone(self, children=None):
-    """Audit cloning.
+    """Clone audit with specified whitelisted children.
+
+    Children that can be cloned should be specified in CLONEABLE_CHILDREN.
 
     Args:
       children: A list of related objects that should also be copied and linked

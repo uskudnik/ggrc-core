@@ -166,7 +166,7 @@ class Relatable(object):
         cascade='all, delete-orphan')
 
   def related_objects(self, _types=None):
-    """Get related objects
+    """Returns all or a subset of related objects of certain types.
 
     If types is specified, only return objects of selected types
 
