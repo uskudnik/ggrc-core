@@ -166,7 +166,7 @@ class Relatable(object):
         cascade='all, delete-orphan')
 
   def related_objects(self, _types=None):
-    """Get related objects
+    """Returns all or a subset of related objects of certain types.
 
     If types is specified, only return objects of selected types
 
@@ -182,7 +182,7 @@ class Relatable(object):
 
     if _types:
       return [obj for obj in related if obj.type in _types]
-    return related
+    return set(related)
 
   _publish_attrs = [
       'related_sources',
