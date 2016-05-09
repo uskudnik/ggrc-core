@@ -33,8 +33,9 @@
           modal_description: scope.attr('modalDescription'),
           content_view: GGRC.mustache_path + '/' +
             instance.class.root_collection + '/object_cloner.mustache',
-          modal_confirm: 'Copy',
-          skip_refresh: true
+          modal_confirm: 'Clone',
+          skip_refresh: true,
+          button_view: GGRC.mustache_path + '/modals/prompt_buttons.mustache'
         }, function () {
           instance.attr('operation', 'clone');
           instance.attr('associatedObjects', this.getIncluded());
