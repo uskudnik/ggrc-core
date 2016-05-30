@@ -35,6 +35,38 @@ class TestMixinAutoStatusChangable(integration.ggrc.TestCase):
     assessment = self.refresh_object(assessment)
     self.assertEqual(assessment.status, models.Assessment.PROGRESS_STATE)
 
+  def test_sending_assessment_no_verifiers_wrong_state(self):
+    """Test that no verifier scenario doesn't save correct value"""
+    people = [
+        ("creator@example.com", "Creator"),
+        ("assessor_1@example.com", "Assessor"),
+        ("assessor_2@example.com", "Assessor"),
+    ]
+
+    assessment = self.create_assessment(people)
+
+    self.assertEqual(assessment.status,
+                     models.Assessment.START_STATE)
+
+    assessment = self.refresh_object(assessment)
+
+    self.api_helper.modify_object(assessment, {
+        "title": assessment.title + " modified, change #1"
+    })
+
+    assessment = self.refresh_object(assessment)
+
+    self.assertEqual(assessment.status,
+                     models.Assessment.PROGRESS_STATE)
+
+    response = self.api_helper.modify_object(assessment, {
+        "status": assessment.DONE_STATE,
+    })
+    self.assertEqual(response.status_code, 400, "Status shouldn't be adjusted")
+
+    assessment = self.refresh_object(assessment)
+    self.assertEqual(assessment.status, models.Assessment.PROGRESS_STATE)
+
   def test_chaning_assignees_when_open_should_not_change_status(self):
     """Adding/chaning/removing assignees shouldn't change status when open"""
     people = [
