@@ -355,7 +355,7 @@ class FinishedDate(object):
     )
 
   _publish_attrs = [
-      reflection.PublishOnly('finished_date')
+      reflection.PublishOnly("finished_date")
   ]
 
   _aliases = {
@@ -408,8 +408,8 @@ class VerifiedDate(object):
     return self.verified_date != None  # noqa
 
   _publish_attrs = [
-      reflection.PublishOnly('verified'),
-      reflection.PublishOnly('verified_date'),
+      reflection.PublishOnly("verified"),
+      reflection.PublishOnly("verified_date"),
   ]
 
   _aliases = {
