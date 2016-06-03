@@ -39,6 +39,7 @@
       instance.delay_resolving_save_until($.when(attrDfd));
     },
     '{CMS.Models.AssessmentTemplate} created': function (model, ev, instance) {
+      return;
       if (!(instance instanceof CMS.Models.AssessmentTemplate)) {
         return;
       }

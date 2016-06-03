@@ -5,10 +5,16 @@
 
 from ggrc import db
 from ggrc.models import mixins
+from ggrc.models.mixins import Base, Titled, CustomAttributable
+from ggrc.models.audit import Audit
+from ggrc.models.custom_attribute_definition import CustomAttributeDefinition
 from ggrc.models.reflection import PublishOnly
 from ggrc.models import relationship
 from ggrc.models.types import JsonType
+from ggrc.services import common
+from ggrc.services import signals
 
+from sqlalchemy.orm import validates
 
 class AssessmentTemplate(relationship.Relatable, mixins.Titled,
                          mixins.CustomAttributable, mixins.Slugged, db.Model):
@@ -93,3 +99,62 @@ class AssessmentTemplate(relationship.Relatable, mixins.Titled,
       cad._clone(assessment_template_copy)
 
     return (assessment_template_copy, rel)
+
+  @validates("mandatory")
+  def validate_mandatory(self, key, value):
+    print "validate_mandatory", key, value
+    return value
+
+  @validates("multi_choice_options")
+  def validate_multi_choice_options(self, key, value):
+    print "validate_multi_choice_options", key, value
+
+  @validates("multi_choice_mandatory")
+  def validate_multi_choice_mandatory(self, key, value):
+    print "validate_multi_choice_mandatory", key, value
+
+
+def create_audit_relationship(audit_stub, obj):
+  audit = Audit.query.get(audit_stub["id"])
+
+  rel = relationship.Relationship(
+    source=audit,
+    destination=obj,
+    context=audit.context)
+  db.session.add(rel)
+
+def create_custom_attribute_definition(obj, data):
+  del data['opts']
+  mandatory = data["mandatory"] if "mandatory" in data else False
+  update = {
+    "mandatory": mandatory,
+    "definition_type": "assessment_template",
+    "definition_id": obj.id,
+  }
+  data.update(update)
+  custom_attr_def = CustomAttributeDefinition(**data)
+  db.session.add(custom_attr_def)
+
+
+def create_custom_attribute_definitions(obj, custom_attribute_definitions):
+  print "\n"*5
+  print "create_custom_attribute_definitions"
+  for cad in custom_attribute_definitions:
+    print "cad: ", cad
+    create_custom_attribute_definition(obj, cad)
+
+
+@common.Resource.model_posted.connect_via(AssessmentTemplate)
+def handle_assessment_template(sender, obj=None, src=None, service=None):
+  db.session.flush()
+  print "handle_assessment_template", obj.id
+  print src
+
+  if "audit" in src:
+    create_audit_relationship(src["audit"], obj)
+
+  if ("custom_attribute_definitions" in src and
+      src["custom_attribute_definitions"]):
+    create_custom_attribute_definitions(obj, src["custom_attribute_definitions"])
+
+  db.session.flush()
