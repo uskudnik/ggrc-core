@@ -26,7 +26,14 @@ class Statusable(object):
 
   NOT_DONE_STATES = {START_STATE, PROGRESS_STATE}
   DONE_STATES = {DONE_STATE} | END_STATES
-  VALID_STATES = tuple(NOT_DONE_STATES | DONE_STATES)
+
+  VALID_STATES = (
+      START_STATE,
+      PROGRESS_STATE,
+      DONE_STATE,
+      VERIFIED_STATE,
+      FINAL_STATE
+  )
 
   status = db.Column(
       db.Enum(*VALID_STATES),
@@ -76,10 +83,8 @@ class Statusable(object):
     if self.status == value:
       return value
 
-    verifiers = any(True for _, roles in self.assignees
-                    if "Verifier" in roles)
-
-    valid_transitions = self.STATE_MACHINE[verifiers]
+    has_verifiers = any(self.get_assignees("Verifier"))
+    valid_transitions = self.STATE_MACHINE[has_verifiers]
 
     if (self.status, value) in valid_transitions:
       return value
