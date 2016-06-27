@@ -57,6 +57,7 @@ class Statusable(object):
           (None, START_STATE),
           # None to PROGRESS_STATE needed because of imports
           (None, PROGRESS_STATE),
+          (START_STATE, PROGRESS_STATE),
           (PROGRESS_STATE, DONE_STATE),
           (DONE_STATE, PROGRESS_STATE),
           (START_STATE, DONE_STATE),
