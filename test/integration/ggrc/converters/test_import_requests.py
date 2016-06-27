@@ -123,13 +123,32 @@ class TestRequestImport(converters.TestCase):
         "block_warnings": set(),
         "row_errors": set(),
         "row_warnings": set([
-            errors.STATUSABLE_INVALID_TRANSITION.format(line=4, object_type="Request", current_state=models.Request.PROGRESS_STATE, new_state=models.Request.DONE_STATE),
-            errors.STATUSABLE_INVALID_TRANSITION.format(line=5, object_type="Request", current_state=models.Request.START_STATE, new_state=models.Request.FINAL_STATE),
-            errors.STATUSABLE_INVALID_TRANSITION.format(line=6, object_type="Request", current_state=models.Request.PROGRESS_STATE, new_state=models.Request.VERIFIED_STATE),
-            errors.STATUSABLE_INVALID_TRANSITION.format(line=7, object_type="Request", current_state=models.Request.START_STATE, new_state=models.Request.DONE_STATE),
-            errors.STATUSABLE_INVALID_STATE.format(line=10, object_type="Request"),
-            errors.STATUSABLE_INVALID_STATE.format(line=11, object_type="Request"),
-            errors.STATUSABLE_INVALID_STATE.format(line=12, object_type="Request"),
+            errors.STATUSABLE_INVALID_TRANSITION.format(
+                line=4,
+                object_type="Request",
+                current_state=models.Request.PROGRESS_STATE,
+                new_state=models.Request.DONE_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(
+                line=5,
+                object_type="Request",
+                current_state=models.Request.START_STATE,
+                new_state=models.Request.FINAL_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(
+                line=6,
+                object_type="Request",
+                current_state=models.Request.PROGRESS_STATE,
+                new_state=models.Request.VERIFIED_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(
+                line=7,
+                object_type="Request",
+                current_state=models.Request.START_STATE,
+                new_state=models.Request.DONE_STATE),
+            errors.STATUSABLE_INVALID_STATE.format(
+                line=10, object_type="Request"),
+            errors.STATUSABLE_INVALID_STATE.format(
+                line=11, object_type="Request"),
+            errors.STATUSABLE_INVALID_STATE.format(
+                line=12, object_type="Request"),
         ]),
     }
 
