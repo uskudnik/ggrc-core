@@ -45,6 +45,8 @@ class Statusable(object):
   STATE_MACHINE = {
       False: {
           (None, START_STATE),
+          # None to PROGRESS_STATE needed because of imports
+          (None, PROGRESS_STATE),
           (START_STATE, PROGRESS_STATE),
           (PROGRESS_STATE, FINAL_STATE),
           (FINAL_STATE, PROGRESS_STATE),
@@ -53,7 +55,8 @@ class Statusable(object):
       },
       True: {
           (None, START_STATE),
-          (START_STATE, PROGRESS_STATE),
+          # None to PROGRESS_STATE needed because of imports
+          (None, PROGRESS_STATE),
           (PROGRESS_STATE, DONE_STATE),
           (DONE_STATE, PROGRESS_STATE),
           (START_STATE, DONE_STATE),
@@ -71,6 +74,26 @@ class Statusable(object):
       }
   }
 
+  IMPORT_STATE_MACHINE = {
+    (None, START_STATE),
+    (None, PROGRESS_STATE),
+    (START_STATE, PROGRESS_STATE),
+    (START_STATE, START_STATE),
+    (PROGRESS_STATE, PROGRESS_STATE),
+  }
+
+  @classmethod
+  def valid_transition(cls, old, new, has_verifiers):
+    if (old, new) in cls.STATE_MACHINE[has_verifiers]:
+      return True
+    return False
+
+  @classmethod
+  def valid_import_transition(cls, old, new):
+    if (old, new) in cls.IMPORT_STATE_MACHINE:
+      return True
+    return False
+
   @validates("status")
   def validate_status(self, key, value):
     """Validate status transitions"""
@@ -84,9 +107,8 @@ class Statusable(object):
       return value
 
     has_verifiers = any(self.get_assignees("Verifier"))
-    valid_transitions = self.STATE_MACHINE[has_verifiers]
 
-    if (self.status, value) in valid_transitions:
+    if self.valid_transition(self.status, value, has_verifiers):
       return value
 
     message = ("Transition from \"{}\" to \"{}\" is not allowed.".format(
