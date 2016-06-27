@@ -14,7 +14,20 @@ class StatusableColumnHandler(handlers.StatusColumnHandler):
   def parse_item(self):
     """Parse raw_value into a valid request status if possible."""
     value = handlers.StatusColumnHandler.parse_item(self)
-    if value in models.Request.END_STATES:
-      value = models.Request.PROGRESS_STATE
-      self.add_warning(errors.REQUEST_INVALID_STATE)
+    obj = self.row_converter.obj
+
+    if not mixins_statusable.Statusable.valid_import_transition(obj.status,
+                                                                value):
+      if (not obj.status and
+         value not in mixins_statusable.Statusable.NOT_DONE_STATES):
+        self.add_warning(
+          errors.STATUSABLE_INVALID_STATE,
+          object_type=obj.type)
+        value = mixins_statusable.Statusable.PROGRESS_STATE
+      else:
+        self.add_warning(
+          errors.STATUSABLE_INVALID_TRANSITION,
+          object_type=obj.type, current_state=obj.status, new_state=value)
+        value = mixins_statusable.Statusable.PROGRESS_STATE
+
     return value
