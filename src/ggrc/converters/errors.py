@@ -80,8 +80,13 @@ DELETE_CASCADE_ERROR = (u"Line {line}: Cannot delete object {object_type}:"
 
 UNKNOWN_ERROR = u"Line {line}: Import failed due to unknown error."
 
-REQUEST_INVALID_STATE = (u"Line {line}: Can not set Request state to Completed"
-                         u" or Verified via imports.")
+STATUSABLE_INVALID_STATE = (u"LINE {line}: Can not set {object_type} state to "
+                            u"Completed, Ready for Review or Verified via "
+                            u"imports.")
+
+STATUSABLE_INVALID_TRANSITION = (u"LINE {line}: Can not transition "
+                                 u"{object_type} state from {current_state} to "
+                                 u"{new_state}.")
 
 INVALID_START_END_DATES = (u"Line {line}: {start_date} can not be after "
                            u"{end_date}. The line will be ignored.")

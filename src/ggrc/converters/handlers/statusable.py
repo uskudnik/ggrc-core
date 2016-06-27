@@ -5,10 +5,10 @@
 
 from ggrc.converters.handlers import handlers
 from ggrc.converters import errors
-from ggrc import models
+from ggrc.models import mixins_statusable
 
 
-class RequestStatusColumnHandler(handlers.StatusColumnHandler):
+class StatusableColumnHandler(handlers.StatusColumnHandler):
   """Handler for request status."""
 
   def parse_item(self):

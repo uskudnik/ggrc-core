@@ -4,7 +4,7 @@
 """List of all column handlers for objects in the ggrc module."""
 
 from ggrc.converters.handlers import handlers
-from ggrc.converters.handlers import request
+from ggrc.converters.handlers import statusable
 from ggrc.converters.handlers import related_person
 from ggrc.converters.handlers import list_handlers
 from ggrc.converters.handlers import boolean
@@ -49,7 +49,8 @@ GGRC_COLUMN_HANDLERS = {
     "report_start_date": handlers.DateColumnHandler,
     "request": handlers.RequestColumnHandler,
     "request_audit": handlers.RequestAuditColumnHandler,
-    "request_status": request.RequestStatusColumnHandler,
+    "request_status": statusable.StatusableColumnHandler,
+    "assessment_status": statusable.StatusableColumnHandler,
     "request_type": handlers.RequestTypeColumnHandler,
     "requested_on": handlers.DateColumnHandler,
     "secondary_assessor": handlers.UserColumnHandler,
