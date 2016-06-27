@@ -15,7 +15,7 @@ proj-3",mkt-1
 ,Request 7,Audit,Request title 3,,,not started,user1@a.com,user2@a.com,,Interview,7/7/2015,5/17/2016,,,,,
 ,Request 8,Audit,Request title 4,,,not started,user1@a.com,user2@a.com,user@example.com,Interview,7/8/2015,5/18/2016,,,,,
 ,Request 9,Audit,Request title 5,,,not started,user1@a.com,user2@a.com,,Interview,7/9/2015,5/19/2016,,,,,
-,Request 10,Audit,Request title 6,,,Ready for Review,user1@a.com,user2@a.com,user@example.com,Interview,7/10/2015,5/20/2016,,,,,
+,Request 10,Audit,Request title 6,,,In Progress,user1@a.com,user2@a.com,user@example.com,Interview,7/10/2015,5/20/2016,,,,,
 ,Request 11,Audit,Request title 7,,,In PROGRESS,user1@a.com,user2@a.com,user@example.com,Interview,7/11/2015,5/21/2016,,,,,
 ,Request 12,Audit,Request title 8,,,Not Started,user1@a.com,user2@a.com,user@example.com,Interview,7/12/2015,5/22/2016,,,,,
 ,,,,,,,,,,,,,,,,,
