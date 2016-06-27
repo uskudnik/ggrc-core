@@ -323,7 +323,7 @@ class TestCreatorProgram(TestCase):
     response = self.api.post(all_models.Request, {
         "request": {
             "title": "Request for audit",
-            "status": "In Progress",
+            "status": "Not Started",
             "context": {
                 "id": audit_context_id,
                 "type": "Context"
