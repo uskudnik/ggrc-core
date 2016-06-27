@@ -103,8 +103,11 @@ class TestRequestImport(converters.TestCase):
     These tests are an intermediate part for zucchini release and will be
     updated in the next release.
 
-    CSV sheet:
-      https://docs.google.com/spreadsheets/d/1Jg8jum2eQfvR3kZNVYbVKizWIGZXvfqv3yQpo2rIiD8/edit#gid=299569476
+    CSV sheets:
+      * request_full_no_warnings.csv:
+          https://docs.google.com/spreadsheets/d/1Jg8jum2eQfvR3kZNVYbVKizWIGZXvfqv3yQpo2rIiD8/edit#gid=704933240
+      * request_update_intermediate.csv:
+          https://docs.google.com/spreadsheets/d/1Jg8jum2eQfvR3kZNVYbVKizWIGZXvfqv3yQpo2rIiD8/edit#gid=299569476
     """
     self.import_file("request_full_no_warnings.csv")
     response = self.import_file("request_update_intermediate.csv")
@@ -120,10 +123,13 @@ class TestRequestImport(converters.TestCase):
         "block_warnings": set(),
         "row_errors": set(),
         "row_warnings": set([
-            errors.REQUEST_INVALID_STATE.format(line=5),
-            errors.REQUEST_INVALID_STATE.format(line=6),
-            errors.REQUEST_INVALID_STATE.format(line=11),
-            errors.REQUEST_INVALID_STATE.format(line=12),
+            errors.STATUSABLE_INVALID_TRANSITION.format(line=4, object_type="Request", current_state=models.Request.PROGRESS_STATE, new_state=models.Request.DONE_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(line=5, object_type="Request", current_state=models.Request.START_STATE, new_state=models.Request.FINAL_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(line=6, object_type="Request", current_state=models.Request.PROGRESS_STATE, new_state=models.Request.VERIFIED_STATE),
+            errors.STATUSABLE_INVALID_TRANSITION.format(line=7, object_type="Request", current_state=models.Request.START_STATE, new_state=models.Request.DONE_STATE),
+            errors.STATUSABLE_INVALID_STATE.format(line=10, object_type="Request"),
+            errors.STATUSABLE_INVALID_STATE.format(line=11, object_type="Request"),
+            errors.STATUSABLE_INVALID_STATE.format(line=12, object_type="Request"),
         ]),
     }
 
@@ -136,7 +142,8 @@ class TestRequestImport(converters.TestCase):
     self.assertEqual(requests["Request 60"].status, models.Request.START_STATE)
     self.assertEqual(requests["Request 61"].status,
                      models.Request.PROGRESS_STATE)
-    self.assertEqual(requests["Request 62"].status, models.Request.DONE_STATE)
+    self.assertEqual(requests["Request 62"].status,
+                     models.Request.PROGRESS_STATE)
     self.assertEqual(requests["Request 63"].status,
                      models.Request.PROGRESS_STATE)
     self.assertEqual(requests["Request 64"].status,
