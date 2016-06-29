@@ -27,13 +27,13 @@ class Statusable(object):
   NOT_DONE_STATES = {START_STATE, PROGRESS_STATE}
   DONE_STATES = {DONE_STATE} | END_STATES
 
-  VALID_STATES = (
+  VALID_STATES = {
       START_STATE,
       PROGRESS_STATE,
       DONE_STATE,
       VERIFIED_STATE,
       FINAL_STATE
-  )
+  }
 
   status = db.Column(
       db.Enum(*VALID_STATES),
