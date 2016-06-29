@@ -12,12 +12,17 @@ from ggrc.models import reflection
 from ggrc.models.audit import Audit
 from ggrc.models.comment import Commentable
 from ggrc.models.mixin_autostatuschangable import AutoStatusChangable
-from ggrc.models.mixins import BusinessObject
 from ggrc.models.mixins import CustomAttributable
+from ggrc.models.mixins import Described
 from ggrc.models.mixins import FinishedDate
+from ggrc.models.mixins import Hyperlinked
+from ggrc.models.mixins import Noted
+from ggrc.models.mixins import Slugged
 from ggrc.models.mixins import TestPlanned
 from ggrc.models.mixins import Timeboxed
+from ggrc.models.mixins import Titled
 from ggrc.models.mixins import VerifiedDate
+from ggrc.models.mixins import WithContact
 from ggrc.models.mixins import deferred
 from ggrc.models.mixins_assignable import Assignable
 from ggrc.models.object_document import Documentable
@@ -35,7 +40,8 @@ class Assessment(mixins_statusable.Statusable,
                  CustomAttributable, Documentable, Commentable, Personable,
                  mixins_reminderable.Reminderable, Timeboxed,
                  Ownable, Relatable, FinishedDate, VerifiedDate,
-                 BusinessObject, db.Model):
+                 Noted, Described, Hyperlinked, WithContact,
+                 Titled, Slugged, db.Model):
   """Class representing Assessment.
 
   Assessment is an object representing an individual assessment performed on
