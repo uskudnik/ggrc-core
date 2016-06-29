@@ -26,7 +26,6 @@ class TestAssessmentMixins(test_mixins_base.TestMixinsBase):
     self.model = Assessment
     self.included_mixins = [
         mixins_assignable.Assignable,
-        mixins.BusinessObject,
         mixins.CustomAttributable,
         db.Model,
         object_document.Documentable,
@@ -36,6 +35,14 @@ class TestAssessmentMixins(test_mixins_base.TestMixinsBase):
         object_owner.Ownable,
         object_person.Personable,
         relationship.Relatable,
+        mixins.Described,
+        mixins.FinishedDate,
+        mixins.Hyperlinked,
+        mixins.Noted,
+        mixins.Slugged,
+        mixins.Titled,
+        mixins.VerifiedDate,
+        mixins.WithContact,
     ]
 
     self.attributes_introduced = [
