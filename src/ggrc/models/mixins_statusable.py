@@ -76,24 +76,20 @@ class Statusable(object):
   }
 
   IMPORT_STATE_MACHINE = {
-    (None, START_STATE),
-    (None, PROGRESS_STATE),
-    (START_STATE, PROGRESS_STATE),
-    (START_STATE, START_STATE),
-    (PROGRESS_STATE, PROGRESS_STATE),
+      (None, START_STATE),
+      (None, PROGRESS_STATE),
+      (START_STATE, PROGRESS_STATE),
+      (START_STATE, START_STATE),
+      (PROGRESS_STATE, PROGRESS_STATE),
   }
 
   @classmethod
   def valid_transition(cls, old, new, has_verifiers):
-    if (old, new) in cls.STATE_MACHINE[has_verifiers]:
-      return True
-    return False
+    return (old, new) in cls.STATE_MACHINE[has_verifiers]
 
   @classmethod
   def valid_import_transition(cls, old, new):
-    if (old, new) in cls.IMPORT_STATE_MACHINE:
-      return True
-    return False
+    return (old, new) in cls.IMPORT_STATE_MACHINE
 
   @validates("status")
   def validate_status(self, key, value):
