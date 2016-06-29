@@ -128,6 +128,7 @@ class Assessment(mixins_statusable.Statusable,
           "filter_by": "_filter_by_related_verifiers",
           "type": reflection.AttributeInfo.Type.MAPPING,
       },
+      "status": "State"
   }
 
   def validate_conclusion(self, value):
