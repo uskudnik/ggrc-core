@@ -85,8 +85,8 @@ STATUSABLE_INVALID_STATE = (u"LINE {line}: Can not set {object_type} state to "
                             u"imports.")
 
 STATUSABLE_INVALID_TRANSITION = (u"LINE {line}: Can not transition "
-                                 u"{object_type} state from {current_state} to "
-                                 u"{new_state} via imports.")
+                                 u"{object_type} state from {current_state} "
+                                 u"to {new_state} via imports.")
 
 INVALID_START_END_DATES = (u"Line {line}: {start_date} can not be after "
                            u"{end_date}. The line will be ignored.")

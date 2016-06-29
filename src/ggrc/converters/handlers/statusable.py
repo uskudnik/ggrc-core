@@ -21,13 +21,13 @@ class StatusableColumnHandler(handlers.StatusColumnHandler):
       if (not obj.status and
          value not in mixins_statusable.Statusable.NOT_DONE_STATES):
         self.add_warning(
-          errors.STATUSABLE_INVALID_STATE,
-          object_type=obj.type)
+            errors.STATUSABLE_INVALID_STATE,
+            object_type=obj.type)
         value = mixins_statusable.Statusable.PROGRESS_STATE
       else:
         self.add_warning(
-          errors.STATUSABLE_INVALID_TRANSITION,
-          object_type=obj.type, current_state=obj.status, new_state=value)
+            errors.STATUSABLE_INVALID_TRANSITION,
+            object_type=obj.type, current_state=obj.status, new_state=value)
         value = mixins_statusable.Statusable.PROGRESS_STATE
 
     return value
