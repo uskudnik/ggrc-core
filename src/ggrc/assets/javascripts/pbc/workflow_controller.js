@@ -6,6 +6,7 @@
 (function (can, $) {
   can.Control('GGRC.Controllers.PbcWorkflows', {}, {
     '{CMS.Models.AssessmentTemplate} updated': function (model, ev, instance) {
+      return;
       var attrDfd;
       var definitions = instance.custom_attribute_definitions;
 

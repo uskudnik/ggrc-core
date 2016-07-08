@@ -697,13 +697,85 @@ class CustomAttributable(object):
         cascade='all, delete-orphan',
     )
 
+  def update_custom_attribute_definitions(self, custom_attr_defs):
+    def get_attr(obj, key):
+      print obj, key
+      if key == "modified_by_id":
+        # import ipdb;
+        # ipdb.set_trace()
+        return obj["modified_by"]["id"]
+      else:
+        return obj[key]
+
+    from ggrc.models.custom_attribute_definition \
+      import CustomAttributeDefinition
+
+    print "\n"*5
+    print "update_custom_attribute_definitions"
+    print custom_attr_defs
+
+    # editable columns
+    columns = {
+      "Text": {
+          "mandatory",
+          "modified_by_id"
+      },
+      "Dropdown": {
+        "multi_choice_options",
+        "multi_choice_mandatory",
+        "modified_by_id",
+        "mandatory"
+      },
+      "Checkbox": {
+      }
+    }
+
+    # columns = custom_attr_defs
+    current_defs = self.custom_attribute_definitions
+
+    old = {}
+    for cad in current_defs:
+      old[getattr(cad, "id")] = {column: getattr(cad, column)
+                                 for column in columns[cad.attribute_type]}
+
+    new = {}
+    for cad in custom_attr_defs:
+      new[cad["id"]] = {column: get_attr(cad, column) for column in columns[cad["attribute_type"]]}
+
+    print "old: "
+    print old
+    print "new: "
+    print new
+    print "modified: "
+    modified = {}
+    for oid in old:
+      modified[oid] = set(new[oid].viewitems()) - set(old[oid].viewitems())
+
+    print modified
+
+    for cadid, updates in modified.items():
+      if updates:
+        cad = CustomAttributeDefinition.query.get(cadid)
+
+        for attr, value in updates:
+          setattr(cad, attr, value)
+    db.session.add(cad)
+
+
   def custom_attributes(cls, attributes):
     from ggrc.fulltext.mysql import MysqlRecordProperty
     from ggrc.models.custom_attribute_value import CustomAttributeValue
     from ggrc.services import signals
 
-    if 'custom_attributes' not in attributes:
+    custom_attr_defs = attributes.get("custom_attribute_definitions", {})
+    if custom_attr_defs != {}:
+      cls.update_custom_attribute_definitions(custom_attr_defs)
+
+    if attributes.get("custom_attributes", {}) == {}:
       return
+
+    # if 'custom_attributes' not in attributes:
+    #   return
 
     attributes = attributes['custom_attributes']
 
@@ -796,7 +868,7 @@ class CustomAttributable(object):
             }, service=cls.__class__.__name__)
 
   _publish_attrs = ['custom_attribute_values', 'custom_attribute_definitions']
-  _update_attrs = ['custom_attributes']
+  _update_attrs = ['custom_attributes', 'custom_attribute_definitions']
   _include_links = ['custom_attribute_definitions']
 
   @classmethod
