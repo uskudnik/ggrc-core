@@ -577,7 +577,7 @@
     /**
      * Return the name of the object as it should be displayed in the UI.
      *
-     * @return {String}
+     * @return {String} - a user-friendly object name
      */
     display_name: function () {
       var desc = this.title;
