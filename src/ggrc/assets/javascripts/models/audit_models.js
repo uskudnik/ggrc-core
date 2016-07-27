@@ -577,6 +577,11 @@
       var desc = this.title;
       var max_len = 20;
       var out_name = desc;
+
+      if (_.isUndefined(desc)) {
+        return '"Request ' + this.id + '" (DELETED)';
+      }
+
       // Truncate if greater than max_len chars
       if (desc.length > max_len) {
         out_name = desc.slice(0, max_len) + ' ...';
