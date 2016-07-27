@@ -573,6 +573,12 @@
         this._super.apply(this, arguments);
       }
     },
+
+    /**
+     * Return the name of the object as it should be displayed in the UI.
+     *
+     * @return {String}
+     */
     display_name: function () {
       var desc = this.title;
       var max_len = 20;
