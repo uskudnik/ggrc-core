@@ -26,6 +26,8 @@ class Revision(Base, db.Model):
   destination_type = db.Column(db.String, nullable=True)
   destination_id = db.Column(db.Integer, nullable=True)
 
+  snapshots = db.relationship("Snapshot")
+
   @staticmethod
   def _extra_table_args(_):
     return (

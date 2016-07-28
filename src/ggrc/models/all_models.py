@@ -53,6 +53,7 @@ from ggrc.models.relationship import RelationshipAttr
 from ggrc.models.request import Request
 from ggrc.models.revision import Revision
 from ggrc.models.section import Section
+from ggrc.models.snapshot import Snapshot
 from ggrc.models.system import Process
 from ggrc.models.system import System
 from ggrc.models.system import SystemOrProcess
@@ -109,7 +110,8 @@ all_models = [
     NotificationConfig,
     NotificationType,
     Notification,
-    Issue
+    Issue,
+    Snapshot,
 ]
 
 __all__ = [model.__name__ for model in all_models]
