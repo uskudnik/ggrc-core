@@ -3408,6 +3408,7 @@ Mustache.registerHelper('get_custom_attr_value', function (attr, instance, optio
 });
 
 Mustache.registerHelper("with_create_issue_json", function (instance, options) {
+  var instances;
   instance = Mustache.resolve(instance);
 
   var audits = instance.get_mapping("related_audits"),
@@ -3440,7 +3441,17 @@ Mustache.registerHelper("with_create_issue_json", function (instance, options) {
     }
   };
 
-  return options.fn(options.contexts.add({'create_issue_json': JSON.stringify(json)}));
+  instances = {
+    audit: audit,
+    program: program,
+    control: control,
+    assessment: instance
+  };
+
+  return options.fn(options.contexts.add({
+    create_issue_json: JSON.stringify(json),
+    create_issue_instances: instances
+  }));
 });
 
 Mustache.registerHelper("pretty_role_name", function (name) {

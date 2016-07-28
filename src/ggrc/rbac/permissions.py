@@ -66,6 +66,8 @@ def is_allowed_update_for(instance):
   """Whether or not the user is allowed to update this particular resource
   instance.
   """
+  print "\n"*5
+  print "permissions.is_allowed_update_for", instance
   return permissions_for(get_user()).is_allowed_update_for(instance)
 
 def is_allowed_delete(resource_type, resource_id, context_id):

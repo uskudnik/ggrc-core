@@ -288,6 +288,8 @@ class DefaultUserPermissions(UserPermissions):
 
   def is_allowed_update_for(self, instance):
     """Whether or not the user is allowed to update the given instance"""
+    print "\n"*5
+    print "permissions_provider", instance
     return self._is_allowed_for(instance, 'update')
 
   def is_allowed_delete(self, resource_type, resource_id, context_id):

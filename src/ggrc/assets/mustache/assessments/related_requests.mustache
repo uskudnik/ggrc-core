@@ -21,23 +21,25 @@ Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 </ul>
 </div>
 <div class="row-fluid wrap-row">
-{{#is_allowed 'create' instance context='for'}}
-  {{#with_mapping 'related_audits' instance}}
-    {{#with_mapping 'related_controls' instance}}
-      {{#using control=control}}
-        {{#with_create_issue_json instance}}
-          <a class="btn btn-small btn-primary"
-             href="javascript://"
-             data-toggle="modal-ajax-form"
-             data-modal-class="modal-wide"
-             data-object-singular="Request"
-             data-object-plural="requests"
-             data-object-params='{{create_issue_json}}'>
-            Create Request
-          </a>
-        {{/with_create_issue_json}}
-      {{/using}}
-    {{/with_mapping}}
+{{#with_mapping 'related_audits' instance}}
+  {{#with_mapping 'related_controls' instance}}
+    {{#using control=control}}
+      {{#with_create_issue_json instance}}
+        {{log create_issue_instances.audit}}
+        {{log create_issue_instances.program}}
+        {{#is_allowed 'update' create_issue_instances.audit context='for'}}
+            <a class="btn btn-small btn-primary"
+           href="javascript://"
+           data-toggle="modal-ajax-form"
+           data-modal-class="modal-wide"
+           data-object-singular="Request"
+           data-object-plural="requests"
+           data-object-params='{{create_issue_json}}'>
+          Create Request
+        </a>
+        {{/is_allowed}}
+      {{/with_create_issue_json}}
+    {{/using}}
   {{/with_mapping}}
-{{/is_allowed}}
+{{/with_mapping}}
 </div>
