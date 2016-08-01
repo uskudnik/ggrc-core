@@ -55,6 +55,12 @@ class Audit(clonable.Clonable,
   object_type = db.Column(
       db.String(length=250), nullable=False, default='Control')
 
+  # Feature flag for audits that had snapshoted objects instead of mapped
+  # objects
+  ff_snapshot_enabled = db.Column(
+      db.Boolean(), nullable=False, default=False
+  )
+
   _publish_attrs = [
       'report_start_date',
       'report_end_date',
