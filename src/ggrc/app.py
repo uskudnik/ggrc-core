@@ -93,7 +93,9 @@ def init_permissions_provider():
 
 def init_extra_listeners():
   from ggrc.automapper import register_automapping_listeners
+  from ggrc.snapshoter import register_snapshot_listeners
   register_automapping_listeners()
+  register_snapshot_listeners()
 
 
 def _enable_debug_toolbar():
