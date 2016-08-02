@@ -19,8 +19,10 @@ from ggrc.models.reflection import PublishOnly
 from ggrc.models.program import Program
 from ggrc.models.person import Person
 
+from ggrc.models.snapshot import Snapshotable
 
-class Audit(clonable.Clonable,
+
+class Audit(Snapshotable, clonable.Clonable,
             CustomAttributable, Personable, HasOwnContext, Relatable,
             Timeboxed, Noted, Described, Hyperlinked, WithContact, Titled,
             Slugged, db.Model):
@@ -62,6 +64,7 @@ class Audit(clonable.Clonable,
   )
 
   _publish_attrs = [
+      "ff_snapshot_enabled",
       'report_start_date',
       'report_end_date',
       'audit_firm',

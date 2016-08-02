@@ -164,6 +164,38 @@
       );
     }
   }, {
+    init: function () {
+      if (this._super) {
+        this._super.apply(this, arguments);
+      }
+
+      console.log("audit instance init");
+      if (this.ff_snapshot_enabled) {
+        this.load_snapshots();
+      }
+    },
+    load_snapshots: function () {
+      var snapshot_ids = _.map(this.snapshoted_objects, 'id');
+      console.log("snapshoted objects: ", this.snapshoted_objects);
+      console.log("snapshot_ids", snapshot_ids);
+
+      CMS.Models.Snapshot.findAll({
+        id__in: snapshot_ids.join()
+      }).then(function (snapshots) {
+        var revision_ids = _.map(snapshots, 'revision_id');
+        console.log("got back snapshots!", snapshots);
+        return CMS.Models.Revision.findAll({
+          id__in: revision_ids.join()
+        }).then(function (revisions) {
+          console.log("got back revisions: ", revisions);
+          _.map(revisions, function (revision) {
+            var obj = new CMS.Models[revision.resource_type](revision.content);
+            console.log(obj);
+          });
+        });
+      });
+
+    },
     object_model: can.compute(function () {
       return CMS.Models[this.attr('object_type')];
     }),

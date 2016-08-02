@@ -62,6 +62,7 @@ def all_cache_entries():
       resource('systems', 'System'),
       resource('processes', 'Process'),
       resource('issues', 'Issue'),
+      resource('snapshots', 'Snapshot'),
 
       # ggrc notification models
       resource('notification_configs', 'NotificationConfig'),
