@@ -172,30 +172,83 @@
       console.log("audit instance init");
       if (this.ff_snapshot_enabled) {
         this.load_snapshots();
+      } else {
+        var related_controls = this.get_binding("related_controls")
+
+        $.when(related_controls.refresh_instances()).then(function (objects) {
+          console.log("CONTROl got back related controls: ", objects);
+          console.log("CONTROl got back related controls: ", typeof objects);
+        });
+
       }
     },
     load_snapshots: function () {
-      var snapshot_ids = _.map(this.snapshoted_objects, 'id');
-      console.log("snapshoted objects: ", this.snapshoted_objects);
-      console.log("snapshot_ids", snapshot_ids);
+      console.log("load_snapshots");
 
-      CMS.Models.Snapshot.findAll({
-        id__in: snapshot_ids.join()
-      }).then(function (snapshots) {
-        var revision_ids = _.map(snapshots, 'revision_id');
-        console.log("got back snapshots!", snapshots);
-        return CMS.Models.Revision.findAll({
-          id__in: revision_ids.join()
-        }).then(function (revisions) {
-          console.log("got back revisions: ", revisions);
-          _.map(revisions, function (revision) {
-            var obj = new CMS.Models[revision.resource_type](revision.content);
-            console.log(obj);
-          });
-        });
+      // console.log("related_snapshot binding: ", this.get_binding("related_snapshots"));
+      //
+      // var mapping = this.get_mapping("related_snapshots");
+      //
+      // $.when(mapping).then(function (result) {
+      //   console.log("related_snapshots mapping result", result);
+      // });
+
+      var snapshots_binding = this.get_binding("related_snapshots");
+      var revision_controls_binding = this.get_binding("revisioned_controls");
+      var related_controls = this.get_binding("related_controls");
+      var related_objectives = this.get_binding("related_objectives");
+
+      var objectives_binding = this.get_binding("revisioned_objectives");
+      console.log("snapshots binding: ", snapshots_binding);
+      console.log("controls binding: ", revision_controls_binding);
+      console.log("objectives binding: ", objectives_binding);
+
+      $.when(snapshots_binding.refresh_instances()).then(function (objects) {
+        console.log("snapshots: ", objects);
+      });
+      $.when(revision_controls_binding.refresh_instances()).then(function (objects) {
+        console.log("CONTROL got back revisioned controls: ", objects);
+      });
+      $.when(objectives_binding.refresh_instances()).then(function (objects) {
+        console.log("got back revisioned objectives: ", objects);
       });
 
+      $.when(related_controls.refresh_instances()).then(function (objects){
+        console.log("CONTROL got back related_controls: ", objects);
+        console.log("CONTROL got back related_controls: ", typeof objects);
+      });
+      $.when(related_objectives.refresh_instances()).then(function (objects){
+        console.log("OBJECTIVE got back related_objectives: ", objects);
+      });
+      // var mapping_2 = this.get_mapping("snapshoted_controls");
+
+      // console.log("snapshoted_controls mapping: ", mapping_2);
+      // $.when(mapping_2).then(function (result) {
+      //   console.log("snapshoted_controls mapping result", result);
+      // });
     },
+    // load_snapshots: function () {
+    //   var snapshot_ids = _.map(this.snapshoted_objects, 'id');
+    //   console.log("snapshoted objects: ", this.snapshoted_objects);
+    //   console.log("snapshot_ids", snapshot_ids);
+    //
+    //   CMS.Models.Snapshot.findAll({
+    //     id__in: snapshot_ids.join()
+    //   }).then(function (snapshots) {
+    //     var revision_ids = _.map(snapshots, 'revision_id');
+    //     console.log("got back snapshots!", snapshots);
+    //     return CMS.Models.Revision.findAll({
+    //       id__in: revision_ids.join()
+    //     }).then(function (revisions) {
+    //       console.log("got back revisions: ", revisions);
+    //       _.map(revisions, function (revision) {
+    //         var obj = new CMS.Models[revision.resource_type](revision.content);
+    //         console.log(obj);
+    //       });
+    //     });
+    //   });
+    //
+    // },
     object_model: can.compute(function () {
       return CMS.Models[this.attr('object_type')];
     }),

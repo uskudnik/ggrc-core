@@ -290,6 +290,7 @@
      * @return {Object} - mapping of related objects
      */
     getRelatedObjects: function (depth) {
+      console.log("getRelatedObjects", depth)
       var basedRelatedObjects;
       var relatedObject;
       var mustachePath = GGRC.mustache_path;

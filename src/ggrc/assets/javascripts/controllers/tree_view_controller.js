@@ -222,11 +222,22 @@ can.Control('CMS.Controllers.TreeLoader', {
     this.on();
 
     temp_list = [];
+    if (list instanceof Array) {
+      list = new can.List(list);
+    }
+
+    // if (!_.isUndefined(list.list) && list.list instanceof can.List) {
+    //   list = list.list;
+    // }
+    console.log("IS RELOAD?", is_reload);
+
     list.each(function (v) {
       var item = that.prepare_child_options(v, force_prepare_children);
       temp_list.push(item);
+      console.log("REFRESH selflink", item.instance.selfLink);
       if (!is_reload && !item.instance.selfLink) {
-        refresh_queue.enqueue(v.instance);
+        console.log("JAP, REFRESH!");
+        // refresh_queue.enqueue(v.instance);
       }
     });
     if (this.options.sort_property || this.options.sort_function) {
@@ -339,17 +350,17 @@ can.Control('CMS.Controllers.TreeLoader', {
         can.map(filtered_items, function (item) {
           var instance = item.instance || item;
           if (instance.custom_attribute_values) {
-            return instance.refresh_all('custom_attribute_values').then(function (values) {
-              var rq = new RefreshQueue();
-              _.each(values, function (value) {
-                if (value.attribute_object) {
-                  rq.enqueue(value.attribute_object);
-                }
-              });
-              return rq.trigger().then(function () {
-                return values;
-              });
-            });
+            // return instance.refresh_all('custom_attribute_values').then(function (values) {
+            //   var rq = new RefreshQueue();
+            //   _.each(values, function (value) {
+            //     if (value.attribute_object) {
+            //       rq.enqueue(value.attribute_object);
+            //     }
+            //   });
+            //   return rq.trigger().then(function () {
+            //     return values;
+            //   });
+            // });
           }
         }));
     } else {
@@ -782,29 +793,43 @@ CMS.Controllers.TreeLoader('CMS.Controllers.TreeView', {
   },
 
   fetch_list: function () {
+    console.log("fetch_list", this.find_all_deferred);
     if (this.find_all_deferred) {
       //  Skip, because already done, e.g., display() already called
       return this.find_all_deferred;
     }
+
     if (can.isEmptyObject(this.options.find_params.serialize())) {
+      console.log("fetch_list this.options.find_params.serialize()", this.options.parent_instance ? this.options.parent_instance.id : undefined);
       this.options.find_params.attr(
         'id', this.options.parent_instance ? this.options.parent_instance.id : undefined);
     }
 
     if (this.options.mapping) {
+      console.log("fetch_list this.options.mapping", this.options.parent_instance);
       if (this.options.parent_instance === undefined) {
         // TODO investigate why is this method sometimes called twice
         return undefined; // not ready, will try again
       }
-      this.find_all_deferred =
-        this.options.parent_instance.get_list_loader(this.options.mapping);
+      console.log("fetch_list get_list_loader", this.options.mapping);
+      if (this.options.parent_instance.type === "Audit" &&
+          this.options.parent_instance.ff_snapshot_enabled === true) {
+        this.find_all_deferred = this.options.parent_instance.get_binding("controls").list;
+      } else {
+        this.find_all_deferred =
+          this.options.parent_instance.get_list_loader(this.options.mapping);
+      }
     } else if (this.options.list_loader) {
+      console.log("fetch_list this.options.list_loader", this.options.list_loader);
       this.find_all_deferred =
         this.options.list_loader(this.options.parent_instance);
     } else {
       console.debug('Unexpected code path', this);
     }
 
+    $.when(this.find_all_deferred).then(function(result) {
+      console.log("fetch_list END this.find_all_deferred", result);
+    });
     return this.find_all_deferred;
   },
 
@@ -1201,6 +1226,7 @@ CMS.Controllers.TreeLoader('CMS.Controllers.TreeView', {
     }
 
     $item.control().options.instance.refresh().then(function (inst) {
+      console.log("REFRESH control()))))");
       inst.attr(
         that.options.sort_property,
         GGRC.Math.string_half(GGRC.Math.string_add(before_index, after_index))

@@ -11,6 +11,7 @@
     Search = GGRC.MapperHelpers.Search,
     Multi = GGRC.MapperHelpers.Multi,
     TypeFilter = GGRC.MapperHelpers.TypeFilter,
+    TypeConverter = GGRC.MapperHelpers.TypeConverter,
     AttrFilter = GGRC.MapperHelpers.AttrFilter,
     CustomFilter = GGRC.MapperHelpers.CustomFilter,
     Cross = GGRC.MapperHelpers.Cross;
@@ -348,7 +349,7 @@
       related_systems: TypeFilter("related_objects", "System"),
       related_issues: TypeFilter("related_objects", "Issue"),
       related_audits: TypeFilter("related_objects", "Audit"),
-      related_controls: TypeFilter("related_objects", "Control"),
+      // related_controls: TypeFilter("related_objects", "Control"),
       related_assessments: TypeFilter("related_objects", "Assessment"),
       related_requests: TypeFilter("related_objects", "Request"),
       regulations: TypeFilter("related_objects", "Regulation"),
@@ -356,10 +357,10 @@
       policies: TypeFilter("related_objects", "Policy"),
       standards: TypeFilter("related_objects", "Standard"),
       programs: TypeFilter("related_objects", "Program"),
-      controls: TypeFilter("related_objects", "Control"),
+      // controls: TypeFilter("related_objects", "Control"),
       sections: TypeFilter("related_objects", "Section"),
       clauses: TypeFilter("related_objects", "Clause"),
-      objectives: TypeFilter("related_objects", "Objective"),
+      // objectives: TypeFilter("related_objects", "Objective"),
     },
     // Program
     Program: {
@@ -478,7 +479,7 @@
       owned_policies: Indirect("Policy", "contact"),
       owned_standards: Indirect("Standard", "contact"),
       owned_objectives: Indirect("Objective", "contact"),
-      owned_controls: Indirect("Control", "contact"),
+      // owned_controls: Indirect("Control", "contact"),
       owned_sections: Indirect("Section", "contact"),
       owned_clauses: Indirect("Clause", "contact"),
       owned_access_groups: Indirect("AccessGroup", "contact"),
@@ -499,7 +500,7 @@
       related_policies: TypeFilter("related_objects", "Policy"),
       related_standards: TypeFilter("related_objects", "Standard"),
       related_objectives: TypeFilter("related_objects", "Objective"),
-      related_controls: TypeFilter("related_objects", "Control"),
+      // related_controls: TypeFilter("related_objects", "Control"),
       related_sections: TypeFilter("related_objects", "Section"),
       related_clauses: TypeFilter("related_objects", "Clause"),
       related_access_groups: TypeFilter("related_objects", "AccessGroup"),
@@ -520,7 +521,7 @@
       extended_related_contracts: Multi(["related_contracts", "owned_contracts"]),
       extended_related_policies: Multi(["related_policies", "owned_policies"]),
       extended_related_objectives: Multi(["related_objectives", "owned_objectives"]),
-      extended_related_controls: Multi(["related_controls", "owned_controls"]),
+      // extended_related_controls: Multi(["related_controls", "owned_controls"]),
       extended_related_sections: Multi(["related_sections", "owned_sections"]),
       extended_related_clauses: Multi(["related_clauses", "owned_clauses"]),
       extended_related_data_assets: Multi(["related_data_assets", "owned_data_assets"]),
@@ -598,6 +599,66 @@
       person: Direct("Person", "user_roles", "person"),
       role: Direct("Role", "user_roles", "role")
     },
+    Snapshot: {
+      _revision: Direct("Snapshot", "revision", "snapshots")
+    },
+    snap_objects: {
+      // _canonical: {
+      //   'related_objects_as_source': [
+      //     'AccessGroup', 'Clause', 'Contract', 'Control', 'DataAsset',
+      //     'Facility', 'Market', 'Objective', 'OrgGroup', 'Policy', 'Process',
+      //     'Product', 'Regulation', 'Section', 'Standard', 'System', 'Vendor',
+      //     'Risk', 'Threat'
+      //   ]
+      // },
+      // objects: Proxy(null, 'auditable', 'AuditObject', 'audit', 'audit_objects'),
+
+      // get back individual snapshot objects
+      related_snapshots: Proxy(
+        null, "revision", "Snapshot", "parent", "snapshoted_objects"),
+      // related_snapshots: Proxy(
+      //   null, "parent", "Snapshot", "revision", "snapshoted_objects"),
+      // related_controls: TypeFilter("related_snapshots", "Control"),
+      revisioned_controls: TypeFilter("related_snapshots", "Control"),
+      revisioned_objectives: TypeFilter("related_snapshots", "Objective"),
+
+      related_controls: TypeConverter("revisioned_controls", "RevisionToCacheable"),
+      controls: TypeConverter("revisioned_controls", "RevisionToCacheable"),
+      related_objectives: TypeConverter("revisioned_objectives", "RevisionToCacheable"),
+
+      // related_objects_as_source: Proxy(
+      //   null, "destination", "Relationship", "source", "related_destinations"),
+      // related_objects_as_destination: Proxy(
+      //   null, "source", "Relationship", "destination", "related_sources"),
+      // related_objects: Multi(["related_objects_as_source", "related_objects_as_destination"]),
+      // destinations: Direct("Relationship", "source", "related_destinations"),
+      // sources: Direct("Relationship", "destination", "related_sources"),
+      // relationships: Multi(["sources", "destinations"]),
+      // related_access_groups: TypeFilter("related_objects", "AccessGroup"),
+      // related_data_assets: TypeFilter("related_objects", "DataAsset"),
+      // related_facilities: TypeFilter("related_objects", "Facility"),
+      // related_markets: TypeFilter("related_objects", "Market"),
+      // related_org_groups: TypeFilter("related_objects", "OrgGroup"),
+      // related_vendors: TypeFilter("related_objects", "Vendor"),
+      // related_processes: TypeFilter("related_objects", "Process"),
+      // related_products: TypeFilter("related_objects", "Product"),
+      // related_projects: TypeFilter("related_objects", "Project"),
+      // related_systems: TypeFilter("related_objects", "System"),
+      // related_issues: TypeFilter("related_objects", "Issue"),
+      // related_audits: TypeFilter("related_objects", "Audit"),
+      // related_controls: TypeFilter("related_objects", "Control"),
+      // related_assessments: TypeFilter("related_objects", "Assessment"),
+      // related_requests: TypeFilter("related_objects", "Request"),
+      // regulations: TypeFilter("related_objects", "Regulation"),
+      // contracts: TypeFilter("related_objects", "Contract"),
+      // policies: TypeFilter("related_objects", "Policy"),
+      // standards: TypeFilter("related_objects", "Standard"),
+      // programs: TypeFilter("related_objects", "Program"),
+      // controls: TypeFilter("related_objects", "Control"),
+      // sections: TypeFilter("related_objects", "Section"),
+      // clauses: TypeFilter("related_objects", "Clause"),
+      // objectives: TypeFilter("related_objects", "Objective"),
+    },
     Audit: {
       _canonical: {
         requests: 'Request',
@@ -606,7 +667,7 @@
 
       },
       _mixins: [
-        'related_object'
+        'related_object', 'snap_objects'
       ],
       requests: Direct("Request", "audit", "requests"),
       active_requests: CustomFilter('requests', function (result) {
@@ -616,7 +677,7 @@
         return result.instance.status === 'Accepted';
       }),
       _program: Direct('Program', 'audits', 'program'),
-      program_controls: Cross('_program', 'controls'),
+      // program_controls: Cross('_program', 'controls'),
       program_requests: Cross('_program', 'related_requests'),
       program_issues: Cross('_program', 'related_issues'),
       program_assessments: Cross('_program', 'related_assessments'),
@@ -674,7 +735,7 @@
         'related_object', 'personable', 'ownable', 'documentable', 'assignable'
       ],
       audits: TypeFilter('related_objects', 'Audit'),
-      related_controls: TypeFilter('related_objects', 'Control'),
+      // related_controls: TypeFilter('related_objects', 'Control'),
       related_regulations: TypeFilter('related_objects', 'Regulation'),
       related_creators: AttrFilter('related_objects', 'AssigneeType', 'Creator', 'Person'),
       related_assessors: AttrFilter('related_objects', 'AssigneeType', 'Assessor', 'Person'),
@@ -693,7 +754,7 @@
       _mixins: ['related_object', 'personable', 'ownable', 'business_object', 'documentable', 'assignable'],
       business_objects: Multi(['related_objects', 'controls', 'documents', 'people', 'sections', 'clauses']),
       audits: Direct('Audit', 'requests', 'audit'),
-      related_controls: TypeFilter('related_objects', 'Control'),
+      // related_controls: TypeFilter('related_objects', 'Control'),
       related_regulations: TypeFilter('related_objects', 'Regulation'),
       related_assignees: AttrFilter('related_objects', 'AssigneeType', 'Assignee', 'Person'),
       related_requesters: AttrFilter('related_objects', 'AssigneeType', 'Requester', 'Person'),

@@ -881,6 +881,7 @@ can.Model('can.Model.Cacheable', {
   },
 
   get_list_loader: function (name) {
+    console.log("fetch_list get_list_loader", name);
     var binding = this.get_binding(name);
     return binding.refresh_list();
   },

@@ -66,6 +66,23 @@ class Snapshot(mixins.Base, db.Model):
     "revision_id",
   ]
 
+  # @classmethod
+  # def eager_query(cls):
+  #   query = super(Snapshot, cls).eager_query()
+  #   return cls.eager_inclusions(query, Snapshot._publish_attrs).options(
+  #     orm.subqueryload('revision'),
+  #   )
+
+  # @classmethod
+  # def eager_query(cls):
+  #   from sqlalchemy import orm
+  #
+  #   query = super(Snapshot, cls).eager_query()
+  #   return query.options(
+  #     orm.subqueryload('revision'))
+
+
+
 class Snapshotable(object):
   @declared_attr
   def snapshoted_objects(cls):

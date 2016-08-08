@@ -54,6 +54,7 @@
     },
 
     init_join_object_with_type: function (attr) {
+      console.log("init_join_object_with_type", attr);
       var objectId;
       var objectType;
       if (this[attr] instanceof can.Model) {
@@ -98,6 +99,37 @@
           that.init_join_object(attr, model.shortName);
         }
       });
+    }
+  });
+
+  can.Model.Join('CMS.Models.Snapshot', {
+    root_object: 'snapshot',
+    root_collection: 'snapshots',
+    attributes: {
+      context: 'CMS.Models.Context.stub',
+      modified_by: 'CMS.Models.Person.stub',
+      parent: 'CMS.Models.Cacheable.stub',
+      revision: 'CMS.Models.Revision.get_instances'
+    },
+    join_keys: {
+      parent: can.Model.Cacheable,
+      revision: can.Model.Revision
+    },
+    defaults: {
+      parent: null,
+      revision: null
+    },
+    findAll: 'GET /api/snapshots',
+    create: 'POST /api/snapshots',
+    update: 'PUT /api/snapshots/{id}',
+    destroy: 'DELETE /api/snapshots/{id}'
+  }, {
+    reinit: function () {
+    //   console.log("reinit", this);
+    //   console.log("reinit.parent", this.parent);
+    //   console.log("reinit.revision", this.revision);
+      this.attr('parent', CMS.Models.get_instance(this.parent));
+      this.attr('revision', CMS.Models.get_instance(this.revision));
     }
   });
 

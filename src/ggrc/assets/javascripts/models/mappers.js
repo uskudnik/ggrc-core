@@ -681,21 +681,96 @@
   }, {
       init: function (source, model_names) {
         var filter_fn = function (result) {
+          // console.log("result: ", result, result.instance instanceof CMS.Models.Revision);
           var i, model_name;
           for (i=0; i<model_names.length; i++) {
             model_name = model_names[i];
-            if (typeof model_name !== 'string')
+            console.log("BZEE result: ", model_name, result);
+            // console.log("BZEE ------: ", result.instance, result.instance.constructor, model_name);
+            if (typeof model_name !== 'string') {
               model_name = model_name.shortName;
-            if (result.instance.constructor
-                && result.instance.constructor.shortName === model_name)
+            }
+            if (result.instance.constructor &&
+                result.instance.constructor.shortName === model_name) {
               return true;
+            }
+            if (result.instance instanceof CMS.Models.Revision) {
+              return this._filter_revisions(result, model_name);
+            }
           }
           return false;
         };
-
+        console.log("BZEE TypeFilteredListLoader", source, model_names)
         this._super(source, filter_fn);
+      },
+      _filter_revisions: function (result, model_name) {
+        if (!result.mappings) {
+          return;
+        }
+        return _.any(result.mappings, function (mapping) {
+          var instance = mapping.instance;
+          if (instance instanceof CMS.Models.Snapshot) {
+            if (instance.child_type === model_name) {
+              return true;
+            }
+          }
+        });
       }
   });
+
+  GGRC.ListLoaders.BaseListLoader("GGRC.ListLoaders.TypeConverterListLoader", {
+  }, {
+    init: function (source, converter) {
+      console.log("TypeConverterListLoader, source: ", source);
+      console.log("TypeConverterListLoader, converter: ", converter);
+
+      this.source_binding = source;
+      this.converter = converter;
+      this._super(source);
+    },
+    init_listeners: function (binding) {
+      console.log("TypeConverterListLoader init_listeners", binding);
+
+    },
+    // insert_results: function (binding, result) {
+    //   console.log("TypeConverterListLoader insert_results", binding, result);
+    //   debugger;
+    // },
+    refresh_stubs: function (binding) {
+      console.log("TypeConverterListLoader refresh_instances", binding);
+      return $.when(this.refresh_instances(binding)).then(function (results) {
+        return _.map(results, function(result) {
+          return result.instance.stub();
+        });
+      });
+    },
+    refresh_instances: function (binding) {
+      console.log("TypeConverterListLoader refresh_instances", binding);
+      var source_binding = binding.instance.get_binding(this.source_binding);
+      return source_binding.refresh_instances().then(function (results) {
+        // debugger;
+        var converted_results = new can.List(_.map(results, function (result) {
+          console.log("result: ", result);
+          var revision = result.instance;
+          var data = revision.content;
+          var model = CMS.Models[revision.resource_type];
+          data.type = revision.resource_type;
+          data.id = revision.resource_id;
+
+          data.selfLink = "/api/" + model.root_collection + "/" + data.id;
+          // var obj = CMS.Models[revision.resource_type].newInstance(data);
+          // var obj = CMS.Models[revision.resource_type].model(data);
+          var obj = new model(data);
+          // var obj = new CMS.Models
+          console.log("result obj: ", obj);
+          return this.make_result(obj, [obj], binding);
+          // return obj;
+        }.bind(this)));
+        return this.insert_results(binding, converted_results);
+      }.bind(this));
+    }
+  });
+
 
   GGRC.ListLoaders.StubFilteredListLoader("GGRC.ListLoaders.AttrFilteredListLoader", {
     }, {
@@ -706,7 +781,7 @@
             return;
           }
           return _.any(binding.mappings, function (mapping) {
-            instance = mapping.instance;
+            var instance = mapping.instance;
             if (instance instanceof CMS.Models.Relationship) {
               if (_.exists(instance, "attrs") &&
                   instance.attrs[prop] &&
@@ -1713,6 +1788,10 @@
 
   GGRC.MapperHelpers.TypeFilter = function TypeFilter(source, model_name) {
     return new GGRC.ListLoaders.TypeFilteredListLoader(source, [model_name]);
+  };
+
+  GGRC.MapperHelpers.TypeConverter = function TypeConverter(source, converter) {
+    return new GGRC.ListLoaders.TypeConverterListLoader(source, converter);
   };
 
   GGRC.MapperHelpers.AttrFilter = function AttrFilter(source, filter_name, keyword, type) {
