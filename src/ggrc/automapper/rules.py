@@ -176,6 +176,7 @@ rules = RuleSet(count_limit=10000, rule_list=[
         {'Request'},
     ),
 
+    # TODO REMOVE ON FINAL COMMIT (FEATURE FLAG REMOVAL)
     Rule(
         'mapping program objects to audit',
         {Attr('audits'), 'Audit'},
