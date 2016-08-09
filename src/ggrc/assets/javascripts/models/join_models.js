@@ -101,6 +101,29 @@
     }
   });
 
+  can.Model.Join('CMS.Models.Snapshot', {
+    root_object: 'snapshot',
+    root_collection: 'snapshots',
+    attributes: {
+      context: 'CMS.Models.Context.stub',
+      modified_by: 'CMS.Models.Person.stub',
+      parent: 'CMS.Models.Cacheable.stub',
+      revision: 'CMS.Models.Revision.get_instances'
+    },
+    join_keys: {
+      parent: can.Model.Cacheable,
+      revision: can.Model.Revision
+    },
+    defaults: {
+      parent: null,
+      revision: null
+    },
+    findAll: 'GET /api/snapshots',
+    create: 'POST /api/snapshots',
+    update: 'PUT /api/snapshots/{id}',
+    destroy: 'DELETE /api/snapshots/{id}'
+  }, {});
+
   can.Model.Join('CMS.Models.Relationship', {
     root_object: 'relationship',
     root_collection: 'relationships',
