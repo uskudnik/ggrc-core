@@ -29,6 +29,10 @@
     {{/if}}
     {{/if}}
     <div class="row-fluid">
+      <div class="span6">
+        <b><label for="create-snapshots">Create snapshots</label></b>
+        <input name="create-snapshots" type="checkbox" />
+      </div>
       <div class="span6 {{#instance.computed_errors.title}}field-failure{{/instance.computed_errors.title}}">
         <label>
           Title
