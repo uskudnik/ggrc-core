@@ -449,7 +449,7 @@
 
       },
       _mixins: [
-        'related_object'
+        'related_object', 'snapshotted_object'
       ],
       requests: Direct('Request', 'audit', 'requests'),
       active_requests: CustomFilter('requests', function (result) {
