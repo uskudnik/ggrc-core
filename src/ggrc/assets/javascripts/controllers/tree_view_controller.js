@@ -296,17 +296,17 @@ can.Control('CMS.Controllers.TreeLoader', {
         can.map(filtered_items, function (item) {
           var instance = item.instance || item;
           if (instance.custom_attribute_values) {
-            return instance.refresh_all('custom_attribute_values').then(function (values) {
-              var rq = new RefreshQueue();
-              _.each(values, function (value) {
-                if (value.attribute_object) {
-                  rq.enqueue(value.attribute_object);
-                }
-              });
-              return rq.trigger().then(function () {
-                return values;
-              });
-            });
+            // return instance.refresh_all('custom_attribute_values').then(function (values) {
+            //   var rq = new RefreshQueue();
+            //   _.each(values, function (value) {
+            //     if (value.attribute_object) {
+            //       rq.enqueue(value.attribute_object);
+            //     }
+            //   });
+            //   return rq.trigger().then(function () {
+            //     return values;
+            //   });
+            // });
           }
         }));
     } else {
@@ -771,8 +771,13 @@ CMS.Controllers.TreeLoader('CMS.Controllers.TreeView', {
         // TODO investigate why is this method sometimes called twice
         return undefined; // not ready, will try again
       }
-      this.find_all_deferred =
-        this.options.parent_instance.get_list_loader(this.options.mapping);
+      if (this.options.parent_instance.type === "Audit" &&
+          this.options.parent_instance.ff_snapshot_enabled === true) {
+        this.find_all_deferred = this.options.parent_instance.get_binding(this.options.mapping).list;
+      } else {
+        this.find_all_deferred =
+          this.options.parent_instance.get_list_loader(this.options.mapping);
+      }
     } else if (this.options.list_loader) {
       this.find_all_deferred =
         this.options.list_loader(this.options.parent_instance);
