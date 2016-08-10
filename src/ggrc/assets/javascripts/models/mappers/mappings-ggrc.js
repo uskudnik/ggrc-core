@@ -10,6 +10,7 @@
   var Search = GGRC.MapperHelpers.Search;
   var Multi = GGRC.MapperHelpers.Multi;
   var TypeFilter = GGRC.MapperHelpers.TypeFilter;
+  var TypeConverter = GGRC.MapperHelpers.TypeConverter;
   var AttrFilter = GGRC.MapperHelpers.AttrFilter;
   var CustomFilter = GGRC.MapperHelpers.CustomFilter;
   var Cross = GGRC.MapperHelpers.Cross;
@@ -409,6 +410,36 @@
       audit_via_context: Indirect('Audit', 'context'),
       person: Direct('Person', 'user_roles', 'person'),
       role: Direct('Role', 'user_roles', 'role')
+    },
+    snapshotted_object: {
+      related_revisions: Proxy(
+        null, 'revision', 'Snapshot', 'parent', 'snapshotted_objects'),
+      related_objects: TypeConverter('related_revisions'),
+
+      related_access_groups: TypeFilter("related_objects", "AccessGroup"),
+      related_data_assets: TypeFilter("related_objects", "DataAsset"),
+      related_facilities: TypeFilter("related_objects", "Facility"),
+      related_markets: TypeFilter("related_objects", "Market"),
+      related_org_groups: TypeFilter("related_objects", "OrgGroup"),
+      related_vendors: TypeFilter("related_objects", "Vendor"),
+      related_processes: TypeFilter("related_objects", "Process"),
+      related_products: TypeFilter("related_objects", "Product"),
+      related_projects: TypeFilter("related_objects", "Project"),
+      related_systems: TypeFilter("related_objects", "System"),
+      related_issues: TypeFilter("related_objects", "Issue"),
+      related_audits: TypeFilter("related_objects", "Audit"),
+      related_controls: TypeFilter("related_objects", "Control"),
+      related_assessments: TypeFilter("related_objects", "Assessment"),
+      related_requests: TypeFilter("related_objects", "Request"),
+      regulations: TypeFilter("related_objects", "Regulation"),
+      contracts: TypeFilter("related_objects", "Contract"),
+      policies: TypeFilter("related_objects", "Policy"),
+      standards: TypeFilter("related_objects", "Standard"),
+      programs: TypeFilter("related_objects", "Program"),
+      controls: TypeFilter("related_objects", "Control"),
+      sections: TypeFilter("related_objects", "Section"),
+      clauses: TypeFilter("related_objects", "Clause"),
+      objectives: TypeFilter("related_objects", "Objective"),
     },
     Audit: {
       _canonical: {
