@@ -10,6 +10,7 @@
   var Search = GGRC.MapperHelpers.Search;
   var Multi = GGRC.MapperHelpers.Multi;
   var TypeFilter = GGRC.MapperHelpers.TypeFilter;
+  var TypeConverter = GGRC.MapperHelpers.TypeConverter;
   var AttrFilter = GGRC.MapperHelpers.AttrFilter;
   var CustomFilter = GGRC.MapperHelpers.CustomFilter;
   var Cross = GGRC.MapperHelpers.Cross;
@@ -40,6 +41,7 @@
     Search: Search,
     Multi: Multi,
     TypeFilter: TypeFilter,
+    TypeConverter: TypeConverter,
     AttrFilter: AttrFilter,
     CustomFilter: CustomFilter,
     Cross: Cross,

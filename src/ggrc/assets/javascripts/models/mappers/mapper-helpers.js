@@ -36,6 +36,10 @@
     return new GGRC.ListLoaders.TypeFilteredListLoader(source, [modelName]);
   };
 
+  GGRC.MapperHelpers.TypeConverter = function TypeConverter(source, converter) {
+    return new GGRC.ListLoaders.TypeConverterListLoader(source, converter);
+  };
+
   GGRC.MapperHelpers.AttrFilter = function AttrFilter(source, filterName,
                                                       keyword, type) {
     return new GGRC.ListLoaders.AttrFilteredListLoader(source, filterName,
