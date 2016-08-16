@@ -12,6 +12,7 @@ from flask import flash
 from flask import g
 from flask import render_template
 from flask import url_for
+from flask import request
 from werkzeug.exceptions import Forbidden
 
 from ggrc import models
@@ -36,6 +37,7 @@ from ggrc.rbac import permissions
 from ggrc.services.common import as_json
 from ggrc.services.common import inclusion_filter
 from ggrc.services import query as services_query
+from ggrc.snapshoter import SnapshotGenerator
 from ggrc.views import converters
 from ggrc.views import cron
 from ggrc.views import filters
@@ -376,3 +378,30 @@ def user_permissions():
      logged in user
   '''
   return get_permissions_json()
+
+
+# TODO: GET is for debugging purposes, remove before production
+@app.route("/_process_snapshots", methods=["GET", "POST", "PUT"])
+@login_required
+def process_snapshots_bg(*args, **kwargs):
+  task_id = int(request.headers.get('x-task-id'))
+  task = models.BackgroundTask.query.get(task_id)
+
+  payload = json.loads(task.parameters)
+  method = payload["method"]
+  operation = payload["operation"]
+  parent, children = tuple(payload["data"])
+  parent, children = tuple(parent), {tuple(child) for child in children}
+
+  snapshot_generator = SnapshotGenerator()
+  snapshot_generator.add_pairs(parent, children)
+  task.start()
+  try:
+    op = snapshot_generator.OPERATION_HANDLERS[operation]
+    op(method=method)
+  except:
+    import traceback
+    task.finish("Failure", traceback.format_exc())
+    raise
+  task.finish("Success", "Successfully generated snapshots!")
+  return make_task_response(task.id)
