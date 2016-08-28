@@ -84,11 +84,11 @@ class Snapshot(mixins.Base, db.Model):
 
 
 class Snapshotable(object):
-  """Provide `snapshoted_objects` on for parent objects."""
+  """Provide `snapshotted_objects` on for parent objects."""
 
   @declared_attr
-  def snapshoted_objects(cls):  # pylint: disable=no-self-argument
-    """Return all snapshoted objects"""
+  def snapshotted_objects(cls):  # pylint: disable=no-self-argument
+    """Return all snapshotted objects"""
     joinstr = "and_(remote(Snapshot.parent_id) == {type}.id, " \
               "remote(Snapshot.parent_type) == '{type}')"
     joinstr = joinstr.format(type=cls.__name__)
@@ -107,7 +107,7 @@ class Snapshotable(object):
   def eager_query(cls):
     query = super(Snapshotable, cls).eager_query()
     return query.options(
-        orm.subqueryload("snapshoted_objects").undefer_group(
+        orm.subqueryload("snapshotted_objects").undefer_group(
             "Snapshot_complete"
         ),
     )
