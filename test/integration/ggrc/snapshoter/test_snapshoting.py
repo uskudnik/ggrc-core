@@ -186,7 +186,83 @@ class TestSnapshoting(integration.ggrc.TestCase):
     pass
 
   def test_individual_update(self):
-    pass
+    """Test update of individual snapshot
+
+    1. Create program with mapped control and data asset.
+    2. Create audit, verify there are snapshot for control and data asset
+    3. Update control and data asset title
+    4. Run refresh on control's snapshot object
+    5. Verify control's title is changed and data assets NOT
+    """
+
+    program = self.create_object(models.Program, {
+        "title": "Test Program Snapshot 1"
+    })
+
+    control = self.create_object(models.Control, {
+        "title": "Test Control Snapshot 1"
+    })
+    data_asset = self.create_object(models.DataAsset, {
+        "title": "Test DataAsset Snapshot 1"
+    })
+
+    self.create_mapping(program, control)
+    self.create_mapping(program, data_asset)
+
+    control = self.refresh_object(control)
+    data_asset = self.refresh_object(data_asset)
+
+    self.create_object(models.Audit, {
+        "title": "Snapshotable audit",
+        "program": {"id": program.id},
+        "status": "Planned",
+        "create-snapshots": True
+    })
+
+    audit = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%Snapshotable audit%")).first()
+
+    self.assertEqual(audit.ff_snapshot_enabled, True)
+
+    self.assertEqual(
+        db.session.query(models.Snapshot).filter(
+            models.Snapshot.parent_type == "Audit",
+            models.Snapshot.parent_id == audit.id).count(),
+        2)
+
+    control = self.refresh_object(control)
+    self.api.modify_object(control, {
+        "title": "Test Control Snapshot 1 EDIT 1"
+    })
+
+    data_asset = self.refresh_object(data_asset)
+    self.api.modify_object(data_asset, {
+        "title": "Test Data Asset Snapshot 1 EDIT 1"
+    })
+
+    snapshot = db.session.query(models.Snapshot).filter(
+        models.Snapshot.child_type == "Control",
+        models.Snapshot.child_id).first()
+
+    self.assertEqual(
+        snapshot.revision.content["title"],
+        "Test Control Snapshot 1")
+
+    self.api.modify_object(snapshot, {
+        "refresh": True
+    })
+
+    expected = [
+        (control, "Test Control Snapshot 1 EDIT 1"),
+        (data_asset, "Test DataAsset Snapshot 1"),
+    ]
+    for obj, expected_title in expected:
+      snapshot = db.session.query(models.Snapshot).filter(
+          models.Snapshot.child_type == obj.__class__.__name__,
+          models.Snapshot.child_id == obj.id).first()
+      self.assertEquals(
+          snapshot.revision.content["title"],
+          expected_title)
 
   def test_update_when_mapped_objects_are_deleted(self):
     """Test global update when object got deleted or unmapped"""
