@@ -381,6 +381,16 @@ def update_snapshots(objs, method="PUT"):
   generator.update(method=method)
 
 
+def update_snapshot(snapshot):
+  """Update individual snapshot to the latest version"""
+  revision_id = db.session.query(models.Revision).filter(
+      models.Revision.resource_type == snapshot.child_type,
+      models.Revision.resource_id == snapshot.child_id,
+  ).order_by(models.Revision.id.desc()).first().id
+  snapshot.revision_id = revision_id
+  db.session.add(snapshot)
+
+
 def register_snapshot_listeners():
   rules = get_rules()
 
@@ -389,12 +399,18 @@ def register_snapshot_listeners():
     if src.get("create-snapshots"):
       create_snapshots(obj)
 
-  def update(sender, obj=None, src=None, service=None):
+  def update_all(sender, obj=None, src=None, service=None):
     if src.get("update-snapshots"):
       update_snapshots(obj)
+
+  def update_one(sender, obj=None, src=None, service=None):
+    if src.get("refresh"):
+      update_snapshot(obj)
 
   # Initialize listening on parent objects
   for type_ in rules.rules.keys():
     model = getattr(models.all_models, type_)
     Resource.model_posted_after_commit.connect(create, model, weak=False)
-    Resource.model_put_after_commit.connect(update, model, weak=False)
+    Resource.model_put_after_commit.connect(update_all, model, weak=False)
+
+  Resource.model_put.connect(update_one, models.Snapshot, weak=False)
