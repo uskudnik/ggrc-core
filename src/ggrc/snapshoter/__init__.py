@@ -38,14 +38,16 @@ class SnapshotGenerator(object):
   def add_parent_object(self, obj):
     """Add parent object and automatically scan neighbourhood for snapshottable
     objects."""
-    key = (obj.type, obj.id)
-    if key not in self.parent_objects:
-      objs = self._get_snapshotable_objects(obj)
-      self.parent_objects.add(key)
-      self.context_cache[key] = obj.context_id
-      self.children_objects = self.children_objects | objs
-      self.snapshotable_objects[key] = objs
-    return self.parent_objects
+    with benchmark("Snapshot.add_parent_object"):
+      key = (obj.type, obj.id)
+      if key not in self.parent_objects:
+        with benchmark("Snapshot.add_parent_object.add object"):
+          objs = self._get_snapshotable_objects(obj)
+          self.parent_objects.add(key)
+          self.context_cache[key] = obj.context_id
+          self.children_objects = self.children_objects | objs
+          self.snapshotable_objects[key] = objs
+      return self.parent_objects
 
   def add_pairs(self, parent, children):
     """Directly add parent object and children that should be snapshotted."""
@@ -91,20 +93,25 @@ class SnapshotGenerator(object):
 
   def _get_snapshotable_objects(self, obj):
     """Get snapshottable objects from parent object's neighbourhood."""
-    object_rules = self._RULES.rules[obj.type]
+    with benchmark("Snapshot._get_snapshotable_objects"):
+      object_rules = self._RULES.rules[obj.type]
 
-    related_mappings = obj.related_objects({
-        rule for rule in object_rules["fst"] if isinstance(rule, basestring)})
+      with benchmark("Snapshot._get_snapshotable_objects.related_mappings"):
+        related_mappings = obj.related_objects({
+            rule for rule in object_rules["fst"]
+            if isinstance(rule, basestring)})
 
-    direct_mappings = {getattr(obj, rule.name)
-                       for rule in object_rules["fst"]
-                       if isinstance(rule, Attr)}
+      with benchmark("Snapshot._get_snapshotable_objects.direct mappings"):
+        direct_mappings = {getattr(obj, rule.name)
+                           for rule in object_rules["fst"]
+                           if isinstance(rule, Attr)}
 
-    related_objects = related_mappings | direct_mappings
+      related_objects = related_mappings | direct_mappings
 
-    return {(sndobj.type, sndobj.id)
-            for fstobj in related_objects
-            for sndobj in fstobj.related_objects(object_rules["snd"])}
+    with benchmark("Snapshot._get_snapshotable_objects.get second degree"):
+      return {(sndobj.type, sndobj.id)
+              for fstobj in related_objects
+              for sndobj in fstobj.related_objects(object_rules["snd"])}
 
   def update(self, method):
     """Update parent object's snapshots and split in chunks if there are too
@@ -250,33 +257,35 @@ class SnapshotGenerator(object):
 
   def create_chunks(self, func, *args, **kwargs):
     """Create chunks if there are too many snapshottable objects."""
-    if not self.chunking:
+    with benchmark("Snapshot.create_chunks"):
+      if not self.chunking:
+        return func(*args, **kwargs)
+      if not len(self.children_objects) > QUEUE_SIZE:
+        return func(*args, **kwargs)
+
+      chunks = []
+      for parent, children in self.snapshotable_objects.items():
+        _children = list(children)
+        while _children:
+          children_chunk = _children[:QUEUE_SIZE]
+          _children = _children[QUEUE_SIZE:]
+          chunks += [(parent, children_chunk)]
+
+      first_chunk = chunks[0]
+      with benchmark("Snapshot.create_chunks.create bg tasks"):
+        for chunk in chunks[1:]:
+          self._create_bg_task(kwargs["method"], {
+              "data": chunk,
+              "method": kwargs["method"],
+              "operation": func.__name__[1:]
+          })
+
+      parent, children = first_chunk
+      children = set(children)
+      self.parent_objects = {parent}
+      self.children_objects = children
+      self.snapshotable_objects[parent] = children
       return func(*args, **kwargs)
-    if not len(self.children_objects) > QUEUE_SIZE:
-      return func(*args, **kwargs)
-
-    chunks = []
-    for parent, children in self.snapshotable_objects.items():
-      _children = list(children)
-      while _children:
-        children_chunk = _children[:QUEUE_SIZE]
-        _children = _children[QUEUE_SIZE:]
-        chunks += [(parent, children_chunk)]
-
-    first_chunk = chunks[0]
-    for chunk in chunks[1:]:
-      self._create_bg_task(kwargs["method"], {
-          "data": chunk,
-          "method": kwargs["method"],
-          "operation": func.__name__[1:]
-      })
-
-    parent, children = first_chunk
-    children = set(children)
-    self.parent_objects = {parent}
-    self.children_objects = children
-    self.snapshotable_objects[parent] = children
-    return func(*args, **kwargs)
 
   def create(self, method):
     """Create snapshots of parent object's neighbourhood per provided rules
@@ -286,27 +295,30 @@ class SnapshotGenerator(object):
   def _create(self, method):
     """Create snapshots of parent objects neighhood and create revisions for
     snapshots."""
-    user_id = get_current_user_id()
-    revision_id_cache = dict()
-    data_payload = list()
-    missed_keys = set()
-    revision_payload = list()
+    with benchmark("Snapshot._create init"):
+      user_id = get_current_user_id()
+      revision_id_cache = dict()
+      data_payload = list()
+      missed_keys = set()
+      revision_payload = list()
 
-    with benchmark("Batch CREATE snapshots"):
-      revisions = db.session.query(
-          models.Revision.id, models.Revision.resource_type,
-          models.Revision.resource_id).filter(
-          tuple_(
-              models.Revision.resource_type,
-              models.Revision.resource_id).in_(self.children_objects)
-      ).order_by(models.Revision.id.desc()).all()
+    with benchmark("Snapshot._create main"):
+      with benchmark("Snapshot._create.revisions"):
+        revisions = db.session.query(
+            models.Revision.id, models.Revision.resource_type,
+            models.Revision.resource_id).filter(
+            tuple_(
+                models.Revision.resource_type,
+                models.Revision.resource_id).in_(self.children_objects)
+        ).order_by(models.Revision.id.desc()).all()
 
-      for revid, restype, resid in revisions:
-        key = (restype, resid)
-        if key not in revision_id_cache:
-          revision_id_cache[key] = revid
+      with benchmark("Snapshot._create.revision cache generation"):
+        for revid, restype, resid in revisions:
+          key = (restype, resid)
+          if key not in revision_id_cache:
+            revision_id_cache[key] = revid
 
-      with benchmark("Create Snapshot payload"):
+      with benchmark("Snapshot._create.create payload"):
         for parent_key in self.parent_objects:
           for child_key in self.snapshotable_objects[parent_key]:
             if child_key in revision_id_cache:
@@ -323,36 +335,38 @@ class SnapshotGenerator(object):
             else:
               missed_keys.add(child_key)
 
-      with benchmark("Write Snapshot objects to database"):
+      with benchmark("Snapshot._create.write to database"):
         engine = db.engine
         engine.execute(models.Snapshot.__table__.insert(), data_payload)
         db.session.commit()
 
       # Create Revisions for Snapshots
-      with benchmark("Retrieve created snapshots"):
+      with benchmark("Snapshot._create.retrieve inserted snapshots"):
         inserted_snapshots = db.session.query(models.Snapshot).filter(
             tuple_(models.Snapshot.parent_type, models.Snapshot.parent_id).in_(
                 self.parent_objects)).all()
 
-      with benchmark("Get Audit creation events"):
+      with benchmark("Snapshot._create.get audit creation event"):
         events = self._get_events(method, self.parent_objects)
 
-      with benchmark("Create Revision payload"):
+      with benchmark("Snapshot._create.create revision payload"):
         for isnapshot in inserted_snapshots:
-          parent = isnapshot.parent
-          parent_key = (parent.type, parent.id)
+          with benchmark("Snapshot._create.get parent"):
+            parent = isnapshot.parent
+            parent_key = (parent.type, parent.id)
           event = events[parent_key]
-          revision_payload += [{
-              "action": "created",
-              "event_id": event,
-              "content": isnapshot.log_json(),
-              "modified_by_id": user_id,
-              "resource_id": isnapshot.id,
-              "resource_type": "Snapshot",
-              "context_id": self.context_cache[parent_key]
-          }]
+          with benchmark("Snapshot._create.build revision payload"):
+            revision_payload += [{
+                "action": "created",
+                "event_id": event,
+                "content": isnapshot.log_json(),
+                "modified_by_id": user_id,
+                "resource_id": isnapshot.id,
+                "resource_type": "Snapshot",
+                "context_id": self.context_cache[parent_key]
+            }]
 
-      with benchmark("Write Revision objects to database"):
+      with benchmark("Snapshot._create.write revisions to database"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
         db.session.commit()
     return True
@@ -360,35 +374,41 @@ class SnapshotGenerator(object):
 
 def create_snapshots(objs, method="POST"):
   """Create snapshots of parent objects."""
-  generator = SnapshotGenerator()
-  if not isinstance(objs, set):
-    objs = {objs}
-  for obj in objs:
-    obj.ff_snapshot_enabled = True
-    db.session.add(obj)
-    generator.add_parent_object(obj)
-  generator.create(method=method)
+  with benchmark("Snapshot.create_snapshots"):
+    with benchmark("Snapshot.create_snapshots.init"):
+      generator = SnapshotGenerator()
+      if not isinstance(objs, set):
+        objs = {objs}
+      for obj in objs:
+        obj.ff_snapshot_enabled = True
+        db.session.add(obj)
+        with benchmark("Snapshot.create_snapshots.add_parent_objects"):
+          generator.add_parent_object(obj)
+    with benchmark("Snapshot.create_snapshots.create"):
+      generator.create(method=method)
 
 
 def update_snapshots(objs, method="PUT"):
   """Update (or create) snapshots of parent objects."""
-  generator = SnapshotGenerator()
-  if not isinstance(objs, set):
-    objs = {objs}
-  for obj in objs:
-    db.session.add(obj)
-    generator.add_parent_object(obj)
-  generator.update(method=method)
+  with benchmark("Snapshot.update_snapshots"):
+    generator = SnapshotGenerator()
+    if not isinstance(objs, set):
+      objs = {objs}
+    for obj in objs:
+      db.session.add(obj)
+      generator.add_parent_object(obj)
+    generator.update(method=method)
 
 
 def update_snapshot(snapshot):
   """Update individual snapshot to the latest version"""
-  revision_id = db.session.query(models.Revision).filter(
-      models.Revision.resource_type == snapshot.child_type,
-      models.Revision.resource_id == snapshot.child_id,
-  ).order_by(models.Revision.id.desc()).first().id
-  snapshot.revision_id = revision_id
-  db.session.add(snapshot)
+  with benchmark("Snapshot.individual update"):
+    revision_id = db.session.query(models.Revision).filter(
+        models.Revision.resource_type == snapshot.child_type,
+        models.Revision.resource_id == snapshot.child_id,
+    ).order_by(models.Revision.id.desc()).first().id
+    snapshot.revision_id = revision_id
+    db.session.add(snapshot)
 
 
 def register_snapshot_listeners():
