@@ -91,6 +91,64 @@ class SnapshotGenerator(object):
         url="/_process_snapshots",
         queued_callback=None, parameters=json.dumps(chunk))
 
+  def _fetch_neighbourhood(self, parent_object, objects):
+    with benchmark("Snapshot._fetch_object_neighbourhood"):
+      query_pairs = set()
+      rules = self._RULES.rules[parent_object.type]["snd"]
+
+      for obj in objects:
+        _type, _id = obj
+        for snd_obj in rules:
+          query_pairs.add((_type, _id, snd_obj))
+
+      columns = db.session.query(
+          models.Relationship.source_type,
+          models.Relationship.source_id,
+          models.Relationship.destination_type,
+          models.Relationship.destination_id)
+
+      relationships = columns.filter(
+          tuple_(
+              models.Relationship.destination_type,
+              models.Relationship.destination_id,
+              models.Relationship.source_type,
+          ).in_(query_pairs)).union(
+          columns.filter(tuple_(
+              models.Relationship.source_type,
+              models.Relationship.source_id,
+              models.Relationship.destination_type,
+          ).in_(query_pairs)))
+
+      neighbourhood = set()
+      for (stype, sid, dtype, did) in relationships:
+        source = (stype, sid)
+        destination = (dtype, did)
+
+        if source in objects:
+          neighbourhood.add(destination)
+        else:
+          neighbourhood.add(source)
+      return neighbourhood
+
+  @staticmethod
+  def _log_snapshot(snapshot):
+    (sid, context_id, created_at, updated_at,
+     parent_type, parent_id,
+     child_type, child_id,
+     revision_id, modified_by_id) = snapshot
+    return {
+        "id": sid,
+        "context_id": context_id,
+        "created_at": created_at,
+        "updated_at": updated_at,
+        "parent_type": parent_type,
+        "parent_id": parent_id,
+        "child_type": child_type,
+        "child_id": child_id,
+        "revision_id": revision_id,
+        "modified_by_id": modified_by_id,
+    }
+
   def _get_snapshotable_objects(self, obj):
     """Get snapshottable objects from parent object's neighbourhood."""
     with benchmark("Snapshot._get_snapshotable_objects"):
@@ -106,12 +164,11 @@ class SnapshotGenerator(object):
                            for rule in object_rules["fst"]
                            if isinstance(rule, Attr)}
 
-      related_objects = related_mappings | direct_mappings
+      related_objects = {(obj.type, obj.id)
+                         for obj in related_mappings | direct_mappings}
 
     with benchmark("Snapshot._get_snapshotable_objects.get second degree"):
-      return {(sndobj.type, sndobj.id)
-              for fstobj in related_objects
-              for sndobj in fstobj.related_objects(object_rules["snd"])}
+      return self._fetch_neighbourhood(obj, related_objects)
 
   def update(self, method):
     """Update parent object's snapshots and split in chunks if there are too
@@ -305,12 +362,13 @@ class SnapshotGenerator(object):
     with benchmark("Snapshot._create main"):
       with benchmark("Snapshot._create.revisions"):
         revisions = db.session.query(
-            models.Revision.id, models.Revision.resource_type,
+            models.Revision.id,
+            models.Revision.resource_type,
             models.Revision.resource_id).filter(
             tuple_(
                 models.Revision.resource_type,
                 models.Revision.resource_id).in_(self.children_objects)
-        ).order_by(models.Revision.id.desc()).all()
+        ).order_by(models.Revision.id.desc())
 
       with benchmark("Snapshot._create.revision cache generation"):
         for revid, restype, resid in revisions:
@@ -342,29 +400,38 @@ class SnapshotGenerator(object):
 
       # Create Revisions for Snapshots
       with benchmark("Snapshot._create.retrieve inserted snapshots"):
-        inserted_snapshots = db.session.query(models.Snapshot).filter(
-            tuple_(models.Snapshot.parent_type, models.Snapshot.parent_id).in_(
-                self.parent_objects)).all()
+        snapshots = db.session.query(
+            models.Snapshot.id,
+            models.Snapshot.context_id,
+            models.Snapshot.created_at,
+            models.Snapshot.updated_at,
+            models.Snapshot.parent_type,
+            models.Snapshot.parent_id,
+            models.Snapshot.child_type,
+            models.Snapshot.child_id,
+            models.Snapshot.revision_id,
+            models.Snapshot.modified_by_id,
+        ).filter(
+            tuple_(
+                models.Snapshot.parent_type,
+                models.Snapshot.parent_id).in_(self.parent_objects))
 
       with benchmark("Snapshot._create.get audit creation event"):
         events = self._get_events(method, self.parent_objects)
 
       with benchmark("Snapshot._create.create revision payload"):
-        for isnapshot in inserted_snapshots:
-          with benchmark("Snapshot._create.get parent"):
-            parent = isnapshot.parent
-            parent_key = (parent.type, parent.id)
+        for snapshot in snapshots:
+          sid, parent_key = snapshot[0], snapshot[4:6]
           event = events[parent_key]
-          with benchmark("Snapshot._create.build revision payload"):
-            revision_payload += [{
-                "action": "created",
-                "event_id": event,
-                "content": isnapshot.log_json(),
-                "modified_by_id": user_id,
-                "resource_id": isnapshot.id,
-                "resource_type": "Snapshot",
-                "context_id": self.context_cache[parent_key]
-            }]
+          revision_payload += [{
+              "action": "created",
+              "event_id": event,
+              "content": self._log_snapshot(snapshot),
+              "modified_by_id": user_id,
+              "resource_id": sid,
+              "resource_type": "Snapshot",
+              "context_id": self.context_cache[parent_key]
+          }]
 
       with benchmark("Snapshot._create.write revisions to database"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
