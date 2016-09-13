@@ -9,9 +9,10 @@ from sqlalchemy import orm
 from ggrc import db
 from ggrc.models.deferred import deferred
 from ggrc.models import mixins
+from ggrc.models import relationship
 
 
-class Snapshot(mixins.Base, db.Model):
+class Snapshot(relationship.Relatable, mixins.Base, db.Model):
   """Snapshot object that holds a join of parent object, revision, child object
   and parent object's context.
 
