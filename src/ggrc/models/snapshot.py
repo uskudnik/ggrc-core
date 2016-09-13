@@ -50,10 +50,14 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
       "revision_id",
   ]
 
+  _include_links = [
+      "revision"
+  ]
+
   @classmethod
   def eager_query(cls):
     query = super(Snapshot, cls).eager_query()
-    return query.options(
+    return cls.eager_inclusions(query, Snapshot._include_links).options(
         orm.subqueryload('revision'),
     )
 
