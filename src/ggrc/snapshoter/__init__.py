@@ -1,7 +1,6 @@
 # Copyright (C) 2016 Google Inc.
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 
-import collections
 import json
 
 from sqlalchemy.sql.expression import tuple_
@@ -11,236 +10,23 @@ from ggrc import db
 from ggrc import models
 from ggrc.models.background_task import create_task
 from ggrc.login import get_current_user_id
-from ggrc.snapshoter.rules import Attr
-from ggrc.services.common import Resource
-from ggrc.snapshoter.rules import get_rules
 from ggrc.utils import benchmark
 
+from ggrc.snapshoter.datastructures import Attr
+from ggrc.snapshoter.datastructures import Stub
+from ggrc.snapshoter.datastructures import OperationResponse
+from ggrc.snapshoter.helpers import create_relationship_dict
+from ggrc.snapshoter.helpers import create_relationship_revision_dict
+from ggrc.snapshoter.helpers import create_snapshot_dict
+from ggrc.snapshoter.helpers import create_snapshot_revision_dict
+from ggrc.snapshoter.helpers import get_relationships
+from ggrc.snapshoter.helpers import get_revisions
+from ggrc.snapshoter.helpers import get_snapshots
 
-class Stub(collections.namedtuple("Stub", ["type", "id"])):
-
-  @classmethod
-  def from_object(cls, _object):
-    return Stub(_object.type, _object.id)
-
-  @classmethod
-  def from_dict(cls, _dict):
-    return Stub(_dict["type"], _dict["id"])
-
-
-class Family(collections.namedtuple("Family", ["parent", "children"])):
-
-  def __contains__(self, item):
-    pass
+from ggrc.snapshoter.rules import get_rules
 
 
-Operation = collections.namedtuple(
-    "Operation", ["type", "success", "response"])
-OperationResponse = collections.namedtuple(
-    "OperationResponse", ["success", "response"])
-
-QUEUE_SIZE = 1000
-
-
-def create_snapshot_dict(parent, child, revision_id, user_id, context_id):
-  return {
-      "parent_type": parent.type,
-      "parent_id": parent.id,
-      "child_type": child.type,
-      "child_id": child.id,
-      "revision_id": revision_id,
-      "modified_by_id": user_id,
-      "context_id": context_id
-  }
-
-
-def create_snapshot_revision_dict(action, event_id, snapshot,
-                                  user_id, context_id):
-  return {
-      "action": action,
-      "event_id": event_id,
-      "content": create_snapshot_log(snapshot),
-      "modified_by_id": user_id,
-      "resource_id": snapshot[0],
-      "resource_type": "Snapshot",
-      "context_id": context_id
-  }
-
-
-def create_relationship_dict(source, destination, user_id, context_id):
-  return {
-      "source_type": source.type,
-      "source_id": source.id,
-      "destination_type": destination.type,
-      "destination_id": destination.id,
-      "modified_by_id": user_id,
-      "context_id": context_id,
-  }
-
-
-def create_relationship_revision_dict(action, event, relationship,
-                                      user_id, context_id):
-  return {
-      "action": action,
-      "event_id": event,
-      "content": create_relationship_log(relationship),
-      "modified_by_id": user_id,
-      "resource_id": relationship[0],
-      "resource_type": "Relationship",
-      "context_id": context_id
-  }
-
-
-def get_snapshots(objects):
-  return db.session.query(
-      models.Snapshot.id,
-      models.Snapshot.context_id,
-      models.Snapshot.created_at,
-      models.Snapshot.updated_at,
-      models.Snapshot.parent_type,
-      models.Snapshot.parent_id,
-      models.Snapshot.child_type,
-      models.Snapshot.child_id,
-      models.Snapshot.revision_id,
-      models.Snapshot.modified_by_id,
-  ).filter(
-      tuple_(
-          models.Snapshot.parent_type,
-          models.Snapshot.parent_id,
-          models.Snapshot.child_type,
-          models.Snapshot.child_id
-      ).in_({(parent.type, parent.id, child.type, child.id)
-             for parent, child in objects}))
-
-
-def get_event(_object, action):
-  """Retrieve the last event for parent objects that performed
-  PUT/POST/IMPORT/Event.action action."""
-  with benchmark("Snapshot.get_events"):
-    event = db.session.query(
-        models.Event.id,
-        models.Event.resource_type,
-        models.Event.resource_id).filter(
-            models.Event.resource_type == _object.type,
-            models.Event.resource_id == _object.id,
-            models.Event.action == action).order_by(
-        models.Event.id.desc()).first()
-    if not event:
-      raise Exception("No event found!")
-    return event
-
-
-def create_snapshot_log(snapshot):
-  (sid, context_id, created_at, updated_at,
-   parent_type, parent_id,
-   child_type, child_id,
-   revision_id, modified_by_id) = snapshot
-  return {
-      "id": sid,
-      "context_id": context_id,
-      "created_at": created_at,
-      "updated_at": updated_at,
-      "parent_type": parent_type,
-      "parent_id": parent_id,
-      "child_type": child_type,
-      "child_id": child_id,
-      "revision_id": revision_id,
-      "modified_by_id": modified_by_id,
-  }
-
-
-def create_relationship_log(relationship):
-  (rid,
-   modified_by_id,
-   created_at,
-   updated_at,
-   source_type,
-   source_id,
-   destination_type,
-   destination_id,
-   context_id,
-   ) = relationship
-  return {
-      "id": rid,
-      "context_id": context_id,
-      "created_at": created_at,
-      "updated_at": updated_at,
-      "source_type": source_type,
-      "source_id": source_id,
-      "destination_type": destination_type,
-      "destination_id": destination_id,
-      "modified_by_id": modified_by_id,
-  }
-
-
-def get_revisions(pairs, revisions, filters=None):
-  revision_id_cache = dict()
-
-  child_stubs = {child for parent, child in pairs}
-  with benchmark("Snapshot.get_revisions"):
-    with benchmark("Snapshot.get_revisions.retrieve revisions"):
-      query = db.session.query(
-          models.Revision.id,
-          models.Revision.resource_type,
-          models.Revision.resource_id).filter(
-          tuple_(
-              models.Revision.resource_type,
-              models.Revision.resource_id).in_(child_stubs)
-      ).order_by(models.Revision.id.desc())
-      if filters:
-        for filter in filters:
-          query = query.filter(filter)
-
-      with benchmark("Snapshot.get_revisions.create child -> parents cache"):
-        parents_cache = collections.defaultdict(set)
-        for parent, child in pairs:
-          parents_cache[child].add(parent)
-
-    with benchmark("Snapshot.get_revisions.create revision_id cache"):
-      for revid, restype, resid in query:
-        child = Stub(restype, resid)
-        for parent in parents_cache[child]:
-          key = (parent, child)
-          if key in revisions:
-            if revid == revisions[key]:
-              revision_id_cache[key] = revid
-          else:
-            if key not in revision_id_cache:
-              revision_id_cache[key] = revid
-    return revision_id_cache
-
-
-def get_relationships(relationships):
-  with benchmark("Snapshot.get_relationships"):
-    relationship_columns = db.session.query(
-        models.Relationship.id,
-        models.Relationship.modified_by_id,
-        models.Relationship.created_at,
-        models.Relationship.updated_at,
-        models.Relationship.source_type,
-        models.Relationship.source_id,
-        models.Relationship.destination_type,
-        models.Relationship.destination_id,
-        models.Relationship.context_id,
-    )
-
-    return relationship_columns.filter(
-        tuple_(
-            models.Relationship.source_type,
-            models.Relationship.source_id,
-            models.Relationship.destination_type,
-            models.Relationship.destination_id,
-        ).in_(relationships)
-    ).union(
-        relationship_columns.filter(
-            tuple_(
-                models.Relationship.destination_type,
-                models.Relationship.destination_id,
-                models.Relationship.source_type,
-                models.Relationship.source_id
-            ).in_(relationships)
-        )
-    )
+QUEUE_SIZE = 100000
 
 
 class SnapshotGenerator(object):
@@ -654,51 +440,3 @@ def update_snapshot(snapshot, event, revisions=set(), filter=None):
     generator.add_family(parent, {child})
     generator.update(event=event, revisions=revisions,
                      filter=lambda x: x in {(parent, child)})
-
-
-def register_snapshot_listeners():
-  rules = get_rules()
-
-  def create(sender, obj=None, src=None, service=None):
-    # TODO REMOVE ON FINAL COMMIT (FEATURE FLAG REMOVAL)
-    snapshot_settings = src.get("snapshots")
-    if snapshot_settings:
-      if snapshot_settings["operation"] == "create":
-        with benchmark("Snapshot.register_snapshot_listeners.create"):
-          event = get_event(obj, "POST")
-        create_snapshots(obj, event)
-
-  def update_all(sender, obj=None, src=None, service=None):
-    snapshot_settings = src.get("snapshots")
-    if snapshot_settings:
-      if snapshot_settings["operation"] == "upsert":
-        revisions = {
-            (Stub.from_dict(revision["parent"]),
-             Stub.from_dict(revision["child"])): revision["revision_id"]
-            for revision in snapshot_settings.get("revisions", {})}
-        with benchmark("Snapshot.register_snapshot_listeners.create"):
-          event = get_event(obj, "PUT")
-        update_snapshots(obj, event, revisions=revisions)
-
-  def update_one(sender, obj=None, src=None, service=None):
-    event = models.Event(
-        modified_by_id=get_current_user_id(),
-        action="PUT",
-        resource_id=obj.id,
-        resource_type=obj.type,
-        context_id=obj.context_id)
-
-    db.session.add(event)
-    # Because we need event's ID
-    db.session.flush()
-
-    if src.get("update"):
-      update_snapshot(obj, event)
-
-  # Initialize listening on parent objects
-  for type_ in rules.rules.keys():
-    model = getattr(models.all_models, type_)
-    Resource.model_posted_after_commit.connect(create, model, weak=False)
-    Resource.model_put_after_commit.connect(update_all, model, weak=False)
-
-  Resource.model_put.connect(update_one, models.Snapshot, weak=False)
