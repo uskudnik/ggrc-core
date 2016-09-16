@@ -394,7 +394,7 @@ def process_snapshots_bg(*args, **kwargs):
   parent, children = tuple(parent), {tuple(child) for child in children}
 
   snapshot_generator = SnapshotGenerator()
-  snapshot_generator.add_pairs(parent, children)
+  snapshot_generator.add_family(parent, children)
   task.start()
   try:
     op = snapshot_generator.OPERATION_HANDLERS[operation]
