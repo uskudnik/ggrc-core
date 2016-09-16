@@ -21,11 +21,18 @@ def get_revisions(pairs, revisions, filters=None):
     revisions: dict({(parent, child): revision_id, ...})
     filters: predicate
   """
-  revision_id_cache = dict()
+  with benchmark("snapshotter.helpers.get_revisions"):
+    revision_id_cache = dict()
 
-  child_stubs = {child for parent, child in pairs}
-  with benchmark("Snapshot.get_revisions"):
-    with benchmark("Snapshot.get_revisions.retrieve revisions"):
+    with benchmark("get_revisions.create caches"):
+      child_stubs = {child for parent, child in pairs}
+
+      with benchmark("get_revisions.create child -> parents cache"):
+        parents_cache = collections.defaultdict(set)
+        for parent, child in pairs:
+          parents_cache[child].add(parent)
+
+    with benchmark("get_revisions.retrieve revisions"):
       query = db.session.query(
           models.Revision.id,
           models.Revision.resource_type,
@@ -38,12 +45,7 @@ def get_revisions(pairs, revisions, filters=None):
         for _filter in filters:
           query = query.filter(_filter)
 
-      with benchmark("Snapshot.get_revisions.create child -> parents cache"):
-        parents_cache = collections.defaultdict(set)
-        for parent, child in pairs:
-          parents_cache[child].add(parent)
-
-    with benchmark("Snapshot.get_revisions.create revision_id cache"):
+    with benchmark("get_revisions.create revision_id cache"):
       for revid, restype, resid in query:
         child = Stub(restype, resid)
         for parent in parents_cache[child]:
@@ -63,7 +65,7 @@ def get_relationships(relationships):
   Args:
     relationships:
   """
-  with benchmark("Snapshot.get_relationships"):
+  with benchmark("snapshotter.helpers.get_relationships"):
     relationship_columns = db.session.query(
         models.Relationship.id,
         models.Relationship.modified_by_id,
@@ -98,7 +100,7 @@ def get_relationships(relationships):
 def get_event(_object, action):
   """Retrieve the last event for parent objects that performed
   PUT/POST/IMPORT/Event.action action."""
-  with benchmark("Snapshot.get_events"):
+  with benchmark("snapshotter.helpers.get_event"):
     event = db.session.query(
         models.Event.id,
         models.Event.resource_type,
@@ -113,34 +115,34 @@ def get_event(_object, action):
 
 
 def get_snapshots(objects=None, ids=None):
-  if objects and ids:
-    raise Exception(
-        "Insert only iterable of (parent, child) tuples or set of IDS")
-  columns = db.session.query(
-      models.Snapshot.id,
-      models.Snapshot.context_id,
-      models.Snapshot.created_at,
-      models.Snapshot.updated_at,
-      models.Snapshot.parent_type,
-      models.Snapshot.parent_id,
-      models.Snapshot.child_type,
-      models.Snapshot.child_id,
-      models.Snapshot.revision_id,
-      models.Snapshot.modified_by_id,
-  )
-  if objects:
-    return columns.filter(
-        tuple_(
-            models.Snapshot.parent_type,
-            models.Snapshot.parent_id,
-            models.Snapshot.child_type,
-            models.Snapshot.child_id
-        ).in_({(parent.type, parent.id, child.type, child.id)
-               for parent, child in objects}))
-  if ids:
-    return columns.filter(
-        models.Snapshot.id.in_(ids))
-
+  with benchmark("snapshotter.helpers.get_snapshots"):
+    if objects and ids:
+      raise Exception(
+          "Insert only iterable of (parent, child) tuples or set of IDS")
+    columns = db.session.query(
+        models.Snapshot.id,
+        models.Snapshot.context_id,
+        models.Snapshot.created_at,
+        models.Snapshot.updated_at,
+        models.Snapshot.parent_type,
+        models.Snapshot.parent_id,
+        models.Snapshot.child_type,
+        models.Snapshot.child_id,
+        models.Snapshot.revision_id,
+        models.Snapshot.modified_by_id,
+    )
+    if objects:
+      return columns.filter(
+          tuple_(
+              models.Snapshot.parent_type,
+              models.Snapshot.parent_id,
+              models.Snapshot.child_type,
+              models.Snapshot.child_id
+          ).in_({(parent.type, parent.id, child.type, child.id)
+                 for parent, child in objects}))
+    if ids:
+      return columns.filter(
+          models.Snapshot.id.in_(ids))
 
 
 def create_snapshot_dict(parent, child, revision_id, user_id, context_id):

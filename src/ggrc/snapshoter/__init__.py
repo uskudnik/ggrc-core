@@ -133,8 +133,8 @@ class SnapshotGenerator(object):
       related_objects = {Stub.from_object(obj)
                          for obj in related_mappings | direct_mappings}
 
-    with benchmark("Snapshot._get_snapshotable_objects.get second degree"):
-      return self._fetch_neighbourhood(obj, related_objects)
+      with benchmark("Snapshot._get_snapshotable_objects.fetch neighbourhood"):
+        return self._fetch_neighbourhood(obj, related_objects)
 
   def update(self, event, revisions, filter=None):
     """Update parent object's snapshots and split in chunks if there are too
@@ -146,46 +146,45 @@ class SnapshotGenerator(object):
   def _update(self, for_update, event, revisions, _filter):
     """Update (or create) parent objects' snapshots and create revisions for
     them."""
-    user_id = get_current_user_id()
-    event_id = event.id
-    engine = db.engine
-    missed_keys = set()
-    revision_id_cache = dict()
-    snapshot_cache = dict()
-    modified_snapshot_keys = set()
-    data_payload_update = list()
-    revision_payload = list()
+    with benchmark("Snapshot._update"):
+      user_id = get_current_user_id()
+      event_id = event.id
+      engine = db.engine
+      missed_keys = set()
+      snapshot_cache = dict()
+      modified_snapshot_keys = set()
+      data_payload_update = list()
+      revision_payload = list()
 
-    with benchmark("Snapshot._update.filter"):
-      for_update = filter(_filter, for_update)
+      with benchmark("Snapshot._update.filter"):
+        for_update = filter(_filter, for_update)
 
-    with benchmark("Snapshot._update.get existing snapshots"):
-      existing_snapshots = db.session.query(
-          models.Snapshot.id,
-          models.Snapshot.parent_type,
-          models.Snapshot.parent_id,
-          models.Snapshot.child_type,
-          models.Snapshot.child_id,
-          models.Snapshot.revision_id,
-      ).filter(tuple_(
-          models.Snapshot.parent_type, models.Snapshot.parent_id,
-          models.Snapshot.child_type, models.Snapshot.child_id
-      ).in_({(parent.type, parent.id, child.type, child.id)
-             for parent, child in for_update}))
+      with benchmark("Snapshot._update.get existing snapshots"):
+        existing_snapshots = db.session.query(
+            models.Snapshot.id,
+            models.Snapshot.parent_type,
+            models.Snapshot.parent_id,
+            models.Snapshot.child_type,
+            models.Snapshot.child_id,
+            models.Snapshot.revision_id,
+        ).filter(tuple_(
+            models.Snapshot.parent_type, models.Snapshot.parent_id,
+            models.Snapshot.child_type, models.Snapshot.child_id
+        ).in_({(parent.type, parent.id, child.type, child.id)
+               for parent, child in for_update}))
 
-      for sid, ptype, pid, ctype, cid, revid in existing_snapshots:
-        parent = Stub(ptype, pid)
-        child = Stub(ctype, cid)
-        snapshot_cache[child] = [sid, revid, parent]
+        for sid, ptype, pid, ctype, cid, revid in existing_snapshots:
+          parent = Stub(ptype, pid)
+          child = Stub(ctype, cid)
+          snapshot_cache[child] = [sid, revid, parent]
 
-    with benchmark("Batch UPDATE snapshots"):
-      with benchmark("Retrieve latest revisions"):
+      with benchmark("Snapshot._update.retrieve latest revisions"):
         revision_id_cache = get_revisions(
             for_update,
             filters=[models.Revision.action.in_(["created", "modified"])],
             revisions=revisions)
 
-      with benchmark("Build models.Snapshot payload"):
+      with benchmark("Snapshot._update.build snapshot payload"):
         for parent, child in for_update:
           key = (parent, child)
           if key in revision_id_cache:
@@ -213,14 +212,13 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._update.retrieve inserted snapshots"):
         snapshots = get_snapshots(modified_snapshot_keys)
 
-      with benchmark("Snapshot._update.create revision payload"):
-        with benchmark("Snapshot._update.create snapshots revision payload"):
-          for snapshot in snapshots:
-            parent = Stub._make(snapshot[4:6])
-            context_id = self.context_cache[parent]
-            data = create_snapshot_revision_dict("created", event_id, snapshot,
-                                                 user_id, context_id)
-            revision_payload += [data]
+      with benchmark("Snapshot._update.create snapshots revision payload"):
+        for snapshot in snapshots:
+          parent = Stub._make(snapshot[4:6])
+          context_id = self.context_cache[parent]
+          data = create_snapshot_revision_dict("created", event_id, snapshot,
+                                               user_id, context_id)
+          revision_payload += [data]
 
       with benchmark("Insert Snapshot entries into Revision"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
@@ -298,7 +296,6 @@ class SnapshotGenerator(object):
   def create(self, event, revisions, filter=None):
     """Create snapshots of parent object's neighbourhood per provided rules
     and split in chuncks if there are too many snapshottable objects."""
-    # return self.create_chunks(self._create, method=method)
     for_create, _ = self.analyze()
     return self._create(
         for_create=for_create, event=event,
@@ -307,17 +304,17 @@ class SnapshotGenerator(object):
   def _create(self, for_create, event, revisions, _filter):
     """Create snapshots of parent objects neighhood and create revisions for
     snapshots."""
-    with benchmark("Snapshot._create init"):
-      user_id = get_current_user_id()
-      missed_keys = set()
-      data_payload = list()
-      revision_payload = list()
-      relationship_payload = list()
-      event_id = event.id
+    with benchmark("Snapshot._create"):
+      with benchmark("Snapshot._create init"):
+        user_id = get_current_user_id()
+        missed_keys = set()
+        data_payload = list()
+        revision_payload = list()
+        relationship_payload = list()
+        event_id = event.id
 
-    with benchmark("Snapshot._create.filter"):
-      for_create = filter(_filter, for_create)
-    with benchmark("Snapshot._create main"):
+      with benchmark("Snapshot._create.filter"):
+        for_create = filter(_filter, for_create)
       with benchmark("Snapshot._create._get_revisions"):
         revision_id_cache = get_revisions(for_create, revisions)
 
@@ -331,8 +328,6 @@ class SnapshotGenerator(object):
                                         revision_id, user_id, context_id)
             data_payload += [data]
           else:
-            # TODO Remove before production - there should never be a missing
-            # TODO revision
             missed_keys.add(key)
 
       with benchmark("Snapshot._create.write to database"):
@@ -385,7 +380,7 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._create.write revisions to database"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
         db.session.commit()
-    return OperationResponse(True, for_create)
+      return OperationResponse(True, for_create)
 
 
 def create_snapshots(objs, event, revisions=set(), filter=None):
