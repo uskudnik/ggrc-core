@@ -3,9 +3,7 @@
 
 """Generate rules for snapshoting"""
 
-from collections import namedtuple
-
-Attr = namedtuple('Attr', ['name'])
+from ggrc.snapshoter.datastructures import Attr
 
 
 class Types(object):
