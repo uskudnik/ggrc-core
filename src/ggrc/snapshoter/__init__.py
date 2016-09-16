@@ -210,36 +210,21 @@ class SnapshotGenerator(object):
           engine.execute(update_sql, data_payload_update)
         db.session.commit()
 
-      # Create revisions for snapshots
-      touched_snapshots = {(ptype, pid, ctype, cid)
-                           for ptype, pid in self.snapshots
-                           for ctype, cid in self.snapshots[
-                           (ptype, pid)]}
-      snapshots = db.session.query(models.Snapshot).filter(
-          tuple_(
-              models.Snapshot.parent_type, models.Snapshot.parent_id,
-              models.Snapshot.child_type, models.Snapshot.child_id).in_(
-                  touched_snapshots)).all()
+      with benchmark("Snapshot._update.retrieve inserted snapshots"):
+        snapshots = get_snapshots(modified_snapshot_keys)
 
-      snapshot_ids = {sh.id for sh in snapshots}
-      snapshots = {sh.id: sh for sh in snapshots}
+      with benchmark("Snapshot._update.create revision payload"):
+        with benchmark("Snapshot._update.create snapshots revision payload"):
+          for snapshot in snapshots:
+            parent = Stub._make(snapshot[4:6])
+            context_id = self.context_cache[parent]
+            data = create_snapshot_revision_dict("created", event_id, snapshot,
+                                                 user_id, context_id)
+            revision_payload += [data]
 
-      for snapshot in snapshots.values():
-        parent = snapshot.parent
-        parent_key = (parent.type, parent.id)
-        revision_payload += [{
-            "action": "modified",
-            "event_id": event_id,
-            "content": snapshot.log_json(),
-            "modified_by_id": user_id,
-            "resource_id": snapshot.id,
-            "resource_type": "Snapshot",
-            "context_id": self.context_cache[parent_key]
-        }]
       with benchmark("Insert Snapshot entries into Revision"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
         db.session.commit()
-
       return OperationResponse(True, for_update)
 
   def create_chunks(self, func, *args, **kwargs):
