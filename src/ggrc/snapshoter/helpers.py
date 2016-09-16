@@ -112,8 +112,11 @@ def get_event(_object, action):
     return event
 
 
-def get_snapshots(objects):
-  return db.session.query(
+def get_snapshots(objects=None, ids=None):
+  if objects and ids:
+    raise Exception(
+        "Insert only iterable of (parent, child) tuples or set of IDS")
+  columns = db.session.query(
       models.Snapshot.id,
       models.Snapshot.context_id,
       models.Snapshot.created_at,
@@ -124,14 +127,20 @@ def get_snapshots(objects):
       models.Snapshot.child_id,
       models.Snapshot.revision_id,
       models.Snapshot.modified_by_id,
-  ).filter(
-      tuple_(
-          models.Snapshot.parent_type,
-          models.Snapshot.parent_id,
-          models.Snapshot.child_type,
-          models.Snapshot.child_id
-      ).in_({(parent.type, parent.id, child.type, child.id)
-             for parent, child in objects}))
+  )
+  if objects:
+    return columns.filter(
+        tuple_(
+            models.Snapshot.parent_type,
+            models.Snapshot.parent_id,
+            models.Snapshot.child_type,
+            models.Snapshot.child_id
+        ).in_({(parent.type, parent.id, child.type, child.id)
+               for parent, child in objects}))
+  if ids:
+    return columns.filter(
+        models.Snapshot.id.in_(ids))
+
 
 
 def create_snapshot_dict(parent, child, revision_id, user_id, context_id):
