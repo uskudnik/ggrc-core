@@ -20,14 +20,31 @@ class Stub(collections.namedtuple("Stub", ["type", "id"])):
   def from_dict(cls, _dict):
     return Stub(_dict["type"], _dict["id"])
 
-
-class Family(collections.namedtuple("Family", ["parent", "children"])):
-
-  def __contains__(self, item):
-    pass
+  @classmethod
+  def from_tuple(cls, _tuple, type_position=0, id_position=1):
+    return Stub(_tuple[type_position], _tuple[id_position])
 
 
-Operation = collections.namedtuple(
-    "Operation", ["type", "success", "response"])
+class Pair(collections.namedtuple("Pair", ["parent", "child"])):
+  """Simple representation of snapshot object"""
+
+  @classmethod
+  def from_4tuple(cls, _tuple,
+                  parent_type=0, parent_id=1, child_type=2, child_id=3):
+    return Pair(Stub(_tuple[parent_type], _tuple[parent_id]),
+                Stub(_tuple[child_type], _tuple[child_id]))
+
+  def to_4tuple(self):
+    return self.parent.type, self.parent.id, self.child.type, self.child.id
+
+  @classmethod
+  def from_2tuple(cls, _tuple):
+    parent, child = _tuple
+    return Pair(parent, child)
+
+  def to_2tuple(self):
+    return self.parent, self.child
+
+
 OperationResponse = collections.namedtuple(
-    "OperationResponse", ["success", "response"])
+    "OperationResponse", ["type", "success", "response", "flags"])
