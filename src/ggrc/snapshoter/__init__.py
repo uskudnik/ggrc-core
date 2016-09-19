@@ -13,12 +13,14 @@ from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
 from ggrc.snapshoter.datastructures import Attr
+from ggrc.snapshoter.datastructures import Pair
 from ggrc.snapshoter.datastructures import Stub
 from ggrc.snapshoter.datastructures import OperationResponse
 from ggrc.snapshoter.helpers import create_relationship_dict
 from ggrc.snapshoter.helpers import create_relationship_revision_dict
 from ggrc.snapshoter.helpers import create_snapshot_dict
 from ggrc.snapshoter.helpers import create_snapshot_revision_dict
+from ggrc.snapshoter.helpers import create_dry_run_response
 from ggrc.snapshoter.helpers import get_relationships
 from ggrc.snapshoter.helpers import get_revisions
 from ggrc.snapshoter.helpers import get_snapshots
@@ -44,12 +46,12 @@ class SnapshotGenerator(object):
     self.snapshots = dict()
     self.context_cache = dict()
     self.chunking = chunking
+    self.dry_run = dry_run
 
   def add_parent(self, obj):
     """Add parent object and automatically scan neighbourhood for snapshottable
     objects."""
     with benchmark("Snapshot.add_parent_object"):
-      # key = (obj.type, obj.id)
       key = Stub.from_object(obj)
       if key not in self.parents:
         with benchmark("Snapshot.add_parent_object.add object"):
@@ -162,21 +164,20 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._update.get existing snapshots"):
         existing_snapshots = db.session.query(
             models.Snapshot.id,
+            models.Snapshot.revision_id,
             models.Snapshot.parent_type,
             models.Snapshot.parent_id,
             models.Snapshot.child_type,
             models.Snapshot.child_id,
-            models.Snapshot.revision_id,
         ).filter(tuple_(
             models.Snapshot.parent_type, models.Snapshot.parent_id,
             models.Snapshot.child_type, models.Snapshot.child_id
-        ).in_({(parent.type, parent.id, child.type, child.id)
-               for parent, child in for_update}))
+        ).in_({pair.to_4tuple() for pair in for_update}))
 
-        for sid, ptype, pid, ctype, cid, revid in existing_snapshots:
-          parent = Stub(ptype, pid)
-          child = Stub(ctype, cid)
-          snapshot_cache[child] = [sid, revid, parent]
+        for es in existing_snapshots:
+          sid, rev_id, pair_tuple = es[0], es[1], es[2:]
+          pair = Pair.from_4tuple(pair_tuple)
+          snapshot_cache[pair] = (sid, rev_id)
 
       with benchmark("Snapshot._update.retrieve latest revisions"):
         revision_id_cache = get_revisions(
@@ -184,13 +185,21 @@ class SnapshotGenerator(object):
             filters=[models.Revision.action.in_(["created", "modified"])],
             revisions=revisions)
 
+      if self.dry_run:
+        old_revisions = {pair: values[1]
+                         for pair, values in snapshot_cache.items()}
+        response = create_dry_run_response(
+            for_update, old_revisions, revision_id_cache)
+        return OperationResponse("update", True, response, {
+            "dry-run": True
+        })
+
       with benchmark("Snapshot._update.build snapshot payload"):
-        for parent, child in for_update:
-          key = (parent, child)
+        for key in for_update:
           if key in revision_id_cache:
-            sid, revid, _ = snapshot_cache[child]
+            sid, rev_id = snapshot_cache[key]
             latest_rev = revision_id_cache[key]
-            if revid != latest_rev:
+            if rev_id != latest_rev:
               modified_snapshot_keys.add(key)
               data_payload_update += [{
                   "_id": sid,
@@ -214,16 +223,16 @@ class SnapshotGenerator(object):
 
       with benchmark("Snapshot._update.create snapshots revision payload"):
         for snapshot in snapshots:
-          parent = Stub._make(snapshot[4:6])
+          parent = Stub.from_tuple(snapshot, 4, 5)
           context_id = self.context_cache[parent]
-          data = create_snapshot_revision_dict("created", event_id, snapshot,
+          data = create_snapshot_revision_dict("modified", event_id, snapshot,
                                                user_id, context_id)
           revision_payload += [data]
 
       with benchmark("Insert Snapshot entries into Revision"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
         db.session.commit()
-      return OperationResponse(True, for_update)
+      return OperationResponse("update", True, for_update, None)
 
   def create_chunks(self, func, *args, **kwargs):
     """Create chunks if there are too many snapshottable objects."""
@@ -267,10 +276,9 @@ class SnapshotGenerator(object):
         models.Snapshot.parent_type, models.Snapshot.parent_id
     ).in_(self.parents)))
 
-    existing_scope = {(Stub._make(fields[0:2]), Stub._make(fields[2:4]))
-                      for fields in query}
+    existing_scope = {Pair.from_4tuple(fields) for fields in query}
 
-    full_scope = {(parent, child)
+    full_scope = {Pair(parent, child)
                   for parent, children in self.snapshots.items()
                   for child in children}
 
@@ -284,6 +292,7 @@ class SnapshotGenerator(object):
 
   def _upsert(self, event, revisions, filter):
     for_create, for_update = self.analyze()
+    create, update = None, None
 
     if for_update:
       update = self._update(
@@ -292,6 +301,13 @@ class SnapshotGenerator(object):
     if for_create:
       create = self._create(for_create=for_create, event=event,
                             revisions=revisions, _filter=filter)
+
+    return OperationResponse("upsert", True, {
+        "create": create,
+        "update": update
+    }, {
+        "dry-run": self.dry_run
+    })
 
   def create(self, event, revisions, filter=None):
     """Create snapshots of parent object's neighbourhood per provided rules
@@ -318,17 +334,22 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._create._get_revisions"):
         revision_id_cache = get_revisions(for_create, revisions)
 
+      if self.dry_run:
+        response = create_dry_run_response(for_create, dict(),
+                                           revision_id_cache)
+        return OperationResponse("create", True, response, {
+            "dry-run": True
+        })
+
       with benchmark("Snapshot._create.create payload"):
-        for parent, child in for_create:
-          key = (parent, child)
-          if key in revision_id_cache:
-            revision_id = revision_id_cache[key]
-            context_id = self.context_cache[parent]
-            data = create_snapshot_dict(parent, child,
-                                        revision_id, user_id, context_id)
+        for pair in for_create:
+          if pair in revision_id_cache:
+            revision_id = revision_id_cache[pair]
+            context_id = self.context_cache[pair.parent]
+            data = create_snapshot_dict(pair, revision_id, user_id, context_id)
             data_payload += [data]
           else:
-            missed_keys.add(key)
+            missed_keys.add(pair)
 
       with benchmark("Snapshot._create.write to database"):
         engine = db.engine
@@ -340,7 +361,7 @@ class SnapshotGenerator(object):
 
       with benchmark("Snapshot._create.create base object -> snapshot rels"):
         for snapshot in snapshots:
-          base_object = Stub._make(snapshot[6:8])
+          base_object = Stub.from_tuple(snapshot, 6, 7)
           snapshot_object = Stub("Snapshot", snapshot[0])
           relationship = create_relationship_dict(base_object, snapshot_object,
                                                   user_id, snapshot[1])
@@ -361,16 +382,16 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._create.create revision payload"):
         with benchmark("Snapshot._create.create snapshots revision payload"):
           for snapshot in snapshots:
-            parent = Stub._make(snapshot[4:6])
+            parent = Stub.from_tuple(snapshot, 4, 5)
             context_id = self.context_cache[parent]
             data = create_snapshot_revision_dict("created", event_id, snapshot,
                                                  user_id, context_id)
             revision_payload += [data]
 
         with benchmark("Snapshot._create.create rel revision payload"):
-          snapshot_parents = {child: parent for parent, child in for_create}
+          snapshot_parents = {pair.child: pair.parent for pair in for_create}
           for relationship in relationships:
-            obj = Stub._make(relationship[4:6])
+            obj = Stub.from_tuple(relationship, 4, 5)
             parent = snapshot_parents[obj]
             context_id = self.context_cache[parent]
             data = create_relationship_revision_dict(
@@ -380,7 +401,7 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._create.write revisions to database"):
         engine.execute(models.Revision.__table__.insert(), revision_payload)
         db.session.commit()
-      return OperationResponse(True, for_create)
+      return OperationResponse("create", True, for_create, None)
 
 
 def create_snapshots(objs, event, revisions=set(), filter=None):
