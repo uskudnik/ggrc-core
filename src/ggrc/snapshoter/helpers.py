@@ -10,6 +10,7 @@ from sqlalchemy.sql.expression import tuple_
 from ggrc import db
 from ggrc import models
 from ggrc.snapshoter.datastructures import Stub
+from ggrc.snapshoter.datastructures import Pair
 from ggrc.utils import benchmark
 
 
@@ -25,7 +26,7 @@ def get_revisions(pairs, revisions, filters=None):
     revision_id_cache = dict()
 
     with benchmark("get_revisions.create caches"):
-      child_stubs = {child for parent, child in pairs}
+      child_stubs = {pair.child for pair in pairs}
 
       with benchmark("get_revisions.create child -> parents cache"):
         parents_cache = collections.defaultdict(set)
@@ -49,7 +50,7 @@ def get_revisions(pairs, revisions, filters=None):
       for revid, restype, resid in query:
         child = Stub(restype, resid)
         for parent in parents_cache[child]:
-          key = (parent, child)
+          key = Pair(parent, child)
           if key in revisions:
             if revid == revisions[key]:
               revision_id_cache[key] = revid
@@ -145,8 +146,9 @@ def get_snapshots(objects=None, ids=None):
           models.Snapshot.id.in_(ids))
 
 
-def create_snapshot_dict(parent, child, revision_id, user_id, context_id):
+def create_snapshot_dict(pair, revision_id, user_id, context_id):
   """Create dictionary representation of snapshot"""
+  parent, child = pair.to_2tuple()
   return {
       "parent_type": parent.type,
       "parent_id": parent.id,
@@ -241,3 +243,17 @@ def create_relationship_log(relationship):
       "destination_id": destination_id,
       "modified_by_id": modified_by_id,
   }
+
+
+def create_dry_run_response(pairs, old_revisions, new_revisions):
+  with benchmark("create_dry_run_response"):
+    response = dict()
+    for pair in pairs:
+      if pair.parent not in response:
+        response[pair.parent] = {}
+
+      old_revision_id = old_revisions.get(pair)
+      new_revision_id = new_revisions.get(pair)
+      if old_revision_id != new_revision_id:
+        response[pair.parent][pair.child] = (old_revision_id, new_revision_id)
+    return response
