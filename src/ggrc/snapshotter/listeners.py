@@ -11,12 +11,12 @@ from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
 
-from ggrc.snapshoter import create_snapshots
-from ggrc.snapshoter import update_snapshots
-from ggrc.snapshoter import update_snapshot
-from ggrc.snapshoter.datastructures import Stub
-from ggrc.snapshoter.rules import get_rules
-from ggrc.snapshoter.helpers import get_event
+from ggrc.snapshotter import create_snapshots
+from ggrc.snapshotter import update_snapshots
+from ggrc.snapshotter import update_snapshot
+from ggrc.snapshotter.datastructures import Stub
+from ggrc.snapshotter.rules import get_rules
+from ggrc.snapshotter.helpers import get_event
 
 
 def register_snapshot_listeners():
