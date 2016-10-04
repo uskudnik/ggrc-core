@@ -49,19 +49,22 @@ def register_snapshot_listeners():
 
   def update_one(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
     """Update single snapshot"""
-    event = models.Event(
-        modified_by_id=get_current_user_id(),
-        action="PUT",
-        resource_id=obj.id,
-        resource_type=obj.type,
-        context_id=obj.context_id)
+    snapshot_settings = src.get("individual-update")
 
-    db.session.add(event)
-    # Because we need event's ID
-    db.session.flush()
+    if snapshot_settings:
+      if snapshot_settings["operation"] == "update":
+        event = models.Event(
+            modified_by_id=get_current_user_id(),
+            action="PUT",
+            resource_id=obj.id,
+            resource_type=obj.type,
+            context_id=obj.context_id)
 
-    if src.get("update"):
-      update_snapshot(obj, event)
+        db.session.add(event)
+        # Because we need event's ID
+        db.session.flush()
+
+        update_snapshot(obj, event)
 
   # Initialize listening on parent objects
   for type_ in rules.rules.keys():
