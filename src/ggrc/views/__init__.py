@@ -324,6 +324,7 @@ def contributed_object_views():
       object_view(models.Person),
       object_view(models.Vendor),
       object_view(models.Issue),
+      object_view(models.Snapshot),
   ]
 
 
