@@ -209,6 +209,9 @@ class SnapshotGenerator(object):
           else:
             missed_keys.add(key)
 
+      if not modified_snapshot_keys:
+        return OperationResponse("update", True, set(), None)
+
       with benchmark("Snapshot._update.write snapshots to database"):
         update_sql = models.Snapshot.__table__.update().where(
             models.Snapshot.id == bindparam("_id")).values(
