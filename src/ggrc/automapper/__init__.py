@@ -284,17 +284,5 @@ def register_automapping_listeners():
   # pylint: disable=unused-variable
   @Resource.model_posted_after_commit.connect_via(Audit)
   def handle_audit(sender, obj=None, src=None, service=None):
-    if not src.get("create-snapshots"):
-      if obj is None:
-        logging.warning("Automapping audit listener: "
-                        "no obj, no mappings created")
-        return
-      if obj.program is None:
-        logging.warning("Automapping audit listener: "
-                        "no program, no mappings created")
-        return
-      rel = Relationship(source_type=obj.type,
-                         source_id=obj.id,
-                         destination_type=obj.program.type,
-                         destination_id=obj.program.id)
+    if not src.get("snapshots"):
       handle_relationship_post(obj, obj.program)
