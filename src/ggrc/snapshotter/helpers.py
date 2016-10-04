@@ -9,8 +9,8 @@ from sqlalchemy.sql.expression import tuple_
 
 from ggrc import db
 from ggrc import models
-from ggrc.snapshoter.datastructures import Stub
-from ggrc.snapshoter.datastructures import Pair
+from ggrc.snapshotter.datastructures import Stub
+from ggrc.snapshotter.datastructures import Pair
 from ggrc.utils import benchmark
 
 

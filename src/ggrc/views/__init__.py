@@ -37,7 +37,7 @@ from ggrc.rbac import permissions
 from ggrc.services.common import as_json
 from ggrc.services.common import inclusion_filter
 from ggrc.services import query as services_query
-from ggrc.snapshoter import SnapshotGenerator
+from ggrc.snapshotter import SnapshotGenerator
 from ggrc.views import converters
 from ggrc.views import cron
 from ggrc.views import filters

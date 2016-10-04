@@ -3,7 +3,7 @@
 
 """Generate rules for snapshoting"""
 
-from ggrc.snapshoter.datastructures import Attr
+from ggrc.snapshotter.datastructures import Attr
 
 
 class Types(object):

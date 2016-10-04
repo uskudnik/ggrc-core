@@ -8,7 +8,7 @@ from os.path import abspath, dirname, join
 
 from ggrc import db
 import ggrc.models as models
-from ggrc.snapshoter.rules import Types
+from ggrc.snapshotter.rules import Types
 
 import integration.ggrc
 from integration.ggrc import api_helper

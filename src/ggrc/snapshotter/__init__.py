@@ -12,20 +12,20 @@ from ggrc.models.background_task import create_task
 from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
-from ggrc.snapshoter.datastructures import Attr
-from ggrc.snapshoter.datastructures import Pair
-from ggrc.snapshoter.datastructures import Stub
-from ggrc.snapshoter.datastructures import OperationResponse
-from ggrc.snapshoter.helpers import create_relationship_dict
-from ggrc.snapshoter.helpers import create_relationship_revision_dict
-from ggrc.snapshoter.helpers import create_snapshot_dict
-from ggrc.snapshoter.helpers import create_snapshot_revision_dict
-from ggrc.snapshoter.helpers import create_dry_run_response
-from ggrc.snapshoter.helpers import get_relationships
-from ggrc.snapshoter.helpers import get_revisions
-from ggrc.snapshoter.helpers import get_snapshots
+from ggrc.snapshotter.datastructures import Attr
+from ggrc.snapshotter.datastructures import Pair
+from ggrc.snapshotter.datastructures import Stub
+from ggrc.snapshotter.datastructures import OperationResponse
+from ggrc.snapshotter.helpers import create_relationship_dict
+from ggrc.snapshotter.helpers import create_relationship_revision_dict
+from ggrc.snapshotter.helpers import create_snapshot_dict
+from ggrc.snapshotter.helpers import create_snapshot_revision_dict
+from ggrc.snapshotter.helpers import create_dry_run_response
+from ggrc.snapshotter.helpers import get_relationships
+from ggrc.snapshotter.helpers import get_revisions
+from ggrc.snapshotter.helpers import get_snapshots
 
-from ggrc.snapshoter.rules import get_rules
+from ggrc.snapshotter.rules import get_rules
 
 
 QUEUE_SIZE = 100000
