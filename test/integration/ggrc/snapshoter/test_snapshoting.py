@@ -3,14 +3,23 @@
 
 """Test for snapshoter"""
 
+import collections
+from os.path import abspath, dirname, join
+
 from ggrc import db
 import ggrc.models as models
 import integration.ggrc
 from integration.ggrc import api_helper
 import integration.ggrc.generator
+from integration.ggrc.converters import TestCase
+from ggrc.snapshoter.rules import Types
 
 
-class TestSnapshoting(integration.ggrc.TestCase):
+THIS_ABS_PATH = abspath(dirname(__file__))
+CSV_DIR = join(THIS_ABS_PATH, "../converters/test_csvs/")
+
+
+class TestSnapshoting(TestCase):
   """Test cases for Snapshoter module"""
 
   # pylint: disable=invalid-name
@@ -354,7 +363,9 @@ class TestSnapshoting(integration.ggrc.TestCase):
         "Test Control Snapshot 1")
 
     self.api.modify_object(control_snapshot, {
-        "update": True
+        "individual-update": {
+            "operation": "update"
+        }
     })
 
     expected = [
@@ -385,3 +396,51 @@ class TestSnapshoting(integration.ggrc.TestCase):
   def test_update_when_mapped_objects_are_deleted(self):
     """Test global update when object got deleted or unmapped"""
     pass
+
+  def test_snapshoting_of_objects(self):
+    """Test that all object types that should be snapshotted are snapshotted
+
+    It is expected that all objects will be triplets.
+    """
+
+    self._import_file("snapshotter_create.csv")
+
+    # Verify that all objects got imported correctly.
+    for _type in Types.all:
+      self.assertEqual(
+          db.session.query(getattr(models.all_models, _type)).count(),
+          3)
+
+    program = db.session.query(models.Program).filter(
+        models.Program.slug == "Prog-13211"
+    ).one()
+
+    self.create_object(models.Audit, {
+        "title": "Snapshotable audit",
+        "program": {"id": program.id},
+        "status": "Planned",
+        "snapshots": {
+            "operation": "create",
+        }
+    })
+
+    audit = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%Snapshotable audit%")).first()
+
+    snapshots = db.session.query(models.Snapshot).filter(
+        models.Snapshot.parent_type == "Audit",
+        models.Snapshot.parent_id == audit.id,
+    )
+
+    self.assertEqual(snapshots.count(), len(Types.all) * 3)
+
+    type_count = collections.defaultdict(int)
+    for snapshot in snapshots:
+      type_count[snapshot.child_type] += 1
+
+    missing_types = set()
+    for snapshottable_type in Types.all:
+      if type_count[snapshottable_type] != 3:
+        missing_types.add(snapshottable_type)
+
+    self.assertEqual(missing_types, set())
