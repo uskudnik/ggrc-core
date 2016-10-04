@@ -8,15 +8,24 @@ from os.path import abspath, dirname, join
 
 from ggrc import db
 import ggrc.models as models
+from ggrc.snapshoter.rules import Types
+
 import integration.ggrc
 from integration.ggrc import api_helper
-import integration.ggrc.generator
 from integration.ggrc.converters import TestCase
-from ggrc.snapshoter.rules import Types
+import integration.ggrc.generator
 
 
 THIS_ABS_PATH = abspath(dirname(__file__))
 CSV_DIR = join(THIS_ABS_PATH, "../converters/test_csvs/")
+
+
+def snapshot_identity(s_1, s_2):
+  return (s_1.id == s_2.id and
+          s_1.updated_at == s_2.updated_at and
+          s_1.child_id == s_2.child_id and
+          s_1.child_type == s_2.child_type and
+          s_1.revision_id == s_2.revision_id)
 
 
 class TestSnapshoting(TestCase):
@@ -444,3 +453,49 @@ class TestSnapshoting(TestCase):
         missing_types.add(snapshottable_type)
 
     self.assertEqual(missing_types, set())
+
+  def test_snapshot_update_is_idempotent(self):
+    """Test that nothing has changed if there's nothing to update"""
+    self._import_file("snapshotter_create.csv")
+
+    program = db.session.query(models.Program).filter(
+        models.Program.slug == "Prog-13211"
+    ).one()
+
+    self.create_object(models.Audit, {
+        "title": "Snapshotable audit",
+        "program": {"id": program.id},
+        "status": "Planned",
+        "snapshots": {
+            "operation": "create",
+        }
+    })
+
+    audit = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%Snapshotable audit%")).first()
+
+    snapshots = db.session.query(models.Snapshot).filter(
+        models.Snapshot.parent_type == "Audit",
+        models.Snapshot.parent_id == audit.id,
+    )
+
+    self.assertEqual(snapshots.count(), len(Types.all) * 3)
+
+    audit = self.refresh_object(audit)
+    self.api.modify_object(audit, {
+        "snapshots": {
+            "operation": "upsert"
+        }
+    })
+
+    old_snapshots = {s.id: s for s in snapshots}
+
+    snapshots = db.session.query(models.Snapshot).filter(
+        models.Snapshot.parent_type == "Audit",
+        models.Snapshot.parent_id == audit.id,
+    )
+
+    new_snapshots = {s.id: s for s in snapshots}
+
+    for _id, snapshot in new_snapshots.items():
+      self.assertEqual(snapshot_identity(old_snapshots[_id], snapshot), True)
