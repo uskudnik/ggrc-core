@@ -25,38 +25,39 @@ def get_revisions(pairs, revisions, filters=None):
   with benchmark("snapshotter.helpers.get_revisions"):
     revision_id_cache = dict()
 
-    with benchmark("get_revisions.create caches"):
-      child_stubs = {pair.child for pair in pairs}
+    if pairs:
+      with benchmark("get_revisions.create caches"):
+        child_stubs = {pair.child for pair in pairs}
 
-      with benchmark("get_revisions.create child -> parents cache"):
-        parents_cache = collections.defaultdict(set)
-        for parent, child in pairs:
-          parents_cache[child].add(parent)
+        with benchmark("get_revisions.create child -> parents cache"):
+          parents_cache = collections.defaultdict(set)
+          for parent, child in pairs:
+            parents_cache[child].add(parent)
 
-    with benchmark("get_revisions.retrieve revisions"):
-      query = db.session.query(
-          models.Revision.id,
-          models.Revision.resource_type,
-          models.Revision.resource_id).filter(
-          tuple_(
-              models.Revision.resource_type,
-              models.Revision.resource_id).in_(child_stubs)
-      ).order_by(models.Revision.id.desc())
-      if filters:
-        for _filter in filters:
-          query = query.filter(_filter)
+      with benchmark("get_revisions.retrieve revisions"):
+        query = db.session.query(
+            models.Revision.id,
+            models.Revision.resource_type,
+            models.Revision.resource_id).filter(
+            tuple_(
+                models.Revision.resource_type,
+                models.Revision.resource_id).in_(child_stubs)
+        ).order_by(models.Revision.id.desc())
+        if filters:
+          for _filter in filters:
+            query = query.filter(_filter)
 
-    with benchmark("get_revisions.create revision_id cache"):
-      for revid, restype, resid in query:
-        child = Stub(restype, resid)
-        for parent in parents_cache[child]:
-          key = Pair(parent, child)
-          if key in revisions:
-            if revid == revisions[key]:
-              revision_id_cache[key] = revid
-          else:
-            if key not in revision_id_cache:
-              revision_id_cache[key] = revid
+      with benchmark("get_revisions.create revision_id cache"):
+        for revid, restype, resid in query:
+          child = Stub(restype, resid)
+          for parent in parents_cache[child]:
+            key = Pair(parent, child)
+            if key in revisions:
+              if revid == revisions[key]:
+                revision_id_cache[key] = revid
+            else:
+              if key not in revision_id_cache:
+                revision_id_cache[key] = revid
     return revision_id_cache
 
 
@@ -67,35 +68,38 @@ def get_relationships(relationships):
     relationships:
   """
   with benchmark("snapshotter.helpers.get_relationships"):
-    relationship_columns = db.session.query(
-        models.Relationship.id,
-        models.Relationship.modified_by_id,
-        models.Relationship.created_at,
-        models.Relationship.updated_at,
-        models.Relationship.source_type,
-        models.Relationship.source_id,
-        models.Relationship.destination_type,
-        models.Relationship.destination_id,
-        models.Relationship.context_id,
-    )
+    if relationships:
+      relationship_columns = db.session.query(
+          models.Relationship.id,
+          models.Relationship.modified_by_id,
+          models.Relationship.created_at,
+          models.Relationship.updated_at,
+          models.Relationship.source_type,
+          models.Relationship.source_id,
+          models.Relationship.destination_type,
+          models.Relationship.destination_id,
+          models.Relationship.context_id,
+      )
 
-    return relationship_columns.filter(
-        tuple_(
-            models.Relationship.source_type,
-            models.Relationship.source_id,
-            models.Relationship.destination_type,
-            models.Relationship.destination_id,
-        ).in_(relationships)
-    ).union(
-        relationship_columns.filter(
-            tuple_(
-                models.Relationship.destination_type,
-                models.Relationship.destination_id,
-                models.Relationship.source_type,
-                models.Relationship.source_id
-            ).in_(relationships)
-        )
-    )
+      return relationship_columns.filter(
+          tuple_(
+              models.Relationship.source_type,
+              models.Relationship.source_id,
+              models.Relationship.destination_type,
+              models.Relationship.destination_id,
+          ).in_(relationships)
+      ).union(
+          relationship_columns.filter(
+              tuple_(
+                  models.Relationship.destination_type,
+                  models.Relationship.destination_id,
+                  models.Relationship.source_type,
+                  models.Relationship.source_id
+              ).in_(relationships)
+          )
+      )
+    else:
+      return set()
 
 
 def get_event(_object, action):
@@ -144,6 +148,7 @@ def get_snapshots(objects=None, ids=None):
     if ids:
       return columns.filter(
           models.Snapshot.id.in_(ids))
+    return set()
 
 
 def create_snapshot_dict(pair, revision_id, user_id, context_id):
