@@ -499,3 +499,40 @@ class TestSnapshoting(TestCase):
 
     for _id, snapshot in new_snapshots.items():
       self.assertEqual(snapshot_identity(old_snapshots[_id], snapshot), True)
+
+  def test_audit_creation_if_nothing_in_program_scope(self):
+    """Test audit creation if there's nothing in prog scope"""
+    program_title = "empty program"
+    audit_title = "Audit for empty program"
+
+    self.create_object(models.Program, {
+        "title": program_title,
+    })
+
+    program = db.session.query(models.Program).filter(
+        models.Program.title == "empty program"
+    ).one()
+
+    self.create_object(models.Audit, {
+        "title": "Audit for empty program",
+        "program": {"id": program.id},
+        "status": "Planned",
+        "snapshots": {
+            "operation": "create",
+        }
+    })
+
+    audit = db.session.query(models.Audit).filter(
+        models.Audit.title == audit_title).one()
+
+    self.assertEqual(
+        db.session.query(models.Audit).filter(
+            models.Audit.title == audit_title).first().ff_snapshot_enabled,
+        True)
+
+    snapshots = db.session.query(models.Snapshot).filter(
+        models.Snapshot.parent_type == "Audit",
+        models.Snapshot.parent_id == audit.id,
+    )
+
+    self.assertEqual(snapshots.count(), 0)
