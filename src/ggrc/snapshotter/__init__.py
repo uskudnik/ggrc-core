@@ -423,8 +423,8 @@ def create_snapshots(objs, event, revisions=set(), filter=None):
       generator.create(event=event, revisions=revisions, filter=filter)
 
 
-def update_snapshots(objs, event, revisions=set(), filter=None):
-  """Update (or create) snapshots of parent objects."""
+def upsert_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
+  """Update (and create if needed) snapshots of parent objects."""
   with benchmark("Snapshot.update_snapshots"):
     generator = SnapshotGenerator()
     if not isinstance(objs, set):
