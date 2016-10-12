@@ -12,7 +12,7 @@ from ggrc.utils import benchmark
 
 
 from ggrc.snapshotter import create_snapshots
-from ggrc.snapshotter import update_snapshots
+from ggrc.snapshotter import upsert_snapshots
 from ggrc.snapshotter import update_snapshot
 from ggrc.snapshotter.datastructures import Stub
 from ggrc.snapshotter.rules import get_rules
@@ -34,7 +34,7 @@ def register_snapshot_listeners():
           event = get_event(obj, "POST")
         create_snapshots(obj, event)
 
-  def update_all(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
+  def upsert_all(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
     """Update snapshots globally"""
     snapshot_settings = src.get("snapshots")
     if snapshot_settings:
@@ -45,7 +45,7 @@ def register_snapshot_listeners():
             for revision in snapshot_settings.get("revisions", {})}
         with benchmark("Snapshot.register_snapshot_listeners.create"):
           event = get_event(obj, "PUT")
-        update_snapshots(obj, event, revisions=revisions)
+        upsert_snapshots(obj, event, revisions=revisions)
 
   def update_one(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
     """Update single snapshot"""
@@ -70,6 +70,6 @@ def register_snapshot_listeners():
   for type_ in rules.rules.keys():
     model = getattr(models.all_models, type_)
     Resource.model_posted_after_commit.connect(create, model, weak=False)
-    Resource.model_put_after_commit.connect(update_all, model, weak=False)
+    Resource.model_put_after_commit.connect(upsert_all, model, weak=False)
 
   Resource.model_put.connect(update_one, models.Snapshot, weak=False)
