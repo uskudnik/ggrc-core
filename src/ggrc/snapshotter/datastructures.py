@@ -16,6 +16,17 @@ class Stub(collections.namedtuple("Stub", ["type", "id"])):
   def from_object(cls, _object):
     return Stub(_object.type, _object.id)
 
+  def to_json(self):
+    from ggrc.models import all_models
+    return {
+        "id": self.id,
+        "href": "/api/{}/{}".format(
+            getattr(all_models, self.type)._inflector.table_name,  # noqa # pylint: disable=protected-access
+            self.id),
+        "type": self.type,
+    }
+
+
   @classmethod
   def from_dict(cls, _dict):
     return Stub(_dict["type"], _dict["id"])
@@ -47,4 +58,4 @@ class Pair(collections.namedtuple("Pair", ["parent", "child"])):
 
 
 OperationResponse = collections.namedtuple(
-    "OperationResponse", ["type", "success", "response", "flags"])
+    "OperationResponse", ["type", "success", "response", "data"])
