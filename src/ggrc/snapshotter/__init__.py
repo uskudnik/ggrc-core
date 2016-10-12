@@ -34,7 +34,7 @@ QUEUE_SIZE = 100000
 class SnapshotGenerator(object):
   """Geneate snapshots per rules of all connected objects"""
 
-  def __init__(self, chunking=True, dry_run=False):
+  def __init__(self, dry_run, chunking=True):
     self._RULES = get_rules()
     self.OPERATION_HANDLERS = {
         "create": self._create,
@@ -150,13 +150,17 @@ class SnapshotGenerator(object):
     them."""
     with benchmark("Snapshot._update"):
       user_id = get_current_user_id()
-      event_id = event.id
-      engine = db.engine
       missed_keys = set()
       snapshot_cache = dict()
       modified_snapshot_keys = set()
       data_payload_update = list()
       revision_payload = list()
+      response_data = dict()
+
+      if self.dry_run and event is None:
+        event_id = 0
+      else:
+        event_id = event.id
 
       with benchmark("Snapshot._update.filter"):
         for_update = filter(_filter, for_update)
@@ -185,14 +189,10 @@ class SnapshotGenerator(object):
             filters=[models.Revision.action.in_(["created", "modified"])],
             revisions=revisions)
 
-      if self.dry_run:
-        old_revisions = {pair: values[1]
-                         for pair, values in snapshot_cache.items()}
-        response = create_dry_run_response(
-            for_update, old_revisions, revision_id_cache)
-        return OperationResponse("update", True, response, {
-            "dry-run": True
-        })
+      response_data["revisions"] = {
+        "old": {pair: values[1] for pair, values in snapshot_cache.items()},
+        "new": revision_id_cache
+      }
 
       with benchmark("Snapshot._update.build snapshot payload"):
         for key in for_update:
@@ -210,16 +210,14 @@ class SnapshotGenerator(object):
             missed_keys.add(key)
 
       if not modified_snapshot_keys:
-        return OperationResponse("update", True, set(), None)
+        return OperationResponse("update", True, set(), response_data)
 
       with benchmark("Snapshot._update.write snapshots to database"):
         update_sql = models.Snapshot.__table__.update().where(
             models.Snapshot.id == bindparam("_id")).values(
             revision_id=bindparam("_revision_id"),
             modified_by_id=bindparam("_modified_by_id"))
-        if data_payload_update:
-          engine.execute(update_sql, data_payload_update)
-        db.session.commit()
+        self._execute(update_sql, data_payload_update)
 
       with benchmark("Snapshot._update.retrieve inserted snapshots"):
         snapshots = get_snapshots(modified_snapshot_keys)
@@ -233,9 +231,8 @@ class SnapshotGenerator(object):
           revision_payload += [data]
 
       with benchmark("Insert Snapshot entries into Revision"):
-        engine.execute(models.Revision.__table__.insert(), revision_payload)
-        db.session.commit()
-      return OperationResponse("update", True, for_update, None)
+        self._execute(models.Revision.__table__.insert(), revision_payload)
+      return OperationResponse("update", True, for_update, response_data)
 
   def create_chunks(self, func, *args, **kwargs):
     """Create chunks if there are too many snapshottable objects."""
@@ -312,6 +309,13 @@ class SnapshotGenerator(object):
         "dry-run": self.dry_run
     })
 
+  def _execute(self, operation, data):
+    if data and not self.dry_run:
+      engine = db.engine
+      engine.execute(operation, data)
+      db.session.commit()
+    return True
+
   def create(self, event, revisions, filter=None):
     """Create snapshots of parent object's neighbourhood per provided rules
     and split in chuncks if there are too many snapshottable objects."""
@@ -330,19 +334,19 @@ class SnapshotGenerator(object):
         data_payload = list()
         revision_payload = list()
         relationship_payload = list()
-        event_id = event.id
+        response_data = dict()
+
+        if self.dry_run and event is None:
+          event_id = 0
+        else:
+          event_id = event.id
 
       with benchmark("Snapshot._create.filter"):
         for_create = filter(_filter, for_create)
       with benchmark("Snapshot._create._get_revisions"):
         revision_id_cache = get_revisions(for_create, revisions)
 
-      if self.dry_run:
-        response = create_dry_run_response(for_create, dict(),
-                                           revision_id_cache)
-        return OperationResponse("create", True, response, {
-            "dry-run": True
-        })
+      response_data["revisions"] = revision_id_cache
 
       with benchmark("Snapshot._create.create payload"):
         for pair in for_create:
@@ -355,9 +359,9 @@ class SnapshotGenerator(object):
             missed_keys.add(pair)
 
       with benchmark("Snapshot._create.write to database"):
-        engine = db.engine
-        engine.execute(models.Snapshot.__table__.insert(), data_payload)
-        db.session.commit()
+        self._execute(
+            models.Snapshot.__table__.insert(),
+            data_payload)
 
       with benchmark("Snapshot._create.retrieve inserted snapshots"):
         snapshots = get_snapshots(for_create)
@@ -371,9 +375,8 @@ class SnapshotGenerator(object):
           relationship_payload += [relationship]
 
       with benchmark("Snapshot._create.write relationships to database"):
-        engine.execute(models.Relationship.__table__.insert(),
-                       relationship_payload)
-        db.session.commit()
+        self._execute(models.Relationship.__table__.insert(),
+                      relationship_payload)
 
       with benchmark("Snapshot._create.get created relationships"):
         created_relationships = {
@@ -402,16 +405,15 @@ class SnapshotGenerator(object):
             revision_payload += [data]
 
       with benchmark("Snapshot._create.write revisions to database"):
-        engine.execute(models.Revision.__table__.insert(), revision_payload)
-        db.session.commit()
-      return OperationResponse("create", True, for_create, None)
+        self._execute(models.Revision.__table__.insert(), revision_payload)
+      return OperationResponse("create", True, for_create, response_data)
 
 
-def create_snapshots(objs, event, revisions=set(), filter=None):
+def create_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
   """Create snapshots of parent objects."""
   with benchmark("Snapshot.create_snapshots"):
     with benchmark("Snapshot.create_snapshots.init"):
-      generator = SnapshotGenerator()
+      generator = SnapshotGenerator(dry_run)
       if not isinstance(objs, set):
         objs = {objs}
       for obj in objs:
@@ -420,27 +422,28 @@ def create_snapshots(objs, event, revisions=set(), filter=None):
         with benchmark("Snapshot.create_snapshots.add_parent_objects"):
           generator.add_parent(obj)
     with benchmark("Snapshot.create_snapshots.create"):
-      generator.create(event=event, revisions=revisions, filter=filter)
+      return generator.create(event=event, revisions=revisions, filter=filter)
 
 
 def upsert_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
   """Update (and create if needed) snapshots of parent objects."""
   with benchmark("Snapshot.update_snapshots"):
-    generator = SnapshotGenerator()
+    generator = SnapshotGenerator(dry_run)
     if not isinstance(objs, set):
       objs = {objs}
     for obj in objs:
       db.session.add(obj)
       generator.add_parent(obj)
-    generator.upsert(event=event, revisions=revisions, filter=filter)
+    return generator.upsert(event=event, revisions=revisions, filter=filter)
 
 
-def update_snapshot(snapshot, event, revisions=set(), filter=None):
+def update_snapshot(snapshot, event, revisions=set(), filter=None,
+                    dry_run=False):
   """Update individual snapshot to the latest version"""
   with benchmark("Snapshot.individual update"):
-    generator = SnapshotGenerator()
+    generator = SnapshotGenerator(dry_run)
     parent = Stub.from_object(snapshot.parent)
     child = Stub(snapshot.child_type, snapshot.child_id)
     generator.add_family(parent, {child})
-    generator.update(event=event, revisions=revisions,
-                     filter=lambda x: x in {(parent, child)})
+    return generator.update(event=event, revisions=revisions,
+                            filter=lambda x: x in {(parent, child)})
