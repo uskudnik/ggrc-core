@@ -119,7 +119,7 @@ class TestSnapshotterPreview(TestCase):
     }
 
     response = self.client.get("/_service/snapshotter/preview",
-                                data=dumps(data), headers=self.headers)
+                               data=dumps(data), headers=self.headers)
 
     self.assertEqual(response.status_code, 200)
 
