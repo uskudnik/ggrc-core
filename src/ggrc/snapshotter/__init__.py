@@ -49,7 +49,7 @@ class SnapshotGenerator(object):
     self.dry_run = dry_run
 
   def add_parent(self, obj):
-    """Add parent object and automatically scan neighbourhood for snapshottable
+    """Add parent object and automatically scan neighborhood for snapshottable
     objects."""
     with benchmark("Snapshot.add_parent_object"):
       key = Stub.from_object(obj)
@@ -79,8 +79,8 @@ class SnapshotGenerator(object):
         url="/_process_snapshots",
         queued_callback=None, parameters=json.dumps(chunk))
 
-  def _fetch_neighbourhood(self, parent_object, objects):
-    with benchmark("Snapshot._fetch_object_neighbourhood"):
+  def _fetch_neighborhood(self, parent_object, objects):
+    with benchmark("Snapshot._fetch_object_neighborhood"):
       query_pairs = set()
       rules = self._RULES.rules[parent_object.type]["snd"]
 
@@ -106,19 +106,19 @@ class SnapshotGenerator(object):
               models.Relationship.destination_type,
           ).in_(query_pairs)))
 
-      neighbourhood = set()
+      neighborhood = set()
       for (stype, sid, dtype, did) in relationships:
         source = Stub(stype, sid)
         destination = Stub(dtype, did)
 
         if source in objects:
-          neighbourhood.add(destination)
+          neighborhood.add(destination)
         else:
-          neighbourhood.add(source)
-      return neighbourhood
+          neighborhood.add(source)
+      return neighborhood
 
   def _get_snapshottable_objects(self, obj):
-    """Get snapshottable objects from parent object's neighbourhood."""
+    """Get snapshottable objects from parent object's neighborhood."""
     with benchmark("Snapshot._get_snapshotable_objects"):
       object_rules = self._RULES.rules[obj.type]
 
@@ -135,8 +135,8 @@ class SnapshotGenerator(object):
       related_objects = {Stub.from_object(obj)
                          for obj in related_mappings | direct_mappings}
 
-      with benchmark("Snapshot._get_snapshotable_objects.fetch neighbourhood"):
-        return self._fetch_neighbourhood(obj, related_objects)
+      with benchmark("Snapshot._get_snapshotable_objects.fetch neighborhood"):
+        return self._fetch_neighborhood(obj, related_objects)
 
   def update(self, event, revisions, filter=None):
     """Update parent object's snapshots and split in chunks if there are too
@@ -317,7 +317,7 @@ class SnapshotGenerator(object):
     return True
 
   def create(self, event, revisions, filter=None):
-    """Create snapshots of parent object's neighbourhood per provided rules
+    """Create snapshots of parent object's neighborhood per provided rules
     and split in chuncks if there are too many snapshottable objects."""
     for_create, _ = self.analyze()
     return self._create(
