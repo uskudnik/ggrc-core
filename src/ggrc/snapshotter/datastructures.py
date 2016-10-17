@@ -26,7 +26,6 @@ class Stub(collections.namedtuple("Stub", ["type", "id"])):
         "type": self.type,
     }
 
-
   @classmethod
   def from_dict(cls, _dict):
     return Stub(_dict["type"], _dict["id"])

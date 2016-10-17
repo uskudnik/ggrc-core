@@ -20,7 +20,6 @@ from ggrc.snapshotter.helpers import create_relationship_dict
 from ggrc.snapshotter.helpers import create_relationship_revision_dict
 from ggrc.snapshotter.helpers import create_snapshot_dict
 from ggrc.snapshotter.helpers import create_snapshot_revision_dict
-from ggrc.snapshotter.helpers import create_dry_run_response
 from ggrc.snapshotter.helpers import get_relationships
 from ggrc.snapshotter.helpers import get_revisions
 from ggrc.snapshotter.helpers import get_snapshots
@@ -190,8 +189,8 @@ class SnapshotGenerator(object):
             revisions=revisions)
 
       response_data["revisions"] = {
-        "old": {pair: values[1] for pair, values in snapshot_cache.items()},
-        "new": revision_id_cache
+          "old": {pair: values[1] for pair, values in snapshot_cache.items()},
+          "new": revision_id_cache
       }
 
       with benchmark("Snapshot._update.build snapshot payload"):
