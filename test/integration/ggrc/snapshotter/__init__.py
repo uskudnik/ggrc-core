@@ -5,6 +5,9 @@
 
 from os.path import abspath, dirname, join
 
+import ggrc.models as models
+
+
 import integration.ggrc
 from integration.ggrc import api_helper
 from integration.ggrc.converters import TestCase
@@ -43,6 +46,16 @@ class SnapshotterBaseTestCase(TestCase):
   def create_mapping(self, src, dst):
     _, obj = self.objgen.generate_relationship(src, dst)
     return obj
+
+  def create_audit(self, program):
+    self.create_object(models.Audit, {
+        "title": "Snapshotable audit",
+        "program": {"id": program.id},
+        "status": "Planned",
+        "snapshots": {
+            "operation": "create",
+        }
+    })
 
   @classmethod
   def refresh_object(cls, obj):

@@ -121,14 +121,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
         "title": "Test Control Snapshot 1 EDIT 1"
     })
 
-    self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
-        "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
-    })
+    self.create_audit(program)
 
     audit = db.session.query(models.Audit).filter(
         models.Audit.title.like("%Snapshotable audit%")).first()
@@ -297,14 +290,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
     control = self.refresh_object(control)
     data_asset = self.refresh_object(data_asset)
 
-    self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
-        "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
-    })
+    self.create_audit(program)
 
     audit = db.session.query(models.Audit).filter(
         models.Audit.title.like("%Snapshotable audit%")).first()
@@ -388,14 +374,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
         models.Program.slug == "Prog-13211"
     ).one()
 
-    self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
-        "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
-    })
+    self.create_audit(program)
 
     audit = db.session.query(models.Audit).filter(
         models.Audit.title.like("%Snapshotable audit%")).first()
@@ -426,14 +405,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
         models.Program.slug == "Prog-13211"
     ).one()
 
-    self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
-        "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
-    })
+    self.create_audit(program)
 
     audit = db.session.query(models.Audit).filter(
         models.Audit.title.like("%Snapshotable audit%")).first()
