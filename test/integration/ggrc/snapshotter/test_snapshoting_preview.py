@@ -4,46 +4,19 @@
 """Tests for snapshotter's preview"""
 
 
-from os.path import abspath, dirname, join
-
 from flask.json import dumps
 
 from ggrc import db
 import ggrc.models as models
 
-import integration.ggrc
-from integration.ggrc import api_helper
-from integration.ggrc.converters import TestCase
-import integration.ggrc.generator
+from integration.ggrc.snapshotter import SnapshotterBaseTestCase
 
 
-THIS_ABS_PATH = abspath(dirname(__file__))
-CSV_DIR = join(THIS_ABS_PATH, "../converters/test_csvs/")
-
-
-class TestSnapshotterPreview(TestCase):
+class TestSnapshotterPreview(SnapshotterBaseTestCase):
   """Test cases for Snapshot Previewer"""
 
-  def tearDown(self):
-    integration.ggrc.TestCase.tearDown(self)
-
-  def create_object(self, cls, data):
-    _, obj = self.objgen.generate_object(cls, data)
-    return obj
-
-  def create_mapping(self, src, dst):
-    _, obj = self.objgen.generate_relationship(src, dst)
-    return obj
-
-  @classmethod
-  def refresh_object(cls, obj):
-    """Returns a new instance of a model, fresh and warm from the database."""
-    return obj.query.filter_by(id=obj.id).first()
-
   def setUp(self):
-    integration.ggrc.TestCase.setUp(self)
-    self.objgen = integration.ggrc.generator.ObjectGenerator()
-    self.api = api_helper.Api()
+    SnapshotterBaseTestCase.setUp(self)
 
     self.client.get("/login")
     self.headers = {
