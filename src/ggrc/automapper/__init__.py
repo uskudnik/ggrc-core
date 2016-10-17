@@ -1,6 +1,8 @@
 # Copyright (C) 2016 Google Inc.
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 
+# pylint: disable=unused-argument,missing-docstring
+
 from datetime import datetime
 from logging import getLogger
 import collections
