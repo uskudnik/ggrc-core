@@ -16,7 +16,7 @@ class Stub(collections.namedtuple("Stub", ["type", "id"])):
   def from_object(cls, _object):
     return Stub(_object.type, _object.id)
 
-  def to_json(self):
+  def to_json_stub(self):
     from ggrc.models import all_models
     return {
         "id": self.id,
