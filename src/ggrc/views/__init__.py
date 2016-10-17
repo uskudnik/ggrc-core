@@ -43,6 +43,7 @@ from ggrc.views import cron
 from ggrc.views import filters
 from ggrc.views import mockups
 from ggrc.views import notifications
+from ggrc.views import snapshotter
 from ggrc.views.common import RedirectedPolymorphView
 from ggrc.views.registry import object_view
 from ggrc.utils import benchmark
@@ -350,6 +351,7 @@ def init_extra_views(app_):
   mockups.init_mockup_views()
   filters.init_filter_views()
   converters.init_converter_views()
+  snapshotter.init_snapshotter_views(app_)
   cron.init_cron_views(app_)
   notifications.init_notification_views(app_)
   services_query.init_query_view(app_)
