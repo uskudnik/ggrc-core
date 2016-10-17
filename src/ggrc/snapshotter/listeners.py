@@ -19,8 +19,7 @@ from ggrc.snapshotter.rules import get_rules
 from ggrc.snapshotter.helpers import get_event
 
 
-def create_all(sender, obj=None, src=None,
-           service=None):  # noqa  # pylint: disable=unused-argument
+def create_all(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
   """Create snapshots"""
   # TODO REMOVE ON FINAL COMMIT (FEATURE FLAG REMOVAL)
   snapshot_settings = src.get("snapshots")
@@ -31,8 +30,7 @@ def create_all(sender, obj=None, src=None,
       create_snapshots(obj, event)
 
 
-def upsert_all(sender, obj=None, src=None,
-               service=None):  # noqa  # pylint: disable=unused-argument
+def upsert_all(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
   """Update snapshots globally"""
   snapshot_settings = src.get("snapshots")
   if snapshot_settings:
@@ -46,8 +44,7 @@ def upsert_all(sender, obj=None, src=None,
       upsert_snapshots(obj, event, revisions=revisions)
 
 
-def update_one(sender, obj=None, src=None,
-               service=None):  # noqa  # pylint: disable=unused-argument
+def update_one(sender, obj=None, src=None, service=None):  # noqa  # pylint: disable=unused-argument
   """Update single snapshot"""
   snapshot_settings = src.get("individual-update")
 

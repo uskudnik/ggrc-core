@@ -1,14 +1,19 @@
 # Copyright (C) 2016 Google Inc.
 # Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
 
-import json
+"""Main snapshotter module
+
+Snapshotter creates an immutable scope around an object (e.g. Audit) where
+snapshot object represent a join between parent object (Audit),
+child object (e.g. Control, Regulation, ...) and a particular revision.
+"""
+
 
 from sqlalchemy.sql.expression import tuple_
 from sqlalchemy.sql.expression import bindparam
 
 from ggrc import db
 from ggrc import models
-from ggrc.models.background_task import create_task
 from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
@@ -19,6 +24,7 @@ from ggrc.snapshotter.datastructures import OperationResponse
 from ggrc.snapshotter.helpers import create_relationship_dict
 from ggrc.snapshotter.helpers import create_relationship_revision_dict
 from ggrc.snapshotter.helpers import create_snapshot_dict
+from ggrc.snapshotter.helpers import create_bg_task
 from ggrc.snapshotter.helpers import create_snapshot_revision_dict
 from ggrc.snapshotter.helpers import get_relationships
 from ggrc.snapshotter.helpers import get_revisions
@@ -34,11 +40,7 @@ class SnapshotGenerator(object):
   """Geneate snapshots per rules of all connected objects"""
 
   def __init__(self, dry_run, chunking=True):
-    self._RULES = get_rules()
-    self.OPERATION_HANDLERS = {
-        "create": self._create,
-        "update": self._update
-    }
+    self.rules = get_rules()
 
     self.parents = set()
     self.children = set()
@@ -71,20 +73,12 @@ class SnapshotGenerator(object):
     self.children = children
     self.context_cache[parent] = parent_object.context_id
 
-  def _create_bg_task(self, method, chunk):
-    """Create background task"""
-    return create_task(
-        name="{}-SNAPSHOTS-".format(method),
-        url="/_process_snapshots",
-        queued_callback=None, parameters=json.dumps(chunk))
-
   def _fetch_neighborhood(self, parent_object, objects):
     with benchmark("Snapshot._fetch_object_neighborhood"):
       query_pairs = set()
-      rules = self._RULES.rules[parent_object.type]["snd"]
 
       for obj in objects:
-        for snd_obj in rules:
+        for snd_obj in self.rules.rules[parent_object.type]["snd"]:
           query_pairs.add((obj.type, obj.id, snd_obj))
 
       columns = db.session.query(
@@ -119,7 +113,7 @@ class SnapshotGenerator(object):
   def _get_snapshottable_objects(self, obj):
     """Get snapshottable objects from parent object's neighborhood."""
     with benchmark("Snapshot._get_snapshotable_objects"):
-      object_rules = self._RULES.rules[obj.type]
+      object_rules = self.rules.rules[obj.type]
 
       with benchmark("Snapshot._get_snapshotable_objects.related_mappings"):
         related_mappings = obj.related_objects({
@@ -137,16 +131,26 @@ class SnapshotGenerator(object):
       with benchmark("Snapshot._get_snapshotable_objects.fetch neighborhood"):
         return self._fetch_neighborhood(obj, related_objects)
 
-  def update(self, event, revisions, filter=None):
+  def update(self, event, revisions, _filter=None):
     """Update parent object's snapshots and split in chunks if there are too
     many of them."""
     _, for_update = self.analyze()
     return self._update(for_update=for_update, event=event,
-                        revisions=revisions, _filter=filter)
+                        revisions=revisions, _filter=_filter)
 
   def _update(self, for_update, event, revisions, _filter):
     """Update (or create) parent objects' snapshots and create revisions for
-    them."""
+    them.
+
+    Args:
+      event: A ggrc.models.Event instance
+      revisions: A set of tuples of pairs with revisions to which it should
+        either create or update a snapshot of that particular audit
+      _filter: Callable that should return True if it should be updated
+    Returns:
+      OperationResponse
+    """
+    # pylint: disable=too-many-locals
     with benchmark("Snapshot._update"):
       user_id = get_current_user_id()
       missed_keys = set()
@@ -162,7 +166,8 @@ class SnapshotGenerator(object):
         event_id = event.id
 
       with benchmark("Snapshot._update.filter"):
-        for_update = filter(_filter, for_update)
+        if _filter:
+          for_update = {elem for elem in for_update if _filter(elem)}
 
       with benchmark("Snapshot._update.get existing snapshots"):
         existing_snapshots = db.session.query(
@@ -177,8 +182,8 @@ class SnapshotGenerator(object):
             models.Snapshot.child_type, models.Snapshot.child_id
         ).in_({pair.to_4tuple() for pair in for_update}))
 
-        for es in existing_snapshots:
-          sid, rev_id, pair_tuple = es[0], es[1], es[2:]
+        for esnap in existing_snapshots:
+          sid, rev_id, pair_tuple = esnap[0], esnap[1], esnap[2:]
           pair = Pair.from_4tuple(pair_tuple)
           snapshot_cache[pair] = (sid, rev_id)
 
@@ -238,7 +243,7 @@ class SnapshotGenerator(object):
     with benchmark("Snapshot.create_chunks"):
       if not self.chunking:
         return func(*args, **kwargs)
-      if not len(self.children) > QUEUE_SIZE:
+      if len(self.children) <= QUEUE_SIZE:
         return func(*args, **kwargs)
 
       chunks = []
@@ -252,7 +257,7 @@ class SnapshotGenerator(object):
       first_chunk = chunks[0]
       with benchmark("Snapshot.create_chunks.create bg tasks"):
         for chunk in chunks[1:]:
-          self._create_bg_task(kwargs["method"], {
+          create_bg_task(kwargs["method"], {
               "data": chunk,
               "method": kwargs["method"],
               "operation": func.__name__[1:]
@@ -266,6 +271,7 @@ class SnapshotGenerator(object):
       return func(*args, **kwargs)
 
   def analyze(self):
+    """Analyze which snapshots need to be updated and which created"""
     query = set(db.session.query(
         models.Snapshot.parent_type,
         models.Snapshot.parent_id,
@@ -286,20 +292,30 @@ class SnapshotGenerator(object):
 
     return for_create, for_update
 
-  def upsert(self, event, revisions, filter):
-    return self._upsert(event=event, revisions=revisions, filter=filter)
+  def upsert(self, event, revisions, _filter):
+    return self._upsert(event=event, revisions=revisions, _filter=_filter)
 
-  def _upsert(self, event, revisions, filter):
+  def _upsert(self, event, revisions, _filter):
+    """Update and (if needed) create snapshots
+
+    Args:
+      event: A ggrc.models.Event instance
+      revisions: A set of tuples of pairs with revisions to which it should
+        either create or update a snapshot of that particular audit
+      _filter: Callable that should return True if it should be updated
+    Returns:
+      OperationResponse
+    """
     for_create, for_update = self.analyze()
     create, update = None, None
 
     if for_update:
       update = self._update(
           for_update=for_update, event=event, revisions=revisions,
-          _filter=filter)
+          _filter=_filter)
     if for_create:
       create = self._create(for_create=for_create, event=event,
-                            revisions=revisions, _filter=filter)
+                            revisions=revisions, _filter=_filter)
 
     return OperationResponse("upsert", True, {
         "create": create,
@@ -309,23 +325,42 @@ class SnapshotGenerator(object):
     })
 
   def _execute(self, operation, data):
+    """Execute bulk operation on data if not in dry mode
+
+    Args:
+      operation: sqlalchemy operation
+      data: a list of dictionaries with keys representing column names and
+        values to insert with operation
+    Returns:
+      True if successful.
+    """
     if data and not self.dry_run:
       engine = db.engine
       engine.execute(operation, data)
       db.session.commit()
     return True
 
-  def create(self, event, revisions, filter=None):
+  def create(self, event, revisions, _filter=None):
     """Create snapshots of parent object's neighborhood per provided rules
     and split in chuncks if there are too many snapshottable objects."""
     for_create, _ = self.analyze()
     return self._create(
         for_create=for_create, event=event,
-        revisions=revisions, _filter=filter)
+        revisions=revisions, _filter=_filter)
 
   def _create(self, for_create, event, revisions, _filter):
     """Create snapshots of parent objects neighhood and create revisions for
-    snapshots."""
+    snapshots.
+
+    Args:
+      event: A ggrc.models.Event instance
+      revisions: A set of tuples of pairs with revisions to which it should
+        either create or update a snapshot of that particular audit
+      _filter: Callable that should return True if it should be updated
+    Returns:
+      OperationResponse
+    """
+    # pylint: disable=too-many-locals,too-many-statements
     with benchmark("Snapshot._create"):
       with benchmark("Snapshot._create init"):
         user_id = get_current_user_id()
@@ -341,7 +376,9 @@ class SnapshotGenerator(object):
           event_id = event.id
 
       with benchmark("Snapshot._create.filter"):
-        for_create = filter(_filter, for_create)
+        if _filter:
+          for_create = {elem for elem in for_create if _filter(elem)}
+
       with benchmark("Snapshot._create._get_revisions"):
         revision_id_cache = get_revisions(for_create, revisions)
 
@@ -408,8 +445,12 @@ class SnapshotGenerator(object):
       return OperationResponse("create", True, for_create, response_data)
 
 
-def create_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
+def create_snapshots(objs, event, revisions=None, _filter=None, dry_run=False):
   """Create snapshots of parent objects."""
+  # pylint: disable=unused-argument
+  if not revisions:
+    revisions = set()
+
   with benchmark("Snapshot.create_snapshots"):
     with benchmark("Snapshot.create_snapshots.init"):
       generator = SnapshotGenerator(dry_run)
@@ -421,11 +462,17 @@ def create_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
         with benchmark("Snapshot.create_snapshots.add_parent_objects"):
           generator.add_parent(obj)
     with benchmark("Snapshot.create_snapshots.create"):
-      return generator.create(event=event, revisions=revisions, filter=filter)
+      return generator.create(event=event,
+                              revisions=revisions,
+                              _filter=_filter)
 
 
-def upsert_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
+def upsert_snapshots(objs, event, revisions=None, _filter=None, dry_run=False):
   """Update (and create if needed) snapshots of parent objects."""
+  # pylint: disable=unused-argument
+  if not revisions:
+    revisions = set()
+
   with benchmark("Snapshot.update_snapshots"):
     generator = SnapshotGenerator(dry_run)
     if not isinstance(objs, set):
@@ -433,16 +480,24 @@ def upsert_snapshots(objs, event, revisions=set(), filter=None, dry_run=False):
     for obj in objs:
       db.session.add(obj)
       generator.add_parent(obj)
-    return generator.upsert(event=event, revisions=revisions, filter=filter)
+    return generator.upsert(event=event, revisions=revisions, _filter=_filter)
 
 
-def update_snapshot(snapshot, event, revisions=set(), filter=None,
+def update_snapshot(snapshot, event, revisions=None, _filter=None,
                     dry_run=False):
   """Update individual snapshot to the latest version"""
+
+  if not revisions:
+    revisions = set()
+
+  if not _filter:
+    def _filter(item):  # pylint: disable=function-redefined
+      return item in {(parent, child)}
+
   with benchmark("Snapshot.individual update"):
     generator = SnapshotGenerator(dry_run)
     parent = Stub.from_object(snapshot.parent)
     child = Stub(snapshot.child_type, snapshot.child_id)
     generator.add_family(parent, {child})
     return generator.update(event=event, revisions=revisions,
-                            filter=lambda x: x in {(parent, child)})
+                            _filter=_filter)

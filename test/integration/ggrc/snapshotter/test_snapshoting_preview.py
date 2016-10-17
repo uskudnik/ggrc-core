@@ -49,14 +49,7 @@ class TestSnapshotterPreview(SnapshotterBaseTestCase):
           "title": new_title
       })
 
-    self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
-        "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
-    })
+    self.create_audit(program)
 
     audit = db.session.query(models.Audit).filter(
         models.Audit.title.like("%Snapshotable audit%")).first()

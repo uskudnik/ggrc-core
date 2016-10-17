@@ -4,11 +4,14 @@
 """Various simple helper functions for snapshot generator"""
 
 import collections
+import json
+
 
 from sqlalchemy.sql.expression import tuple_
 
 from ggrc import db
 from ggrc import models
+from ggrc.models.background_task import create_task
 from ggrc.snapshotter.datastructures import Stub
 from ggrc.snapshotter.datastructures import Pair
 from ggrc.utils import benchmark
@@ -262,3 +265,11 @@ def create_dry_run_response(pairs, old_revisions, new_revisions):
       if old_revision_id != new_revision_id:
         response[pair.parent][pair.child] = (old_revision_id, new_revision_id)
     return response
+
+
+def create_bg_task(method, chunk):
+  """Create background task"""
+  return create_task(
+      name="{}-SNAPSHOTS-".format(method),
+      url="/_process_snapshots",
+      queued_callback=None, parameters=json.dumps(chunk))
