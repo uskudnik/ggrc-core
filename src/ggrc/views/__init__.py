@@ -38,6 +38,7 @@ from ggrc.services.common import as_json
 from ggrc.services.common import inclusion_filter
 from ggrc.services import query as services_query
 from ggrc.snapshotter import SnapshotGenerator
+from ggrc.snapshotter.indexer import reindex as reindex_snapshots
 from ggrc.views import converters
 from ggrc.views import cron
 from ggrc.views import filters
@@ -92,6 +93,8 @@ def do_reindex():
       for instance in query_chunk:
         indexer.create_record(fts_record_for(instance), False)
       db.session.commit()
+
+  reindex_snapshots()
 
 
 def get_permissions_json():

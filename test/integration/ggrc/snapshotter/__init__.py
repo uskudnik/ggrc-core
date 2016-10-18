@@ -3,15 +3,16 @@
 
 """Base test case for testing snapshotter"""
 
+from collections import defaultdict
 from os.path import abspath, dirname, join
 
 import ggrc.models as models
-
 
 import integration.ggrc
 from integration.ggrc import api_helper
 from integration.ggrc.converters import TestCase
 import integration.ggrc.generator
+from integration.ggrc.models import factories
 
 
 THIS_ABS_PATH = abspath(dirname(__file__))
@@ -61,3 +62,38 @@ class SnapshotterBaseTestCase(TestCase):
   def refresh_object(cls, obj):
     """Returns a new instance of a model, fresh and warm from the database."""
     return obj.query.filter_by(id=obj.id).one()
+
+  @staticmethod
+  def create_custom_attribute_definitions(cad_definitions=None):
+    custom_attribute_definitions = defaultdict(list)
+
+    if not cad_definitions:
+      cad_definitions = [
+          {
+              "definition_type": "control",
+              "title": "control text field 1",
+              "attribute_type": "Text",
+          },
+          {
+              "definition_type": "objective",
+              "title": "objective rich field 1",
+              "attribute_type": "Rich Text",
+          },
+          {
+              "definition_type": "process",
+              "title": "process date field 1",
+              "attribute_type": "Date",
+          },
+          {
+              "definition_type": "access_group",
+              "title": "access group text field 2",
+              "attribute_type": "Text",
+          },
+      ]
+
+    for cad in cad_definitions:
+      attr = factories.CustomAttributeDefinitionFactory(**cad)
+      custom_attribute_definitions[cad["definition_type"]] += [[
+          attr.id, attr.title]]
+
+    return custom_attribute_definitions
