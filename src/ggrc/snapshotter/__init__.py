@@ -14,6 +14,7 @@ from sqlalchemy.sql.expression import bindparam
 
 from ggrc import db
 from ggrc import models
+from ggrc.models.reflection import AttributeInfo
 from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
@@ -29,6 +30,7 @@ from ggrc.snapshotter.helpers import create_snapshot_revision_dict
 from ggrc.snapshotter.helpers import get_relationships
 from ggrc.snapshotter.helpers import get_revisions
 from ggrc.snapshotter.helpers import get_snapshots
+from ggrc.snapshotter.indexer import reindex_pairs
 
 from ggrc.snapshotter.rules import get_rules
 
@@ -135,8 +137,12 @@ class SnapshotGenerator(object):
     """Update parent object's snapshots and split in chunks if there are too
     many of them."""
     _, for_update = self.analyze()
-    return self._update(for_update=for_update, event=event,
-                        revisions=revisions, _filter=_filter)
+    result = self._update(for_update=for_update, event=event,
+                          revisions=revisions, _filter=_filter)
+    updated = result.response
+    if not self.dry_run:
+      reindex_pairs(updated)
+    return result
 
   def _update(self, for_update, event, revisions, _filter):
     """Update (or create) parent objects' snapshots and create revisions for
@@ -308,15 +314,21 @@ class SnapshotGenerator(object):
     """
     for_create, for_update = self.analyze()
     create, update = None, None
+    created, updated = set(), set()
 
     if for_update:
       update = self._update(
           for_update=for_update, event=event, revisions=revisions,
           _filter=_filter)
+      updated = update.response
     if for_create:
       create = self._create(for_create=for_create, event=event,
                             revisions=revisions, _filter=_filter)
+      created = create.response
 
+    to_reindex = updated | created
+    if not self.dry_run:
+      reindex_pairs(to_reindex)
     return OperationResponse("upsert", True, {
         "create": create,
         "update": update
@@ -344,9 +356,13 @@ class SnapshotGenerator(object):
     """Create snapshots of parent object's neighborhood per provided rules
     and split in chuncks if there are too many snapshottable objects."""
     for_create, _ = self.analyze()
-    return self._create(
+    result = self._create(
         for_create=for_create, event=event,
         revisions=revisions, _filter=_filter)
+    created = result.response
+    if not self.dry_run:
+      reindex_pairs(created)
+    return result
 
   def _create(self, for_create, event, revisions, _filter):
     """Create snapshots of parent objects neighhood and create revisions for
