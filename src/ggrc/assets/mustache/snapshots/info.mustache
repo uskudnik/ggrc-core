@@ -5,27 +5,26 @@
 
 {{#instance}}
   <section class="info{{#is_info_pin}} sticky-info-panel{{/is_info_pin}}">
-
+    
     {{#is_info_pin}}
       {{{render '/static/mustache/base_objects/info-pin.mustache'}}}
     {{/is_info_pin}}
-  
-    <div class="info-pane-utility">
-    {{#if instance.snapshot }}
-      {{> /static/mustache/snapshots/dropdown_menu.mustache}}
-    {{else}}
-      {{> /static/mustache/base_objects/dropdown_menu.mustache}}
-    {{/if}}
-    </div>
-
-
+    
     <div class="tier-content">
-      {{{render '/static/mustache/base_objects/general_info.mustache' instance=instance}}}
+        <div class="pane-header">
+          <div class="row-fluid wrap-row">
+            <div data-test-id="title_0ad9fbaf" class="span9">
+              <h6>SNAPSHOT Title</h6>
+              <h3>{{instance.title}}</h3>
+            </div>
+          </div>
+        </div>
+
       {{{render '/static/mustache/base_objects/description.mustache' instance=instance}}}
       {{{render '/static/mustache/base_objects/notes.mustache' instance=instance}}}
       {{{render '/static/mustache/base_objects/contacts.mustache' instance=instance}}}
       {{{render '/static/mustache/base_objects/urls.mustache' instance=instance}}}
-
+      
       <div class="custom-attr-wrap">
         <div class="row-fluid">
           <div class="span12">
@@ -76,11 +75,11 @@
         </div><!-- hidden-fields-area end -->
       </div><!-- custom-attr-wrap end -->
     </div><!-- tier-content end -->
-
-  {{{render '/static/mustache/custom_attributes/info.mustache' instance=instance}}}
-
+    
+    {{{render '/static/mustache/custom_attributes/info.mustache' instance=instance}}}
+  
   </section>
-
+  
   <div class="info-widget-footer">
     <p>
       <small>

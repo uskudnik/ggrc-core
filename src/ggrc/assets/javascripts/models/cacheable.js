@@ -993,6 +993,10 @@
       var binding;
       var binding_attr = this._get_binding_attr(mapper);
 
+      if (!_.isUndefined(this.snapshot)) {
+        return this.get_binding.call(this.snapshot, mapper);
+      }
+
       if (binding_attr) {
         binding = this[binding_attr];
       }
@@ -1116,6 +1120,7 @@
       return serial;
     },
     display_name: function () {
+      console.log("cacheable.display_name");
       var displayName = this.title || this.name;
 
       if (_.isUndefined(displayName)) {

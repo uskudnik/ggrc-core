@@ -295,18 +295,25 @@ can.Control('CMS.Controllers.TreeLoader', {
       refreshed_deferred = $.when.apply($,
         can.map(filtered_items, function (item) {
           var instance = item.instance || item;
-          if (instance.custom_attribute_values) {
-            // return instance.refresh_all('custom_attribute_values').then(function (values) {
-            //   var rq = new RefreshQueue();
-            //   _.each(values, function (value) {
-            //     if (value.attribute_object) {
-            //       rq.enqueue(value.attribute_object);
-            //     }
-            //   });
-            //   return rq.trigger().then(function () {
-            //     return values;
-            //   });
-            // });
+          if (_.isUndefined(instance.snapshot) && instance.custom_attribute_values) {
+            return instance.refresh_all('custom_attribute_values').then(function (values) {
+              var rq = new RefreshQueue();
+              _.each(values, function (value) {
+                if (value.attribute_object) {
+                  rq.enqueue(value.attribute_object);
+                }
+              });
+              return rq.trigger().then(function () {
+                return values;
+              });
+            });
+          } else if (!_.isUndefined(instance.snapshot) && instance.custom_attributes) {
+            console.log("DEBUG adding custom attributes: ", instance.custom_attributes);
+            // return instance.attr('custom_attribute_values', instance.custom_attributes);
+            return instance.attr('custom_attribute_values', _.map(instance.custom_attributes, function (cav) {
+              return CMS.Models.CustomAttributeValue.cache[cav.id].stub();
+            }));
+
           }
         }));
     } else {

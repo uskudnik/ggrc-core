@@ -109,8 +109,22 @@
       }
     },
 
-    page_instance: function() {
+    page_instance: function () {
+      var _data = {};
+      var data;
+      var modelType;
+
       if (!GGRC._page_instance && GGRC.page_object) {
+        data = GGRC.page_object;
+        if (_.has(data, "snapshot")) {
+          modelType = _.snakeCase(data.snapshot.revision.resource_type);
+          var snapshotInstance = new CMS.Models.Snapshot(data.snapshot);
+          // debugger;
+          _data[modelType] = CMS.Models.Snapshot.morphData(data.snapshot);
+          _data[modelType].snapshot = snapshotInstance;
+          // _data[modelType].parent = snapshotInstance.parent;
+          GGRC.page_object = _data;
+        }
         GGRC._page_instance = GGRC.make_model_instance(GGRC.page_object);
       }
       return GGRC._page_instance;

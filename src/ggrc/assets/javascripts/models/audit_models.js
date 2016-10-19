@@ -59,6 +59,7 @@
     mixins: ['contactable', 'unique_title', 'ca_update'],
     is_custom_attributable: true,
     is_clonable: true,
+    is_snapshotted: true,
     attributes: {
       context: 'CMS.Models.Context.stub',
       program: 'CMS.Models.Program.stub',
@@ -167,6 +168,17 @@
         program: this.program,
         title: this.title + new Date()
       });
+    },
+    snapshotIt: function () {
+      var data;
+      if (_.isUndefined(this.attr("snapshots"))) {
+        data = {
+          operation: 'create'
+        };
+        this.attr("snapshots", data);
+      } else {
+        this.removeAttr("snapshots");
+      }
     },
     save: function () {
       // Make sure the context is always set to the parent program

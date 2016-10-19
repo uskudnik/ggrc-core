@@ -67,6 +67,16 @@
     {{/is_allowed}}
     {{/if}}
 
+    {{#if instance.class.is_snapshotted}}
+    <li>
+      <snapshot-scope-update instance="instance">
+        <a href="javascript://" can-click="upsertIt">
+          <i class="fa fa-refresh"></i>
+          Update {{ instance.type }}'s global scope</a>
+      </snapshot-scope-update>
+    </li>
+    {{/if}}
+
     <li>
       {{#is_allowed 'create' 'CycleTaskGroupObjectTask' context=null}}
         {{#is_allowed 'update' instance context='for'}}

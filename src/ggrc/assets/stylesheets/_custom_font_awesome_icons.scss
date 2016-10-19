@@ -98,6 +98,11 @@
   &.color { color: $purple; }
 }
 
+.#{$fa-css-prefix}-snapshot {
+  &:before { content: $fa-var-camera; }
+  &.color { color: $purple; }
+}
+
 .#{$fa-css-prefix}-task_group {
   &:before { content: $fa-var-cog; }
   &.color { color: $purple; }

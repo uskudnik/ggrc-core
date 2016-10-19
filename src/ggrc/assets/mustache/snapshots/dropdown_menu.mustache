@@ -1,0 +1,61 @@
+{{!
+    Copyright (C) 2016 Google Inc.
+    Licensed under http://www.apache.org/licenses/LICENSE-2.0 <see LICENSE file>
+}}
+
+
+{{#if_helpers '\
+#if' is_info_pin '\
+and #is_allowed_to_map' page_instance instance '\
+or #if' is_info_pin '\
+and #if' instance.viewLink '\
+or #is_allowed' 'update' instance '\
+' _4_context='for'}}
+<div class="details-wrap">
+  <a class="btn btn-draft dropdown-toggle" href="#" data-toggle="dropdown">
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+  </a>
+<ul class="dropdown-menu" aria-labelledby="drop1" role="menu">
+
+{{#is_info_pin}}
+  {{#if instance.viewLink}}
+    {{#is_allowed "view_object_page" instance}}
+      <li>
+        <a href="{{instance.viewLink}}">
+          <i class="fa fa-long-arrow-right"></i>
+          View {{instance.class.title_singular}}
+        </a>
+      </li>
+    {{/is_allowed}}
+  {{/if}}
+{{/is_info_pin}}
+
+<li>
+  <clipboard-link
+    data-test-id="dropdown_settings_get_permalink_75e3bf91"
+    title="Get permalink"
+    notify="true"
+    text="{{get_permalink_for_object instance}}" />
+</li>
+
+<li>
+  <a href="{{instance.originalLink}}">
+    <i class="fa fa-long-arrow-right"></i>
+    View original {{instance.class.title_singular}}
+  </a>
+</li>
+
+<li>
+  <snapshot-individual-update instance="instance.snapshot">
+  <a href="javascript://" can-click="updateIt">
+    <i class="fa fa-refresh"></i>
+    Update snapshot
+  </a>
+  </snapshot-individual-update>
+</li>
+
+</ul>
+</div>
+{{/if_helpers}}

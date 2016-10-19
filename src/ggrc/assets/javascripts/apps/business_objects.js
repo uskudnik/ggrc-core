@@ -12,6 +12,7 @@
     object_type_decision_tree: function () {
       return {
         program: CMS.Models.Program,
+        snapshot: CMS.Models.Snapshot,
         audit: CMS.Models.Audit,
         contract: CMS.Models.Contract,
         policy: CMS.Models.Policy,
@@ -96,7 +97,8 @@
         assessment_templates:
           path + '/assessment_templates/info.mustache',
         requests: path + '/requests/info.mustache',
-        issues: path + '/issues/info.mustache'
+        issues: path + '/issues/info.mustache',
+        snapshots: path + '/snapshots/info.mustache'
       };
       widget_list.add_widget(object.constructor.shortName, 'info', {
         widget_id: 'info',
@@ -266,6 +268,9 @@
           },
           Vendor: {
             order: 280
+          },
+          Snapshot: {
+            order: 290
           }
         },
         Contract: {
@@ -372,6 +377,30 @@
       },
 
       extra_content_controller_options = apply_mixins({
+        snapshots: {
+          Snapshot: {
+            mapping: 'snapshots',
+            child_options: relatedObjectsChildOptions,
+            draw_children: false,
+            show_view: path + '/snapshots/tree.mustache',
+            content_controller_options: {
+              allow_mapping: false,
+              allow_creating: false
+            }
+          }
+        },
+        snapshot_parent: {
+          Audit: {
+            mapping: 'snapshot_audit',
+            child_options: relatedObjectsChildOptions,
+            draw_children: true,
+            show_view: GGRC.mustache_path + '/audits/tree.mustache',
+            footer_view:
+            GGRC.mustache_path + '/base_objects/tree_footer.mustache',
+            add_item_view:
+            GGRC.mustache_path + '/base_objects/tree_add_item.mustache'
+          }
+        },
         objectives: {
           Objective: {
             mapping: 'objectives',
@@ -785,38 +814,46 @@
               GGRC.mustache_path + '/base_objects/tree_add_item.mustache'
           }
         },
+        Snapshot: {
+          _mixins: ['governance_objects', 'business_objects'],
+          AccessGroup: {
+            mapping: 'related_access_groups',
+            child_options: relatedObjectsChildOptions,
+            draw_children: true
+          }
+        },
         AccessGroup: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         DataAsset: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Facility: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Market: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         OrgGroup: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Vendor: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Process: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Product: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Project: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         System: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Document: {
-          _mixins: ['governance_objects', 'business_objects', 'issues']
+          _mixins: ['governance_objects', 'business_objects', 'issues', 'snapshots', 'snapshot_parent']
         },
         Person: {
           _mixins: ['issues'],

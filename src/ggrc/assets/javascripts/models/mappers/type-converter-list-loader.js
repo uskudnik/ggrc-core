@@ -25,7 +25,7 @@ GGRC.ListLoaders.BaseListLoader("GGRC.ListLoaders.TypeConverterListLoader", {
       var rev_to_snapshot_lookup = {};
 
       if (!_.isUndefined(binding)) {
-        _.map(binding.instance.snapshoted_objects, function (stub) {
+        _.map(binding.instance.snapshotted_objects, function (stub) {
           var snapshot = CMS.Models.Snapshot.cache[stub.id];
           rev_to_snapshot_lookup[snapshot.revision_id] = stub.id;
         });
@@ -36,14 +36,31 @@ GGRC.ListLoaders.BaseListLoader("GGRC.ListLoaders.TypeConverterListLoader", {
         var snapshot = CMS.Models.Snapshot.cache[rev_to_snapshot_lookup[result.instance.id]];
         var data = revision.content.serialize();
         var model = CMS.Models[revision.resource_type];
+        var cav_model = CMS.Models.CustomAttributeValue;
         var obj;
         data.type = revision.resource_type;
         data.id = revision.resource_id;
         // tree_view_controller.draw_list tests full object data with
         // selfLink, if it's not present it tries to fetch from backend.
         data.selfLink = "/api/" + model.root_collection + "/" + data.id;
+        data.originalLink = "/" + model.root_collection + "/" + data.id;
+        data.viewLink = "/snapshots/" + snapshot.id;
         obj = new model(data);
-        obj.snapshot = snapshot;
+        if (!_.isUndefined(data.custom_attributes)) {
+          var cavs = _.map(data.custom_attributes, function (cav) {
+            var cavobj;
+            cav.type = "CustomAttributeValue";
+            cav.id = cav.id;
+            cav.href = "/api/" + cav_model.root_collection + "/" + cav.id;
+            cav.selfLink = "/api/" + cav_model.root_collection + "/" + cav.id;
+            cavobj = new cav_model(cav);
+            return cavobj;
+          });
+        }
+        if (obj.slug === "cl-10") {
+          // debugger;
+        }
+        obj.attr('snapshot', snapshot);
         return this.make_result(obj, [result], binding);
       }.bind(this)));
       return this.insert_results(binding, converted_results);

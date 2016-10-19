@@ -10,7 +10,7 @@
     'Program Regulation Policy Standard Contract Clause Section'.split(' '),
     'Request Control Objective OrgGroup Vendor AccessGroup'.split(' '),
     'System Process DataAsset Product Project Facility Market'.split(' '),
-    'Issue Assessment Risk Threat'.split(' ')
+    'Issue Assessment Risk Threat Snapshot'.split(' ') // snapshot probably shouldn't be here? bug in last_approved mustache helper
   );
   var _taskSortFunction = function (a, b) {
     var dateA = Number(new Date(a.end_date));

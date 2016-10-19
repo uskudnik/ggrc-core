@@ -65,6 +65,7 @@ dashboard-js-files:
   - models/mappers/stub-filtered-list-loader.js
   - models/mappers/cross-list-loader.js
   - models/mappers/type-filtered-list-loader.js
+  - models/mappers/type-converter-list-loader.js
   - models/mappers/attr-filtered-list-loader.js
   - models/mappers/first-element-loader.js
   - models/mappers/custom-filtered-list-loader.js
@@ -204,6 +205,8 @@ dashboard-js-files:
   - components/tree_pagination/tree_pagination.js
   - components/view-object-button/view-object-button.js
   - components/add-object-button/add-object-button.js
+  - components/snapshotter/scope-update.js
+  - components/snapshotter/individual-update.js
   #- d3.v2.js
   #- related_graph.js
 
@@ -532,6 +535,9 @@ dashboard-js-template-files:
   - import_export/export/filter_query.mustache
   - mapper/relevant_filter.mustache
   - quick_form/confirm_buttons.mustache
+  - snapshots/dropdown_menu.mustache
+  - snapshots/tree.mustache
+  - snapshots/info.mustache
 
 dashboard-css-files:
   - dashboard.css

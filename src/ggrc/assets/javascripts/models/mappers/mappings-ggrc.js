@@ -93,7 +93,7 @@
           'Product', 'Project', 'System', 'Regulation', 'Policy', 'Contract',
           'Standard', 'Program', 'Issue', 'Control', 'Section', 'Clause',
           'Objective', 'Audit', 'Assessment', 'AssessmentTemplate',
-          'AccessGroup', 'Request', 'Document'
+          'AccessGroup', 'Request', 'Document', 'Snapshot'
         ]
       },
       related_objects_as_source: Proxy(
@@ -128,7 +128,8 @@
       controls: TypeFilter('related_objects', 'Control'),
       sections: TypeFilter('related_objects', 'Section'),
       clauses: TypeFilter('related_objects', 'Clause'),
-      objectives: TypeFilter('related_objects', 'Objective')
+      objectives: TypeFilter('related_objects', 'Objective'),
+      snapshots: TypeFilter('related_objects', 'Snapshot')
     },
     // Program
     Program: {
@@ -208,7 +209,8 @@
       ])
     },
     AccessGroup: {
-      _mixins: ['business_object']
+      _mixins: ['business_object'],
+      snapshot_audit: Direct('Audit', 'parent', 'snapshots')
     },
     DataAsset: {
       _mixins: ['business_object']
@@ -440,6 +442,12 @@
       sections: TypeFilter("related_objects", "Section"),
       clauses: TypeFilter("related_objects", "Clause"),
       objectives: TypeFilter("related_objects", "Objective"),
+    },
+    Snapshot: {
+      _mixins: [
+        'related_object'
+      ],
+      snapshot_audit: Direct('Audit', 'snapshots', 'parent')
     },
     Audit: {
       _canonical: {

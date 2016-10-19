@@ -108,7 +108,7 @@
       context: 'CMS.Models.Context.stub',
       modified_by: 'CMS.Models.Person.stub',
       parent: 'CMS.Models.Cacheable.stub',
-      revision: 'CMS.Models.Revision.get_instances'
+      revision: 'CMS.Models.Revision.stub'
     },
     join_keys: {
       parent: can.Model.Cacheable,
@@ -119,10 +119,38 @@
       revision: null
     },
     findAll: 'GET /api/snapshots',
-    create: 'POST /api/snapshots',
     update: 'PUT /api/snapshots/{id}',
-    destroy: 'DELETE /api/snapshots/{id}'
-  }, {});
+    morphData: function (snapshotData) {
+      var instanceData = snapshotData.revision.content;
+      instanceData.type = snapshotData.revision.resource_type;
+      instanceData.snapshot = snapshotData;
+      return instanceData;
+    },
+    child_instance: function (snapshotData) {
+      var instanceData = snapshotData.revision.content;
+
+    },
+    snapshot_instance: function (snapshotData) {
+
+    },
+  }, {
+    reinit: function () {
+      var revision = CMS.Models.Revision.findInCacheById(this.revision_id);
+      this.content = revision.content;
+    },
+    display_name: function () {
+      var revision = CMS.Models.Revision.findInCacheById(this.revision_id);
+      return revision.content.display_name + " (" + this.parent.type + " ID: " + this.parent.id + ")";
+    },
+    title: function () {
+      var revision = CMS.Models.Revision.findInCacheById(this.revision_id);
+      return "SNAPSHOT JOIN MODEL: " + revision.content.title;
+    },
+    description: function () {
+      var revision = CMS.Models.Revision.findInCacheById(this.revision_id);
+      return "SNAPSHOT JOIN MODEL: " + revision.content.description;
+    }
+  });
 
   can.Model.Join('CMS.Models.Relationship', {
     root_object: 'relationship',
