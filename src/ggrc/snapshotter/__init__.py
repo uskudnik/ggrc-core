@@ -14,7 +14,6 @@ from sqlalchemy.sql.expression import bindparam
 
 from ggrc import db
 from ggrc import models
-from ggrc.models.reflection import AttributeInfo
 from ggrc.login import get_current_user_id
 from ggrc.utils import benchmark
 
