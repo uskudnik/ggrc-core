@@ -89,7 +89,7 @@ def parse_operation(operation_response):
     grouped = defaultdict(lambda: defaultdict(list))
 
     for pair in pairs:
-      grouped[pair.parent.type][pair.parent.id] = [{
+      grouped[pair.parent.type][pair.parent.id] += [{
           "child": pair.child.to_json_stub(),
           "revision_id": revisions[pair],
       }]
@@ -126,13 +126,18 @@ def handle_upsert_preview(objs):
     history for all objects that was either created or updated.
   """
   with benchmark("Snapshotter.preview.handle_upsert_preview"):
+    created_response, updated_response = dict(), dict()
+    created_children, updated_children = set(), set()
+
     upserted = upsert_snapshots(objs, None, dry_run=True)
     with benchmark("Snapshotter.preview.handle_upsert_preview.parse create"):
-      created_response, created_children = parse_operation(
-          upserted.response["create"])
+      created = upserted.response["create"]
+      if created:
+        created_response, created_children = parse_operation(created)
     with benchmark("Snapshotter.preview.handle_upsert_preview.parse update"):
-      updated_response, updated_children = parse_operation(
-          upserted.response["update"])
+      updated = upserted.response["update"]
+      if updated:
+        updated_response, updated_children = parse_operation(updated)
 
     modified = created_children | updated_children
 

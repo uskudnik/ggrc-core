@@ -9,6 +9,8 @@ from flask.json import dumps
 from ggrc import db
 import ggrc.models as models
 
+from ggrc.snapshotter.rules import Types
+
 from integration.ggrc.snapshotter import SnapshotterBaseTestCase
 
 
@@ -142,3 +144,47 @@ class TestSnapshotterPreview(SnapshotterBaseTestCase):
 
   def test_individual_update_preview(self):
     pass
+
+  def test_big_update(self):
+    """Test that all objects are in preview"""
+    self._import_file("snapshotter_create.csv")
+
+    program = db.session.query(models.Program).filter(
+        models.Program.slug == "Prog-13211"
+    ).one()
+
+    self.create_audit(program)
+
+    audit = db.session.query(models.Audit).filter(
+        models.Audit.title.like("%Snapshotable audit%")).first()
+
+    self._import_file("snapshotter_update.csv")
+
+    data = {
+        "snapshotter": {
+            "parent": self.objgen.create_stub(audit),
+            "operation": "upsert"
+        }
+    }
+
+    response = self.client.get("/_service/snapshotter/preview",
+                               data=dumps(data), headers=self.headers)
+
+    self.assertEqual(response.status_code, 200)
+
+    returned_data = response.json
+    self.assertIsInstance(returned_data["updated"], dict)
+    self.assertIsInstance(returned_data["created"], dict)
+    self.assertIsInstance(returned_data["history"], dict)
+
+    self.assertEqual(returned_data["created"], dict())
+
+    updated = returned_data["updated"]["Audit"][str(audit.id)]
+    history = returned_data["history"]
+
+    self.assertEqual(len(updated), len(Types.all) * 3)
+
+    self.assertEqual(len(history.keys()), len(Types.all))
+
+    for _type in Types.all:
+      self.assertEqual(len(history[_type]), 3)
