@@ -90,7 +90,12 @@ class QueryHelper(object):
 
   def __init__(self, query, ca_disabled=False):
     importable = get_exportables()
-    self.object_map = {o.__name__: o for o in importable.values()}
+    searchable_objects = {o.__name__: o for o in importable.values()}
+    # Snapshots aren't importable (yet?) so we have to add it here
+    searchable_objects.update({
+        "Snapshot": models.Snapshot
+    })
+    self.object_map = searchable_objects
     self.query = self._clean_query(query)
     self.ca_disabled = ca_disabled
     self._set_attr_name_map()
@@ -247,6 +252,75 @@ class QueryHelper(object):
       return sa.or_(
         context_query_filter(model.context_id, contexts),
         resource_sql)
+
+  def _get_snapshot_objects(self, object_query, parents, child_type):
+    """Creates base query when snapshots are to be returned.
+
+    When snapshots are requested from frontend via relevant_snapshot
+    operation we have to build a special query based on
+    models.Snapshot objects and not based on model.<Type> but limit
+    the results to snapshots that are of type child_type and belong
+    to the scopes of selected parents.
+
+    Args:
+      object_query: Expression dictionary
+      parents: Parent scope objects
+      child_type: Type of objects that are to be returned
+    Returns:
+      Snapshot query object limited to specific parent scopes.
+    """
+    parent_type = parents["object_name"]
+    parent_ids = parents["ids"]
+    expression = object_query.get("filters", {}).get("expression")
+
+    if expression is None:
+      return set()
+
+    object_class = models.Snapshot
+    query = db.session.query(
+        models.Snapshot.id,
+        models.Snapshot.parent_type,
+        models.Snapshot.parent_id,
+        models.Snapshot.child_type,
+        models.Snapshot.child_id,
+        models.Snapshot.revision_id,
+        models.Snapshot.updated_at,
+    ).filter(
+            models.Snapshot.parent_type == parent_type,
+            models.Snapshot.parent_id.in_(parent_ids)
+    )
+
+    with benchmark("Get permissions: _get_snapshot_objects > _get_type_query"):
+      requested_permissions = object_query.get("permissions", "read")
+      type_query = self._get_type_query(getattr(models, parent_type),
+                                        requested_permissions)
+      if type_query is not None:
+        query = query.filter(type_query)
+
+    with benchmark(
+        "Parse filter query: _get_snapshot_objects > _build_expression"):
+      filter_expression = self._build_expression(
+          expression,
+          object_class,
+          parent_type,
+          parent_ids,
+          child_type
+      )
+      if filter_expression is not None:
+        query = query.filter(filter_expression)
+
+    if object_query.get("order_by"):
+      with benchmark("Sorting: _get_snapshot_objects > order_by"):
+        pass
+    with benchmark("Apply limit"):
+      limit = object_query.get("limit")
+      if limit:
+        matches, total = self._apply_limit(query, limit)
+      else:
+        matches = query.all()
+        total = len(matches)
+      object_query["total"] = total
+    return matches
 
   def _get_objects(self, object_query):
     """Get a set of objects described in the filters."""
@@ -490,7 +564,9 @@ class QueryHelper(object):
 
     return query.order_by(*orders)
 
-  def _build_expression(self, exp, object_class):
+  def _build_expression(self, exp, object_class,  # noqa # pylint: disable=too-many-arguments
+                        parent_type=None, parent_ids=None, child_type=None):
+    # pylint: disable=too-many-locals
     """Make an SQLAlchemy filtering expression from exp expression tree."""
     if "op" not in exp:
       return None
@@ -499,6 +575,12 @@ class QueryHelper(object):
       """Try to guess the type of `value` and parse it from the string."""
       if not isinstance(o_key, basestring):
         return value
+
+      # isinstance check fails since object_class is of type
+      # <class 'flask_sqlalchemy._BoundDeclarativeMeta'>
+      if object_class == models.Snapshot:
+        return value
+
       key, _ = self.attr_name_map[object_class].get(o_key, (o_key, None))
       is_date = False
       try:
@@ -541,6 +623,15 @@ class QueryHelper(object):
               query["ids"],
           )
       )
+
+    def relevant_snapshot():
+      """Filter snapshott scope."""
+      return object_class.id.in_(sid for (sid,) in
+          db.session.query(models.Snapshot.id).filter(
+              models.Snapshot.parent_type == exp["object_name"],
+              models.Snapshot.parent_id.in_(exp["ids"]),
+              models.Snapshot.child_type == self.query[0]["object_name"]
+          ))
 
     def similar():
       """Filter by relationships similarity."""
@@ -587,9 +678,33 @@ class QueryHelper(object):
               predicate(Record.content)
           ))
 
-    def with_key(key, p):
+    def snapshots_filter_by(object_class, predicate):
+      """Filter snapshot queries to specific parent scope.
+
+      Args:
+        object_class: object_class, models.Snapshot in all cases
+      Returns:
+        IDs from specified parent scope with matching predicate.
+      """
+      tags = set()
+      for _id in parent_ids:
+        tags.add("{}-{}-{}".format(parent_type, _id, child_type))
+
+      return object_class.id.in_(db.session.query(Record.key).filter(
+        Record.type == "Snapshot",
+        Record.tags.in_(tags),
+        predicate(Record.content)
+      ))
+
+    def with_key(key, p):  # pylint: disable=invalid-name
       """Apply keys to the filter expression."""
       key = key.lower()
+
+      # isinstance check fails since object_class is of type
+      # <class 'flask_sqlalchemy._BoundDeclarativeMeta'>
+      if object_class == models.Snapshot:
+        return snapshots_filter_by(object_class, p)
+
       key, filter_by = self.attr_name_map[
           object_class].get(key, (key, None))
       if callable(filter_by):
@@ -603,8 +718,12 @@ class QueryHelper(object):
 
     with_left = lambda p: with_key(exp["left"], p)
 
-    lift_bin = lambda f: f(self._build_expression(exp["left"], object_class),
-                           self._build_expression(exp["right"], object_class))
+    lift_bin = lambda f: f(self._build_expression(exp["left"], object_class,
+                                                  parent_type, parent_ids,
+                                                  child_type),
+                           self._build_expression(exp["right"], object_class,
+                                                  parent_type, parent_ids,
+                                                  child_type))
 
     def text_search():
       """Filter by fulltext search.
@@ -696,6 +815,7 @@ class QueryHelper(object):
         "<": lambda: with_left(lambda l: l < rhs()),
         ">": lambda: with_left(lambda l: l > rhs()),
         "relevant": relevant,
+        "relevant_snapshot": relevant_snapshot,
         "text_search": text_search,
         "similar": similar,
         "owned": owned,
