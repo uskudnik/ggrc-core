@@ -9,6 +9,7 @@ from ggrc.models.mixins import (
     Timeboxed, Noted, Described, Hyperlinked, WithContact,
     Titled, Slugged, CustomAttributable
 )
+from ggrc.utils import benchmark
 
 from ggrc.models.mixins import clonable
 from ggrc.models.relationship import Relatable
@@ -111,6 +112,11 @@ class Audit(Snapshotable, clonable.Clonable,
     custom attribute values, etc.)
     """
     from ggrc_basic_permissions import create_audit_context
+    from ggrc.snapshotter import SnapshotGenerator
+    from ggrc.models import Snapshot
+    from ggrc.snapshotter.datastructures import Pair
+    from ggrc.snapshotter.datastructures import Stub
+    from ggrc.snapshotter.helpers import get_event
 
     data = {
         "title": source_object.generate_attribute("title"),
@@ -131,6 +137,27 @@ class Audit(Snapshotable, clonable.Clonable,
     create_audit_context(self)
     self._clone_auditors(source_object)
     self.clone_custom_attribute_values(source_object)
+
+    with benchmark("audit.py:Audit._clone.clone audit scope"):
+      source_snapshot = db.session.query(
+          Snapshot.child_type,
+          Snapshot.child_id,
+          Snapshot.revision_id
+      ).filter(
+          Snapshot.parent_type == source_object.type,
+          Snapshot.parent_id == source_object.id
+      )
+      snapshot_revisions = {
+          Pair.from_4tuple((self.type, self.id, ctype, cid)):
+          revid
+          for ctype, cid, revid in source_snapshot}
+
+      event = get_event(self, "POST")
+      parent = Stub(self.type, self.id)
+      children = {pair.child for pair in snapshot_revisions}
+      generator = SnapshotGenerator(dry_run=False)
+      generator.add_family(parent, children)
+      generator.create(event, snapshot_revisions)
 
   def _clone_auditors(self, audit):
     """Clone auditors of specified audit.
