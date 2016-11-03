@@ -602,14 +602,21 @@
     function makeExpression(parent, type, id, operation) {
       var isObjectBrowser = /^\/objectBrowser\/?$/
         .test(window.location.pathname);
+      var isSnapshotPage = /snapshots/.test(window.location);
       var expression;
 
       if (!isObjectBrowser) {
-        expression = {
-          type: type,
-          id: id
-        };
-
+        if (isSnapshotPage) {
+          expression = {
+            type: 'Snapshot',
+            id: id
+          };
+        } else {
+          expression = {
+            type: type,
+            id: id
+          };
+        }
         expression.operation = operation ? operation :
           _getTreeViewOperation(parent);
       }
@@ -649,11 +656,15 @@
 
     function _getTreeViewOperation(objectName) {
       var isDashboard = /dashboard/.test(window.location);
+      var isAuditPage = /audit/.test(window.location);
+
       var operation;
       if (isDashboard) {
         operation = 'owned';
       } else if (objectName === 'Person') {
         operation = 'related_people';
+      } else if (isAuditPage) {
+        operation = 'relevant_snapshot';
       }
       return operation;
     }
