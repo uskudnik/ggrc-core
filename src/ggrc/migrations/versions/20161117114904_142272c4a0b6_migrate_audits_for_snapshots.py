@@ -9,6 +9,7 @@ Create Date: 2016-11-17 11:49:04.547216
 # disable Invalid constant name pylint warning for mandatory Alembic variables.
 # pylint: disable=invalid-name
 
+from logging import getLogger
 import sqlalchemy as sa
 
 from alembic import op
@@ -16,6 +17,7 @@ from sqlalchemy.dialects import mysql
 
 from sqlalchemy.sql import and_
 from sqlalchemy.sql import column
+from sqlalchemy.sql import delete
 from sqlalchemy.sql import func
 from sqlalchemy.sql import select
 from sqlalchemy.sql import table
@@ -33,6 +35,9 @@ from ggrc.models.custom_attribute_value import CustomAttributeValue
 from ggrc.models.snapshot import Snapshot
 
 from ggrc.snapshotter.rules import Types
+
+
+logger = getLogger(__name__)  # pylint: disable=invalid-name
 
 
 # revision identifiers, used by Alembic.
@@ -53,15 +58,197 @@ audits_table = table(
     "audits",
     column("id"),
     column("context_id"),
+    column("program_id"),
+)
+
+programs_table = table(
+    "programs",
+    column("id"),
+    column("context_id")
 )
 
 
-def create_snapshots():
-  pass
+def remove_relationships(connection, event, context_id, user_id, pairs):
+  revisions_payload = list()
+  relationship_tuple = tuple_(
+      relationships_table.c.source_type,
+      relationships_table.c.source_id,
+      relationships_table.c.destination_type,
+      relationships_table.c.destination_id,
+  )
+
+  delete_relationships_sql = select([relationships_table]).where(
+      relationship_tuple.in_(pairs)
+  )
+  deleted_relationships = connection.execute(
+      delete_relationships_sql).fetchall()
+
+  if deleted_relationships:
+    for deleted_rel in deleted_relationships:
+      revisions_payload += [{
+        "action": "deleted",
+        "event_id": event.id,
+        "content": dict(deleted_rel),
+        "modified_by_id": user_id,
+        "resource_id": deleted_rel.id,
+        "resource_type": "Relationship",
+        "context_id": context_id,
+        "source_type": deleted_rel.source_type,
+        "source_id": deleted_rel.source_id,
+        "destination_type": deleted_rel.destination_type,
+        "destination_id": deleted_rel.destination_id,
+
+      }]
+
+    if revisions_payload:
+      print "to delete relationship pairs: ", pairs
+      connection.execute(revisions_table.insert(), revisions_payload)
+      delete_sql = relationships_table.delete().where(
+          relationship_tuple.in_(pairs)
+      )
+      connection.execute(delete_sql)
 
 
-def process_assessment():
+def create_relationships(connection, event, context_id, user_id, pairs):
+  relationships_payload = list()
+  revisions_payload = list()
+
+  for pair in pairs:
+    relationships_payload += [{
+      "source_type": pair[0],
+      "source_id": pair[1],
+      "destination_type": pair[2],
+      "destination_id": pair[3],
+      "modified_by_id": user_id,
+      "context_id": context_id,
+    }]
+
+  if relationships_payload:
+    connection.execute(
+      relationships_table.insert().prefix_with("IGNORE"),
+      relationships_payload)
+
+    created_relationships_sql = select([relationships_table]).where(
+      tuple_(
+        relationships_table.c.source_type,
+        relationships_table.c.source_id,
+        relationships_table.c.destination_type,
+        relationships_table.c.destination_id,
+      ).in_(pairs)
+    )
+    created_relationships = connection.execute(
+      created_relationships_sql).fetchall()
+
+    for created_rel in created_relationships:
+      revisions_payload += [{
+        "action": "created",
+        "event_id": event.id,
+        "content": dict(created_rel),
+        "modified_by_id": user_id,
+        "resource_id": created_rel.id,
+        "resource_type": "Relationship",
+        "context_id": context_id,
+        "source_type": pair[0],
+        "source_id": pair[1],
+        "destination_type": pair[2],
+        "destination_id": pair[3],
+
+      }]
+    if revisions_payload:
+      connection.execute(revisions_table.insert(), revisions_payload)
+
+
+def create_snapshots(connection, event,
+                     user_id, audit, objects):
+  snapshots_payload = list()
+  revisions_payload = list()
+  relationship_pairs = set()
+
+  revisions = get_revisions(connection, objects)
+  for obj in objects:
+    if obj in revisions and revisions[obj]:
+      snapshots_payload += [{
+        "parent_type": "Audit",
+        "parent_id": audit.id,
+        "child_type": obj[0],
+        "child_id": obj[1],
+        "revision_id": revisions[obj],
+        "context_id": audit.context_id,
+        "modified_by_id": user_id,  # TODO verify
+      }]
+    else:
+      logger.warning(
+        "Missing revision for object: {}-{}, cannot create snapshot for "
+        "Audit-{}".format(obj[0], obj[1], audit.id),
+        exc_info=True)
+
+  if snapshots_payload:
+    snapshots_insert_sql = snapshots_table.insert().prefix_with(
+      "IGNORE")  # TODO remove IGNORE on production run?
+    connection.execute(snapshots_insert_sql, snapshots_payload)
+
+    pairs = {
+      ("Audit", audit.id, snapshot["child_type"], snapshot["child_id"])
+      for snapshot in snapshots_payload}
+
+    created_snapshots_sql = select([snapshots_table]).where(
+      tuple_(
+        snapshots_table.c.parent_type,
+        snapshots_table.c.parent_id,
+        snapshots_table.c.child_type,
+        snapshots_table.c.child_id,
+      ).in_(pairs)
+    )
+    created_snapshots = connection.execute(created_snapshots_sql).fetchall()
+
+    for snapshot in created_snapshots:
+      relationship_pairs.add((snapshot.child_type,
+                              snapshot.child_id, "Snapshot", snapshot.id))
+
+      revisions_payload += [{
+        "action": "created",
+        "event_id": event.id,
+        "content": dict(snapshot),
+        "modified_by_id": user_id,
+        "resource_id": snapshot.id,
+        "resource_type": "Snapshot",
+        "context_id": audit.context_id
+      }]
+
+    if revisions_payload:
+      connection.execute(revisions_table.insert(), revisions_payload)
+
+    if relationship_pairs:
+      create_relationships(connection, event, audit.context_id,
+                           user_id, relationship_pairs)
+
+
+def add_objects_to_program_scope(connection, event, user_id,
+                                 program_id, program_context_id, objects):
+  relationship_pairs = set()
+
+  for obj in objects:
+    relationship_pairs.add(("Program", program_id, obj[0], obj[1]))
+
+  create_relationships(connection, event, program_context_id, user_id,
+                       relationship_pairs)
+
+
+def replace_relationships_with_snapshots(connection, event,
+                                         user_id, object, audit):
   pass
+
+def process_assessment(connection, event, user_id, assessment):
+  # print "processing assessment: ", assessment.id
+  audits = get_relationships(connection, "Assessment", assessment.id, {"Audit"})
+  if not len(audits):
+    logger.warning("No audits found for Assessment-{}".format(assessment.id))
+  elif len(audits) == 1:
+    audit = audits.pop()
+    return replace_relationships_with_snapshots(connection, event,
+                                                user_id, assessment, audit)
+  else:
+    print audits
 
 
 def get_relationships(connection, type_, id_, filter_types=None):
@@ -139,101 +326,27 @@ def get_migration_user(connection):
   return Person.query.get(admin_id)
 
 
-def process_audit(connection, event, user_id, audit):
+def process_audit(connection, event, user_id, program_context_id, audit):
   print "processing audit ", audit.id
-  scope_objects = get_relationships(connection, "Audit", audit.id, Types.all)
-  snapshots_payload = list()
-  relationships_payload = list()
-  revisions_payload = list()
+  audit_scope_objects = get_relationships(
+      connection, "Audit", audit.id, Types.all)
+  program_scope_objects = get_relationships(
+      connection, "Program", audit.program_id, Types.all)
 
-  if scope_objects:
-    revisions = get_revisions(connection, scope_objects)
-    for obj in scope_objects:
-      if obj in revisions and revisions[obj]:
-        snapshots_payload += [{
-          "parent_type": "Audit",
-          "parent_id": audit.id,
-          "child_type": obj[0],
-          "child_id": obj[1],
-          "revision_id": revisions[obj],
-          "context_id": audit.context_id,
-          "modified_by_id": user_id,  # TODO verify
-        }]
-      else:
-        print "MISSING REVISION: ", obj
+  missing_in_program_scope = audit_scope_objects - program_scope_objects
 
-    if snapshots_payload:
-      snapshots_insert_sql = snapshots_table.insert().prefix_with("IGNORE")  # TODO remove IGNORE on production run?
-      connection.execute(snapshots_insert_sql, snapshots_payload)
+  if missing_in_program_scope:
+    add_objects_to_program_scope(
+        connection, event, user_id,
+        audit.program_id, program_context_id, missing_in_program_scope)
 
-      pairs = {
-          ("Audit", audit.id, snapshot["child_type"], snapshot["child_id"])
-          for snapshot in snapshots_payload}
-
-      created_snapshots_sql = select([snapshots_table]).where(
-          tuple_(
-              snapshots_table.c.parent_type,
-              snapshots_table.c.parent_id,
-              snapshots_table.c.child_type,
-              snapshots_table.c.child_id,
-          ).in_(pairs)
-      )
-      created_snapshots = connection.execute(created_snapshots_sql).fetchall()
-
-      for snapshot in created_snapshots:
-        relationships_payload += [{
-            "source_type": snapshot.child_type,
-            "source_id": snapshot.child_id,
-            "destination_type": "Snapshot",
-            "destination_id": snapshot.id,
-            "modified_by_id": user_id,
-            "context_id": audit.context_id,
-        }]
-
-        revisions_payload += [{
-          "action": "created",
-          "event_id": event.id,
-          "content": dict(snapshot),
-          "modified_by_id": user_id,
-          "resource_id": snapshot.id,
-          "resource_type": "Snapshot",
-          "context_id": audit.context_id
-        }]
-
-      if relationships_payload:
-        connection.execute(
-            relationships_table.insert().prefix_with("IGNORE"),
-          relationships_payload)
-
-        relationship_pairs = {
-            (relationship["source_type"], relationship["source_id"],
-             relationship["destination_type"], relationship["destination_id"])
-            for relationship in relationships_payload}
-        created_relationships_sql = select([relationships_table]).where(
-            tuple_(
-                relationships_table.c.source_type,
-                relationships_table.c.source_id,
-                relationships_table.c.destination_type,
-                relationships_table.c.destination_id,
-            ).in_(relationship_pairs)
-        )
-        created_relationships = connection.execute(
-            created_relationships_sql).fetchall()
-
-        for created_rel in created_relationships:
-          revisions_payload += [{
-            "action": "created",
-            "event_id": event.id,
-            "content": dict(created_rel),
-            "modified_by_id": user_id,
-            "resource_id": created_rel.id,
-            "resource_type": "Relationship",
-            "context_id": audit.context_id
-          }]
-
-      if revisions_payload:
-        connection.execute(revisions_table.insert(), revisions_payload)
-
+  if audit_scope_objects:
+    create_snapshots(connection, event, user_id, audit, audit_scope_objects)
+    removal_pairs = {
+      ("Audit", audit.id, obj[0], obj[1])
+      for obj in audit_scope_objects}
+    remove_relationships(
+        connection, event, audit.context_id, user_id, removal_pairs)
 
 def upgrade():
   """Migrate audit-related data and concepts to audit snapshots
@@ -280,14 +393,23 @@ def upgrade():
       events_table.c.id.desc()).limit(1)
   event = connection.execute(event_sql).fetchone()
 
-  audits_result = connection.execute(audits_table.select())
+  audits = connection.execute(audits_table.select()).fetchall()
 
-  for audit in audits_result:
-    process_audit(connection, event, user_id, audit)
+  program_ids = {audit.program_id for audit in audits}
 
-  assessments_result = connection.execute(assessments_table.select()).fetchall()
-  for assessment in assessments_result:
-    process_assessment(connection, assessment)
+  program_sql = select([programs_table]).where(
+      programs_table.c.id.in_(program_ids)
+  )
+  programs = connection.execute(program_sql)
+  program_context = {program.id: program.context_id for program in programs}
+
+  for audit in audits:
+    process_audit(
+        connection, event, user_id, program_context[audit.program_id], audit)
+
+  assessments = connection.execute(assessments_table.select()).fetchall()
+  for assessment in assessments:
+    process_assessment(connection, event, user_id, assessment)
 
   raise Exception("blaaaa")
 
