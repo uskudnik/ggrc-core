@@ -5,7 +5,6 @@
 
 from datetime import datetime
 
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import orm
 from sqlalchemy import event
@@ -130,36 +129,6 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
             "child_type", "child_id"),
         db.Index("ix_snapshots_parent", "parent_type", "parent_id"),
         db.Index("ix_snapshots_child", "child_type", "child_id"),
-    )
-
-
-class Snapshotable(object):
-  """Provide `snapshotted_objects` on for parent objects."""
-
-  _publish_attrs = [
-      "snapshotted_objects",
-  ]
-
-  @declared_attr
-  def snapshotted_objects(cls):  # pylint: disable=no-self-argument
-    """Return all snapshotted objects"""
-    joinstr = "and_(remote(Snapshot.parent_id) == {type}.id, " \
-              "remote(Snapshot.parent_type) == '{type}')"
-    joinstr = joinstr.format(type=cls.__name__)
-    return db.relationship(
-        lambda: Snapshot,
-        primaryjoin=joinstr,
-        foreign_keys='Snapshot.parent_id,Snapshot.parent_type,',
-        backref='{0}_parent'.format(cls.__name__),
-        cascade='all, delete-orphan')
-
-  @classmethod
-  def eager_query(cls):
-    query = super(Snapshotable, cls).eager_query()
-    return query.options(
-        orm.subqueryload("snapshotted_objects").undefer_group(
-            "Snapshot_complete"
-        ),
     )
 
 
