@@ -25,8 +25,8 @@ class SnapshottableParent(object):
     return db.relationship(
         Snapshot,
         primaryjoin=lambda: and_(
-            orm.remote(ggrc.models.Snapshot.parent_id) == cls.id,
-            orm.remote(ggrc.models.Snapshot.parent_type) == cls.__name__
+            orm.remote(Snapshot.parent_id) == cls.id,
+            orm.remote(Snapshot.parent_type) == cls.__name__
         ),
         foreign_keys='Snapshot.parent_id,Snapshot.parent_type,',
         backref='{0}_parent'.format(cls.__name__),
