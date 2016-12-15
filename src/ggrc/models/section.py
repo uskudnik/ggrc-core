@@ -12,10 +12,12 @@ from ggrc.models.object_person import Personable
 from ggrc.models.reflection import AttributeInfo
 from ggrc.models.relationship import Relatable
 from ggrc.models.relationship import Relationship
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 
 
-class Section(HasObjectState, Hierarchical, db.Model, CustomAttributable,
+class Section(SnapshottableChild,
+              HasObjectState, Hierarchical, db.Model, CustomAttributable,
               Personable, Ownable, Relatable, BusinessObject):
 
   __tablename__ = 'sections'

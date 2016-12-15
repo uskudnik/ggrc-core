@@ -7,6 +7,7 @@ from ggrc.models.mixins import BusinessObject, Timeboxed, CustomAttributable
 from .object_person import Personable
 from .object_owner import Ownable
 from .relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from .utils import validate_option
 
 from sqlalchemy.orm import validates
@@ -102,7 +103,7 @@ class Directive(HasObjectState, Timeboxed, BusinessObject, db.Model):
 
 
 # FIXME: For subclasses, restrict kind
-class Policy(CustomAttributable, Relatable,
+class Policy(SnapshottableChild, CustomAttributable, Relatable,
              Personable, Ownable, Directive):
   __mapper_args__ = {
       'polymorphic_identity': 'Policy'
@@ -122,7 +123,7 @@ class Policy(CustomAttributable, Relatable,
     return 'Policy'
 
 
-class Regulation(CustomAttributable, Relatable,
+class Regulation(SnapshottableChild, CustomAttributable, Relatable,
                  Personable, Ownable, Directive):
   __mapper_args__ = {
       'polymorphic_identity': 'Regulation'
@@ -142,7 +143,7 @@ class Regulation(CustomAttributable, Relatable,
     return 'Regulation'
 
 
-class Standard(CustomAttributable, Relatable,
+class Standard(SnapshottableChild, CustomAttributable, Relatable,
                Personable, Ownable, Directive):
   __mapper_args__ = {
       'polymorphic_identity': 'Standard'
@@ -162,7 +163,7 @@ class Standard(CustomAttributable, Relatable,
     return 'Standard'
 
 
-class Contract(CustomAttributable, Relatable,
+class Contract(SnapshottableChild, CustomAttributable, Relatable,
                Personable, Ownable, Directive):
   __mapper_args__ = {
       'polymorphic_identity': 'Contract'

@@ -7,9 +7,10 @@ from .object_owner import Ownable
 from .object_person import Personable
 from .relationship import Relatable
 from .track_object_state import HasObjectState
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 
 
-class Facility(HasObjectState,
+class Facility(SnapshottableChild, HasObjectState,
                CustomAttributable, Personable,
                Relatable, Timeboxed, Ownable,
                BusinessObject, db.Model):

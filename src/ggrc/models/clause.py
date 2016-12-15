@@ -12,10 +12,12 @@ from ggrc.models.mixins import BusinessObject
 from ggrc.models.object_owner import Ownable
 from ggrc.models.object_person import Personable
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 
 
-class Clause(HasObjectState, Hierarchical, CustomAttributable, Personable,
+class Clause(SnapshottableChild,
+             HasObjectState, Hierarchical, CustomAttributable, Personable,
              Ownable, Timeboxed, Relatable, BusinessObject, db.Model):
 
   __tablename__ = 'clauses'

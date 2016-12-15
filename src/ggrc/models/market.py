@@ -7,9 +7,11 @@ from .object_person import Personable
 from .object_owner import Ownable
 from .relationship import Relatable
 from .track_object_state import HasObjectState
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 
 
-class Market(HasObjectState, CustomAttributable, Personable,
+class Market(SnapshottableChild,
+             HasObjectState, CustomAttributable, Personable,
              Relatable, Timeboxed, Ownable,
              BusinessObject, db.Model):
   __tablename__ = 'markets'
