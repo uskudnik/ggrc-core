@@ -23,12 +23,12 @@ class SnapshottableParent(object):
     """Return all snapshotted objects"""
     import ggrc
 
-    joinstr = "and_(remote(Snapshot.parent_id) == {type}.id, " \
-              "remote(Snapshot.parent_type) == '{type}')"
-    joinstr = joinstr.format(type=cls.__name__)
     return db.relationship(
         lambda: ggrc.models.Snapshot,
-        primaryjoin=joinstr,
+        primaryjoin=lambda: and_(
+            orm.remote(ggrc.models.Snapshot.parent_id) == cls.id,
+            orm.remote(ggrc.models.Snapshot.parent_type) == cls.__name__
+        ),
         foreign_keys='Snapshot.parent_id,Snapshot.parent_type,',
         backref='{0}_parent'.format(cls.__name__),
         cascade='all, delete-orphan')
