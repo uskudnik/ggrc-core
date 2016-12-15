@@ -652,3 +652,54 @@ class TestSnapshoting(SnapshotterBaseTestCase):
 
     self.assertIsNotNone(models.Relationship.find_related(program, objective))
     self.assertIsNotNone(models.Relationship.find_related(program, control))
+
+  def test_object_snapshot_relationships(self):
+    """Ensure all snapshottable objects have related_snapshots relationship"""
+    object_types = Types.all
+    base_objects = collections.defaultdict(list)
+
+    for klass_name in object_types:
+      model = getattr(models.all_models, klass_name)
+      for x in range(4):
+        title = "{} {}".format(klass_name, x)
+        _, object_ = self.objgen.generate_object(model, {
+            "title": title,
+            "description": "lorem ipsum description"
+        })
+        base_objects[klass_name] += [object_]
+
+    programs = [
+        "Test Program for Snapshots 1",
+        "Test Program for Snapshots 2",
+        "Test Program for Snapshots 3"
+    ]
+
+    for title in programs:
+      program = self.create_object(models.Program, {
+          "title": title
+      })
+
+      for _, objects in base_objects.items():
+        for object_ in objects:
+          self.create_mapping(program, object_)
+
+      self.create_audit(program, title="Audit for " + title)
+
+    for klass_name in object_types:
+      model = getattr(models.all_models, klass_name)
+      objects = base_objects[klass_name]
+      for obj in objects:
+        snapshots = db.session.query(models.Snapshot).filter(
+            models.Snapshot.child_type == klass_name,
+            models.Snapshot.child_id == obj.id
+        ).all()
+        object_ = db.session.query(model).filter(
+            model.id == obj.id
+        ).one()
+
+        self.assertEqual(len(snapshots), 3)
+        self.assertSetEqual(
+            set(object_.related_snapshots),
+            set(snapshots),
+            "related_snapshots check failed for {}".format(klass_name)
+        )
