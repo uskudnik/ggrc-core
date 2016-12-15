@@ -11,11 +11,12 @@ from ggrc.models.object_owner import Ownable
 from ggrc.models.object_person import Personable
 from ggrc.models.reflection import PublishOnly
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 
 
-class Risk(HasObjectState, mixins.CustomAttributable, mixins.Stateful,
-           Relatable, mixins.Described, Ownable, Personable,
+class Risk(SnapshottableChild, HasObjectState, mixins.CustomAttributable,
+           mixins.Stateful, Relatable, mixins.Described, Ownable, Personable,
            mixins.WithContact, mixins.Titled, mixins.Timeboxed,
            mixins.Noted, mixins.Hyperlinked, mixins.Slugged,
            db.Model):

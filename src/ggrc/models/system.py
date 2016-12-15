@@ -10,6 +10,7 @@ from ggrc.models.object_owner import Ownable
 from ggrc.models.object_person import Personable
 from ggrc.models.option import Option
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.utils import validate_option
 from ggrc.models import track_object_state
 
@@ -82,7 +83,7 @@ class SystemOrProcess(track_object_state.HasObjectState, Timeboxed,
     )
 
 
-class System(CustomAttributable, Personable,
+class System(SnapshottableChild, CustomAttributable, Personable,
              Relatable, Ownable, SystemOrProcess):
   __mapper_args__ = {
       'polymorphic_identity': False
@@ -96,7 +97,7 @@ class System(CustomAttributable, Personable,
     return False
 
 
-class Process(CustomAttributable, Personable,
+class Process(SnapshottableChild, CustomAttributable, Personable,
               Relatable, Ownable, SystemOrProcess):
   __mapper_args__ = {
       'polymorphic_identity': True

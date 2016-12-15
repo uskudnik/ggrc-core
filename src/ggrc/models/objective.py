@@ -8,9 +8,11 @@ from .object_person import Personable
 from .audit_object import Auditable
 from .track_object_state import HasObjectState
 from .relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 
 
-class Objective(HasObjectState, CustomAttributable, Auditable, Relatable,
+class Objective(SnapshottableChild,
+                HasObjectState, CustomAttributable, Auditable, Relatable,
                 Personable, Ownable, BusinessObject, db.Model):
   __tablename__ = 'objectives'
   _publish_attrs = []

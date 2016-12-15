@@ -6,12 +6,14 @@ from ggrc.models.mixins import CustomAttributable, BusinessObject, Timeboxed
 from ggrc.models.object_person import Personable
 from ggrc.models.object_owner import Ownable
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 
 
-class Threat(
-        HasObjectState, CustomAttributable, Personable,
-        Relatable, Timeboxed, Ownable, BusinessObject, db.Model):
+class Threat(SnapshottableChild, HasObjectState, CustomAttributable,
+             Personable, Relatable, Timeboxed, Ownable, BusinessObject,
+             db.Model):
+
   __tablename__ = 'threats'
 
   _aliases = {

@@ -9,12 +9,14 @@ from ggrc.models.object_owner import Ownable
 from ggrc.models.object_person import Personable
 from ggrc.models.option import Option
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.utils import validate_option
 from ggrc.models.track_object_state import HasObjectState
 
 
-class Product(HasObjectState, CustomAttributable, Personable,
-              Relatable, Timeboxed, Ownable, BusinessObject, db.Model):
+class Product(SnapshottableChild, HasObjectState, CustomAttributable,
+              Personable, Relatable, Timeboxed, Ownable, BusinessObject,
+              db.Model):
   __tablename__ = 'products'
 
   kind_id = deferred(db.Column(db.Integer), 'Product')

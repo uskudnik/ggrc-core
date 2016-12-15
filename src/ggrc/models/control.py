@@ -22,6 +22,7 @@ from ggrc.models.option import Option
 from ggrc.models.person import Person
 from ggrc.models.reflection import PublishOnly
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 from ggrc.models.utils import validate_option
 
@@ -107,7 +108,8 @@ class AssertionCategorized(Categorizable):
     )
 
 
-class Control(HasObjectState, Relatable, CustomAttributable,
+class Control(SnapshottableChild,
+              HasObjectState, Relatable, CustomAttributable,
               Personable, ControlCategorized, AssertionCategorized,
               Hierarchical, Timeboxed, Ownable, Auditable,
               TestPlanned, BusinessObject, db.Model):

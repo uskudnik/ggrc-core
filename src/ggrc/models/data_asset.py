@@ -7,9 +7,10 @@ from .object_owner import Ownable
 from .object_person import Personable
 from .relationship import Relatable
 from .track_object_state import HasObjectState
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 
 
-class DataAsset(HasObjectState,
+class DataAsset(SnapshottableChild, HasObjectState,
                 CustomAttributable, Personable, Relatable,
                 Timeboxed, Ownable, BusinessObject, db.Model):
   __tablename__ = 'data_assets'

@@ -6,10 +6,11 @@ from ggrc.models.mixins import BusinessObject, Timeboxed, CustomAttributable
 from ggrc.models.object_owner import Ownable
 from ggrc.models.object_person import Personable
 from ggrc.models.relationship import Relatable
+from ggrc.models.mixins.snapshottable import SnapshottableChild
 from ggrc.models.track_object_state import HasObjectState
 
 
-class AccessGroup(HasObjectState,
+class AccessGroup(SnapshottableChild, HasObjectState,
                   CustomAttributable, Personable, Relatable,
                   Timeboxed, Ownable, BusinessObject, db.Model):
     __tablename__ = 'access_groups'
