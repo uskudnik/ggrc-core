@@ -44,14 +44,14 @@ class SnapshotterBaseTestCase(TestCase):
     _, obj = self.objgen.generate_relationship(src, dst)
     return obj
 
-  def create_audit(self, program):
+  def create_audit(self, program, title=None):
+    """Simple helper method to create audit"""
+    if not title:
+      title = "Snapshotable audit"
     self.create_object(models.Audit, {
-        "title": "Snapshotable audit",
+        "title": title,
         "program": {"id": program.id},
-        "status": "Planned",
-        "snapshots": {
-            "operation": "create",
-        }
+        "status": "Planned"
     })
 
   @classmethod
