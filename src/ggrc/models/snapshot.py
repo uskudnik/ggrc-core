@@ -38,8 +38,7 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
 
   _publish_attrs = [
       "parent",
-      "child_id",
-      "child_type",
+      "child",
       "revision",
       "revision_id",
       reflection.PublishOnly("revisions"),
@@ -48,8 +47,7 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
 
   _update_attrs = [
       "parent",
-      "child_id",
-      "child_type",
+      "child",
       "update_revision"
   ]
 
@@ -120,6 +118,20 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
     self.parent_id = getattr(value, 'id', None)
     self.parent_type = getattr(value, 'type', None)
     return setattr(self, self.parent_attr, value)
+
+  @property
+  def child_attr(self):
+    return '{0}_child'.format(self.child_type)
+
+  @property
+  def child(self):
+    return getattr(self, self.child_attr)
+
+  @child.setter
+  def child(self, value):
+    self.child_id = getattr(value, 'id', None)
+    self.child_type = getattr(value, 'type', None)
+    return setattr(self, self.child_attr, value)
 
   @staticmethod
   def _extra_table_args(_):
