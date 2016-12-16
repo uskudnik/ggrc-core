@@ -605,15 +605,14 @@ class TestSnapshoting(SnapshotterBaseTestCase):
     objective_snapshot = db.session.query(models.Snapshot).filter(
         models.Snapshot.child_type == "Objective",
         models.Snapshot.child_id == objective.id
-    )
+    ).one()
 
     objective_revision = db.session.query(models.Revision).filter(
         models.Revision.resource_type == "Objective",
         models.Revision.resource_id == objective.id
     ).all()[-1]
 
-    self.assertEquals(objective_snapshot.count(), 1)
-    self.assertEquals(objective_snapshot.first().revision_id,
+    self.assertEquals(objective_snapshot.revision_id,
                       objective_revision.id)
 
     self.assertIsNotNone(models.Relationship.find_related(program, objective))
