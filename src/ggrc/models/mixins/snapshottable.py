@@ -13,14 +13,14 @@ from ggrc.models.snapshot import Snapshot
 
 
 class SnapshottableParent(object):
-  """Provide `snapshotted_objects` on for parent objects."""
+  """Provide `related_snapshots` for parent objects."""
 
   _publish_attrs = [
-      "snapshotted_objects",
+      "related_snapshots",
   ]
 
   @declared_attr
-  def snapshotted_objects(cls):  # pylint: disable=no-self-argument
+  def related_snapshots(cls):  # pylint: disable=no-self-argument
     """Return all snapshotted objects"""
     return db.relationship(
         Snapshot,
@@ -36,7 +36,7 @@ class SnapshottableParent(object):
   def eager_query(cls):
     query = super(SnapshottableParent, cls).eager_query()
     return query.options(
-        orm.subqueryload("snapshotted_objects").undefer_group(
+        orm.subqueryload("related_snapshots").undefer_group(
             "Snapshot_complete"
         ),
     )
