@@ -348,7 +348,7 @@ class TestSnapshoting(SnapshotterBaseTestCase):
     for obj, expected_title in expected:
       snapshot = db.session.query(models.Snapshot).filter(
           models.Snapshot.child_type == obj.__class__.__name__,
-          models.Snapshot.child_id == obj.id).first()
+          models.Snapshot.child_id == obj.id).one()
       self.assertEquals(
           snapshot.revision.content["title"],
           expected_title)
