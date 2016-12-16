@@ -84,6 +84,7 @@ class TestSnapshot(TestCase):
       "people",
       "related_destinations",
       "related_sources",
+      "related_snapshots",
       "risk_objects",
       "risks",
       "task_group_objects",
