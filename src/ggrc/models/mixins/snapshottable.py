@@ -45,6 +45,15 @@ class SnapshottableParent(object):
 
 class SnapshottableChild(object):
   """Provide `related_snapshots` on all snapshottable objects."""
+
+  _publish_attrs = [
+      "related_snapshots"
+  ]
+
+  _include_links = [
+      "related_snapshots"
+  ]
+
   @declared_attr
   def related_snapshots(cls):  # pylint: disable=no-self-argument
     """Return all snapshots for some snapshottable objects"""
