@@ -1006,7 +1006,7 @@
      * @return {Object} The object
      */
     function toObject(instance) {
-      var model = CMS.Models[instance.child_type];
+      var model = CMS.Models[instance.child.type];
       var content = instance.revision.content;
       var type = model.root_collection;
       content.isLatestRevision = instance.is_latest_revision;
@@ -1016,7 +1016,7 @@
       content.related_destinations = [];
       content.viewLink = content.snapshot.viewLink;
       content.selfLink = content.snapshot.selfLink;
-      content.type = instance.child_type;
+      content.type = instance.child.type;
       content.id = instance.id;
       return new model(content);
     }
