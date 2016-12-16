@@ -567,8 +567,11 @@ class TestSnapshoting(SnapshotterBaseTestCase):
                     "type": "Audit",
                     "href": "/api/audits/{}".format(audit.id)
                 },
-                "child_type": "Objective",
-                "child_id": objective.id,
+                "child": {
+                    "id": objective.id,
+                    "type": "Objective",
+                    "href": "/api/objectives/{}".format(objective.id)
+                },
                 "update_revision": "new",
                 "context": {
                     "id": audit.context_id,
@@ -584,8 +587,11 @@ class TestSnapshoting(SnapshotterBaseTestCase):
                     "type": "Audit",
                     "href": "/api/audits/{}".format(audit.id)
                 },
-                "child_type": "Control",
-                "child_id": control.id,
+                "child": {
+                    "id": control.id,
+                    "type": "Control",
+                    "href": "/api/controls/{}".format(control.id)
+                },
                 "update_revision": "new",
                 "context": {
                     "id": audit.context_id,
