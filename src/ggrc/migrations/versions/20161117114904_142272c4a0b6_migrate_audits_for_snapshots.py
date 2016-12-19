@@ -238,30 +238,234 @@ def replace_relationships_with_snapshots(connection, event,
                                          user_id, object, audit):
   pass
 
+
+def clone_dict(obj, data=None, blacklisted=None):
+  blacklisted_fields = set()
+  if not blacklisted:
+    blacklisted_fields = {"id", "context_id", "slug"}
+
+  cpy = dict(obj).copy()
+  for bfield in blacklisted_fields:
+    if bfield in cpy:
+      del cpy[bfield]
+
+  if data:
+    cpy.update(data)
+  return cpy
+
+object_sql_handlers = {
+    "Assessment": {
+        "slug_prefix": "ASSESSMENT",
+        "insert": assessments_table.insert(),
+        "max_id": func.max(assessments_table.c.id),
+        "select_slug": select([assessments_table.c.slug]),
+        "where_slug": assessments_table.c.slug.in_,
+        "select_id": select([assessments_table.c.id]),
+        "select_table": select([assessments_table]),
+    },
+    "Issue": {
+        "insert": issues_table.insert(),
+        "max_id": "",
+    },
+    "Request": {
+        "insert": requests_table.insert(),
+        "max_id": "",
+    }
+}
+
+
+def get_slugs(connection, type_, start_id, num):
+  slug_prefix = object_sql_handlers[type_]["slug_prefix"]
+  slugs = set()
+
+  def generate_slug(x):
+    return "{}-{}".format(slug_prefix, x)
+
+  for id_ in xrange(start_id, start_id+num):
+    slugs.add(generate_slug(id_))
+
+  conflicting_slugs_sql = object_sql_handlers[type_]["select_slug"].where(
+      object_sql_handlers[type_]["where_slug"](slugs)
+  )
+  conflicting_slugs = connection.execute(conflicting_slugs_sql).fetchall()
+  while conflicting_slugs:
+    for cslug, in conflicting_slugs:
+      slugs.remove(cslug)
+      id_ += 1
+      slugs.add(generate_slug(id_))
+
+    conflicting_slugs_sql = object_sql_handlers[type_]["select_slug"].where(
+        object_sql_handlers[type_]["where_slug"](slugs)
+    )
+    conflicting_slugs = connection.execute(conflicting_slugs_sql).fetchall()
+  return slugs
+
+
+def duplicate_object(connection, source_type, source_object, objects):
+  object_duplicates = list()
+  insert_sql = object_sql_handlers[source_type]["insert"]
+  max_id = connection.execute(
+      object_sql_handlers[source_type]["max_id"]).fetchone()[0]
+
+  slugs = get_slugs(connection, source_type, max_id + 1, len(objects))
+  slugs_copy = slugs.copy()
+
+  for object_ in objects:
+    data = {
+      "context_id": object_.context_id,
+      "slug": slugs.pop()
+    }
+    clone_obj = clone_dict(source_object, data)
+    object_duplicates += [clone_obj]
+
+  connection.execute(insert_sql, object_duplicates)
+  return slugs_copy
+
+
+def duplicate_custom_attribute_values(
+      connection, source_type, source_object, duplicates):
+  custom_attribute_val_duplicates = list()
+  source_object_cav_sql = select([custom_attribute_values_table]).where(
+    and_(
+      custom_attribute_values_table.c.attributable_type == source_type,
+      custom_attribute_values_table.c.attributable_id == source_object["id"]
+    )
+  )
+  source_object_cavs = connection.execute(source_object_cav_sql).fetchall()
+
+  # TODO local custom attribute definitions?!
+  if source_object_cavs:
+    print "source_object_cavs: ", source_object_cavs
+    print "duplicates: ", duplicates
+
+    for duplicate in duplicates:
+      print duplicate.id
+      for source_cav in source_object_cavs:
+        print "source_cav: ", source_cav
+        data = {
+            "attributable_id": duplicate.id,
+            "context_id": duplicate.context_id
+        }
+        clone_cav = clone_dict(source_cav, data)
+        custom_attribute_val_duplicates += [clone_cav]
+
+    print "custom_attribute_val_duplicates: ", custom_attribute_val_duplicates
+    connection.execute(
+        custom_attribute_values_table.insert(),
+        custom_attribute_val_duplicates
+    )
+
+
+def duplicate_custom_attribute_definitions(
+      connection, source_type, source_object, duplicates):
+  custom_attribute_def_duplicates = list()
+
+  source_object_cad_sql = select([custom_attribute_definitions_table]).where(
+      and_(
+          custom_attribute_definitions_table.c.definition_type == source_type,
+          custom_attribute_definitions_table.c.definition_id ==
+              source_object["id"],
+        )
+  )
+  source_object_cads = connection.execute(source_object_cad_sql).fetchall()
+
+  if source_object_cads:
+    for duplicate in duplicates:
+      for source_cad in source_object_cads:
+        data = {
+            "definition_id": duplicate.id,
+            "context_id": duplicate.context_id
+        }
+        clone_cad = clone_dict(source_cad, data)
+        custom_attribute_def_duplicates += [clone_cad]
+
+    connection.execute(
+        custom_attribute_definitions_table.insert(),
+        custom_attribute_def_duplicates
+    )
+
+    duplicate_definitions = {
+        (
+            dup["definition_id"],
+            dup["context_id"],
+        )
+        for dup in custom_attribute_def_duplicates}
+    duplicate_definitions_sql = select([])
+
+
+def duplicate_revision_chain(connection,
+                             source_type, source_object, objects):
+
+  ## TODO DUPLICATE CAV AND CAD HISTORY!
+  revision_duplicates = list()
+
+  source_object_revisions_sql = select([revisions_table]).where(
+    and_(
+      revisions_table.c.resource_type == source_type,
+      revisions_table.c.resource_id == source_object["id"]
+    )
+  )
+  source_object_revisions = connection.execute(
+      source_object_revisions_sql).fetchall()
+
+  print "source_object_revisions: ", source_object_revisions
+
+
+def duplicate_object_for_objects(connection,
+                                 source_type, source_object, objects):
+  # print "duplicate_object_for_objects", source_object, objects
+
+  slugs_of_duplicates = duplicate_object(
+      connection, source_type, source_object, objects)
+
+  duplicates = connection.execute(
+      object_sql_handlers[source_type]["select_table"].where(
+          object_sql_handlers[source_type]["where_slug"](slugs_of_duplicates)
+  )).fetchall()
+
+  duplicate_custom_attribute_definitions(
+      connection, source_type, source_object, duplicates)
+  # duplicate_custom_attribute_values(
+  #     connection, source_type, source_object, duplicates
+  # )
+  # duplicate_revision_chain()
+
+
+
 def process_assessment(connection, event, user_id, assessment):
   # print "processing assessment: ", assessment.id
-  audits = get_relationships(connection, "Assessment", assessment.id, {"Audit"})
-  if not len(audits):
-    logger.warning("No audits found for Assessment-{}".format(assessment.id))
-  elif len(audits) == 1:
-    audit = audits.pop()
-    return replace_relationships_with_snapshots(connection, event,
-                                                user_id, assessment, audit)
+  audit_stubs = get_relationships(connection, "Assessment", assessment.id, {"Audit"})
+  if not len(audit_stubs):
+    pass
+    # logger.warning("No audits found for Assessment-{}".format(assessment.id))
+  elif len(audit_stubs) == 1:
+    # TODO: just replace relationships?
+    pass
+    # audit = audits.pop()
+    # return replace_relationships_with_snapshots(connection, event,
+    #                                             user_id, assessment, audit)
   else:
-    print audits
+    # print "\n" * 5
+    print "assessment-{} mapped to multiple audits: ".format(assessment.id)
+    audit_objects_sql = select([audits_table]).where(
+        audits_table.c.id.in_({id_ for _, id_ in audit_stubs})
+    )
+    audit_objects = connection.execute(audit_objects_sql).fetchall()
+
+    duplicate_object_for_objects(
+          connection, "Assessment", assessment, audit_objects)
 
 
 def get_relationships(connection, type_, id_, filter_types=None):
   if not filter_types:
     relationships = select([relationships_table]).where(and_(
-      relationships_table.c.source_type == type_,
-      relationships_table.c.source_id == id_,
-    )
-    ).union(
-      select([relationships_table]).where(and_(
-        relationships_table.c.destination_type == type_,
-        relationships_table.c.destination_id == id_,
-      ))
+        relationships_table.c.source_type == type_,
+        relationships_table.c.source_id == id_,
+    )).union(
+        select([relationships_table]).where(and_(
+            relationships_table.c.destination_type == type_,
+            relationships_table.c.destination_id == id_,
+        ))
     )
   else:
     relationships = select([relationships_table]).where(and_(
@@ -403,9 +607,9 @@ def upgrade():
   programs = connection.execute(program_sql)
   program_context = {program.id: program.context_id for program in programs}
 
-  for audit in audits:
-    process_audit(
-        connection, event, user_id, program_context[audit.program_id], audit)
+  # for audit in audits:
+  #   process_audit(
+  #       connection, event, user_id, program_context[audit.program_id], audit)
 
   assessments = connection.execute(assessments_table.select()).fetchall()
   for assessment in assessments:
