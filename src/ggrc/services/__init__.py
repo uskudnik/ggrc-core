@@ -85,11 +85,11 @@ def all_services():
 def init_extra_services(app):
   from ggrc.login import login_required
 
-  from .search import search
+  from ggrc.services.search import search
   app.add_url_rule(
       '/search', 'search', login_required(search))
 
-  from .description import ServiceDescription
+  from ggrc.services.description import ServiceDescription
   app.add_url_rule(
       '/api', view_func=ServiceDescription.as_view('ServiceDescription'))
 
