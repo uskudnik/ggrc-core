@@ -36,6 +36,48 @@ class BadQueryException(Exception):
 
 # pylint: disable=too-few-public-methods
 
+
+def person_cad_converter(op, value, **kwargs):
+  print "person_cad_converter: ", value, kwargs
+  person = models.Person.query.filter(
+      sa.or_(
+          op(models.Person.name, value), op(models.Person.email, value)
+      )
+  ).first()
+  if person:
+    person = person.email
+  print "person: ", person
+  return person
+
+
+FIELD_HANDLERS = {
+  "Text": lambda _, v: v,
+  "Rich Text": lambda _, v: v,
+  "Dropdown": lambda _, v: v,
+  "Checkbox": lambda _, v: v,
+  "Map:Person": person_cad_converter,
+  "Date": lambda _, v: functools.partial(
+    convert_date_format,
+    format_from=CustomAttributeValue.DATE_FORMAT_US,
+    format_to=CustomAttributeValue.DATE_FORMAT_ISO
+  )(v),
+}
+
+
+def get_custom_attribute_converters(type_, title):
+  cad_query = db.session.query(CustomAttributeDefinition).filter(
+    CustomAttributeDefinition.title == title,
+    CustomAttributeDefinition.definition_type == type_,
+  )
+
+  converters = []
+  for definition in cad_query:
+    cad_type = definition.attribute_type
+    print "cad_type: ", cad_type
+    converters += [FIELD_HANDLERS[cad_type]]
+  return converters
+
+
 class QueryHelper(object):
 
   """Helper class for handling request queries
@@ -433,8 +475,15 @@ class QueryHelper(object):
                            required or [(aliased entity, relationship field)]
                            if joins required.
       """
+      print
+      print
+      print "joins_and_order"
+
       def by_similarity():
         """Join similar_objects subquery, order by weight from it."""
+        print
+        print
+        print "by similarity"
         join_target = flask.g.similar_objects_query.subquery()
         join_condition = model.id == join_target.c.id
         joins = [(join_target, join_condition)]
@@ -443,6 +492,9 @@ class QueryHelper(object):
 
       def by_ca():
         """Join fulltext index table, order by indexed CA value."""
+        print
+        print
+        print "by_ca"
         alias = sa.orm.aliased(Record, name=u"fulltext_{}".format(self._count))
         joins = [(alias, sa.and_(
             alias.key == model.id,
@@ -454,6 +506,10 @@ class QueryHelper(object):
 
       def by_foreign_key():
         """Join the related model, order by title or name/email."""
+        print
+        print
+        print "by foreign key"
+
         related_model = attr.property.mapper.class_
         if issubclass(related_model, models.mixins.Titled):
           joins = [(alias, _)] = [(sa.orm.aliased(attr), attr)]
@@ -472,6 +528,10 @@ class QueryHelper(object):
 
         Implemented only for ObjectOwner mapping.
         """
+        print
+        print
+        print "by_m2m"
+
         if issubclass(attr.target_class, models.object_owner.ObjectOwner):
           # NOTE: In the current implementation we sort only by the first
           # assigned owner if multiple owners defined
@@ -526,11 +586,14 @@ class QueryHelper(object):
         elif (isinstance(attr, sa.orm.attributes.InstrumentedAttribute) and
                 isinstance(attr.property,
                            sa.orm.properties.RelationshipProperty)):
+          print "foreign key"
           joins, order = by_foreign_key()
         elif isinstance(attr, sa.ext.associationproxy.AssociationProxy):
+          print "associated proxy m2m"
           joins, order = by_m2m()
         else:
           # a simple attribute
+          print "simpl ko pasul"
           joins, order = None, attr
 
       if clause.get("desc", False):
@@ -564,40 +627,58 @@ class QueryHelper(object):
         a list of one or several possible meanings of `value` type compliant
         with `getattr(object_class, o_key)`.
       """
-      def has_date_or_non_date_cad(title, definition_type):
-        """Check if there is a date and a non-date CA named title.
+      # def has_date_or_non_date_cad(title, definition_type):
+      #   """Check if there is a date and a non-date CA named title.
+      #
+      #   Returns:
+      #     (bool, bool) - flags indicating the presence of date and non-date CA.
+      #   """
+      #   print
+      #   print
+      #   print "autocast", o_key, operator_name, value
+      #   print
+      #   print "has_date_or_non_date_cad"
+      #   cad_query = db.session.query(CustomAttributeDefinition).filter(
+      #     CustomAttributeDefinition.title == title,
+      #     CustomAttributeDefinition.definition_type == definition_type,
+      #   )
+      #   date_cad = bool(cad_query.filter(
+      #     CustomAttributeDefinition.
+      #         attribute_type == CustomAttributeDefinition.ValidTypes.DATE,
+      #   ).count())
+      #   non_date_cad = bool(cad_query.filter(
+      #     CustomAttributeDefinition.
+      #         attribute_type != CustomAttributeDefinition.ValidTypes.DATE,
+      #   ).count())
+      #   print
+      #   print
+      #   print "date_cad: ", date_cad
+      #   print
+      #   print "non_date_cad: ", non_date_cad
+      #   return date_cad, non_date_cad
 
-        Returns:
-          (bool, bool) - flags indicating the presence of date and non-date CA.
-        """
-        cad_query = db.session.query(CustomAttributeDefinition).filter(
-          CustomAttributeDefinition.title == title,
-          CustomAttributeDefinition.definition_type == definition_type,
-        )
-        date_cad = bool(cad_query.filter(
-          CustomAttributeDefinition.
-              attribute_type == CustomAttributeDefinition.ValidTypes.DATE,
-        ).count())
-        non_date_cad = bool(cad_query.filter(
-          CustomAttributeDefinition.
-              attribute_type != CustomAttributeDefinition.ValidTypes.DATE,
-        ).count())
-        return date_cad, non_date_cad
+
+
 
       if not isinstance(o_key, basestring):
         return [value]
       key, custom_filter = (self.attr_name_map[tgt_class].get(o_key,
                                                               (o_key, None)))
-
+      print "key: ", key
+      print "custom_filter: ", custom_filter
       date_attr = date_cad = non_date_cad = False
+      converters = []
       try:
         attr_type = getattr(tgt_class, key).property.columns[0].type
       except AttributeError:
-        date_cad, non_date_cad = has_date_or_non_date_cad(
-            title=key,
-            definition_type=tgt_class.__name__,
-        )
-        if not (date_cad or non_date_cad) and not custom_filter:
+        converters = get_custom_attribute_converters(tgt_class.__name__, key)
+
+        date_cad, non_date_cad = False, True
+        # date_cad, non_date_cad = has_date_or_non_date_cad(
+        #     title=key,
+        #     definition_type=tgt_class.__name__,
+        # )
+        if not converters and not custom_filter:
           # TODO: this logic fails on CA search for Snapshots
           pass
           # no CA with this name and no custom filter for the field
@@ -607,43 +688,53 @@ class QueryHelper(object):
         if isinstance(attr_type, sa.sql.sqltypes.Date):
           date_attr = True
 
-      converted_date = None
-      if (date_attr or date_cad) and isinstance(value, basestring):
-        try:
-          converted_date = convert_date_format(
-              value,
-              CustomAttributeValue.DATE_FORMAT_US,
-              CustomAttributeValue.DATE_FORMAT_ISO,
-          )
-        except (TypeError, ValueError):
-          # wrong format or not a date
-          if not non_date_cad:
-            # o_key is not a non-date CA
-            raise BadQueryException(u"Field '{}' expects a '{}' date"
-                                    .format(
-                                        o_key,
-                                        CustomAttributeValue.DATE_FORMAT_US,
-                                    ))
+      # converted_date = None
+      # if (date_attr or date_cad) and isinstance(value, basestring):
+      #   try:
+      #     converted_date = convert_date_format(
+      #         value,
+      #         CustomAttributeValue.DATE_FORMAT_US,
+      #         CustomAttributeValue.DATE_FORMAT_ISO,
+      #     )
+      #   except (TypeError, ValueError):
+      #     # wrong format or not a date
+      #     if not non_date_cad:
+      #       # o_key is not a non-date CA
+      #       raise BadQueryException(u"Field '{}' expects a '{}' date"
+      #                               .format(
+      #                                   o_key,
+      #                                   CustomAttributeValue.DATE_FORMAT_US,
+      #                               ))
 
-
-      if date_attr or (date_cad and not non_date_cad):
-        # Filter by converted date
-        return [converted_date]
-      elif date_cad and non_date_cad and converted_date is None:
-        # Filter by unconverted string as date conversion was unsuccessful
-        return [value]
-      elif date_cad and non_date_cad:
-        if operator_name in ("<", ">"):
-          # "<" and ">" works incorrectly when searching by CA in both formats
-          return [converted_date]
-        else:
-          # Since we can have two local CADs with same name when one is Date
-          # and another is Text, we should handle the case when the user wants
-          # to search by the Text CA that should not be converted
-          return [converted_date, value]
+      if not converters:
+        converter = lambda x: x
+        if date_attr:
+          converter = FIELD_HANDLERS["Date"]
+        return [converter(value)]
       else:
-        # Filter by unconverted string
-        return [value]
+        op_ = like
+        result = [converter(op_, value) for converter in converters]
+        print "result: ", result
+        return result
+
+      # if date_attr or (date_cad and not non_date_cad):
+      #   # Filter by converted date
+      #   return [converted_date]
+      # elif date_cad and non_date_cad and converted_date is None:
+      #   # Filter by unconverted string as date conversion was unsuccessful
+      #   return [value]
+      # elif date_cad and non_date_cad:
+      #   if operator_name in ("<", ">"):
+      #     # "<" and ">" works incorrectly when searching by CA in both formats
+      #     return [converted_date]
+      #   else:
+      #     # Since we can have two local CADs with same name when one is Date
+      #     # and another is Text, we should handle the case when the user wants
+      #     # to search by the Text CA that should not be converted
+      #     return [converted_date, value]
+      # else:
+      #   # Filter by unconverted string
+      #   return [value]
 
     def _backlink(object_name, ids):
       """Convert ("__previous__", [query_id]) into (model_name, ids).
@@ -663,7 +754,7 @@ class QueryHelper(object):
         (self.query[ids[0]]["object_name"],
          self.query[ids[0]]["ids"]) otherwise.
       """
-
+      print "_backlink: ", _backlink
       if object_name == "__previous__":
         previous_query = self.query[ids[0]]
         return (previous_query["object_name"], previous_query["ids"])
@@ -681,6 +772,7 @@ class QueryHelper(object):
         sqlalchemy.sql.elements.BinaryExpression if an object of `object_class`
         is related (via a Relationship or another m2m) to one the given objects.
       """
+      print "relevant", object_name, ids
       return object_class.id.in_(
             RelationshipHelper.get_ids_related_to(
                 object_class.__name__,
@@ -775,6 +867,9 @@ class QueryHelper(object):
         Query predicate if the given predicate matches a value for the correct
           custom attribute.
       """
+      print "default_filter_by: ", object_class, key, predicate
+      key = key + ".email"
+      print "key: ", key
       return object_class.id.in_(db.session.query(Record.key).filter(
           Record.type == object_class.__name__,
           Record.property == key,
@@ -794,6 +889,7 @@ class QueryHelper(object):
           `predicate(getattr(object_class, key))` for own attributes,
           `predicate(value of corresponding custom attribute)` otherwise.
       """
+      print "with_key: ", key, predicate
       key = key.lower()
       key, filter_by = self.attr_name_map[
           tgt_class].get(key, (key, None))
@@ -823,6 +919,7 @@ class QueryHelper(object):
         sqlalchemy.sql.elements.BinaryExpression if an object of `object_class`
         has an indexed property that contains `text`.
       """
+      print "text_search: ", text
       return object_class.id.in_(
           db.session.query(Record.key).filter(
               Record.type == object_class.__name__,

@@ -49,6 +49,7 @@ def _generate_delete_csv(all_bad_ids):
 
 def validate():
   """Migrate audit-related data and concepts to audit snapshots."""
+  return sys.exit(0)
   print "Checking database: {}".format(db.engine)
 
   tables = set(row[0] for row in db.session.execute("show tables"))

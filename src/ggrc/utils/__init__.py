@@ -310,6 +310,7 @@ with_nop = benchmarks.WithNop
 
 def convert_date_format(date, format_from, format_to):
   """Convert string date format from one to another."""
+  print "convert_date_format: ", date, format_from, format_to
   return datetime.datetime.strptime(date, format_from).strftime(format_to)
 
 

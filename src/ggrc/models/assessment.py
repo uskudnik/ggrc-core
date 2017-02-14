@@ -11,6 +11,7 @@ from sqlalchemy.orm import validates
 from ggrc import db
 from ggrc.models import reflection
 from ggrc.models.audit import Audit
+from ggrc.models.comment import Comment
 from ggrc.models.comment import Commentable
 from ggrc.models.custom_attribute_definition import CustomAttributeDefinition
 from ggrc.models.mixins import BusinessObject

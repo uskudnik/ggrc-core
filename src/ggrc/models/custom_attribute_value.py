@@ -175,6 +175,11 @@ class CustomAttributeValue(Base, db.Model):
       A function that will generate a filter for a given predicate.
     """
     from ggrc.models import all_models
+
+    print
+    print
+    print
+    print "mk_filter_by_custom", obj_class, custom_attribute_id
     attr_def = all_models.CustomAttributeDefinition.query.filter_by(
         id=custom_attribute_id
     ).first()
