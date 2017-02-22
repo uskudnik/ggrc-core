@@ -64,6 +64,8 @@ class SnapshottableChild(object):
         ),
         foreign_keys="Snapshot.child_id,Snapshot.child_type",
         backref="{0}_child".format(cls.__name__),
+        viewonly=True  # prevents setting child_id to 0 on DELETE of original
+                       # object.
     )
 
   @classmethod
