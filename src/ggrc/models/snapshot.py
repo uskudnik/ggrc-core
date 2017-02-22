@@ -39,6 +39,11 @@ class Snapshot(relationship.Relatable, mixins.Base, db.Model):
   _publish_attrs = [
       "parent",
       "child",
+      # child_id and child_type are required to be exposed as they are used on
+      # frontend because child might not exist if original objects has been
+      # deleted.
+      "child_id",
+      "child_type",
       "revision",
       "revision_id",
       reflection.PublishOnly("revisions"),
